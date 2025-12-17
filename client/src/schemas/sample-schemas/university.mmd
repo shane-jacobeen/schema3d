@@ -5,7 +5,7 @@ erDiagram
     course ||--o{ enrollment : is_part_of
     course ||--o{ textbook : requires
     faculty ||--o{ research_project : leads
-    research_project ||--o{ student : hires
+    student o{--o{ research_project : participates_in
     faculty ||--|{ advisor : is_one_type_of
     advisor ||--o{ student : advises
     graduate_program ||--o{ department : administered_by

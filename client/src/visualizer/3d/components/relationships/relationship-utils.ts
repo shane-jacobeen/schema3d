@@ -26,6 +26,11 @@ import type { Cardinality, CardinalitySymbol, LineStyle } from "../../types";
  * - FK nullable, unique → "0..1:1" (one child can reference 0 or 1 parent)
  * - FK NOT NULL, unique → "1:1" (one child must reference exactly 1 parent)
  * - FK unknown nullable, not unique → "0..1:N" (generic many, ambiguous participation)
+ *
+ * Note: This cardinality format is used consistently throughout the codebase. When displaying
+ * relationships, the symbols are mapped as follows:
+ * - fromTable (FK table) displays the "right" symbol
+ * - toTable (referenced table) displays the "left" symbol
  */
 export function calculateCardinality(
   pkColumn: { isPrimaryKey?: boolean; isUnique?: boolean } | undefined,

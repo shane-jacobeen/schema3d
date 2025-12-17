@@ -59,6 +59,72 @@ describe("parseMermaidSchema", () => {
     expect(schema?.tables.length).toBeGreaterThanOrEqual(4);
   });
 
+  it("should normalize cardinality when FK is on left side of Mermaid syntax", () => {
+    // Mermaid: POST o{--|| USER means POST has many, USER has one
+    // FK should be in POST, referenced is USER
+    // Cardinality should be normalized to: left=USER (1), right=POST (0..N)
+    const mermaid = `
+      erDiagram
+          POST o{--|| USER : created_by
+          POST {
+              int id PK
+          }
+          USER {
+              int id PK
+          }
+    `;
+
+    const schema = parseMermaidSchema(mermaid);
+    expect(schema).not.toBeNull();
+
+    const postTable = schema?.tables.find((t) => t.name === "POST");
+    const userTable = schema?.tables.find((t) => t.name === "USER");
+
+    // Find FK column in POST
+    const fkColumn = postTable?.columns.find((c) => c.isForeignKey);
+    expect(fkColumn).toBeDefined();
+    expect(fkColumn?.references?.table).toBe("USER");
+
+    // Verify cardinality is normalized: left=referenced (USER), right=FK (POST)
+    // Should be "1:0..N" where left (1) = USER, right (0..N) = POST
+    const cardinality = fkColumn?.references?.cardinality;
+    expect(cardinality).toBeDefined();
+    // The cardinality should have referenced table (USER) on left, FK table (POST) on right
+    // Since USER has "||" (1) and POST has "o{" (0..N), normalized should be "1:0..N"
+    expect(cardinality).toMatch(/^1:/); // Left side should be "1" (referenced table)
+    expect(cardinality).toMatch(/:0\.\.N$/); // Right side should be "0..N" (FK table)
+  });
+
+  it("should normalize cardinality when FK is on right side of Mermaid syntax", () => {
+    // Mermaid: USER ||--o{ POST means USER has one, POST has many
+    // FK should be in POST, referenced is USER
+    // Cardinality should already be correct: left=USER (1), right=POST (0..N)
+    const mermaid = `
+      erDiagram
+          USER ||--o{ POST : creates
+          USER {
+              int id PK
+          }
+          POST {
+              int id PK
+          }
+    `;
+
+    const schema = parseMermaidSchema(mermaid);
+    expect(schema).not.toBeNull();
+
+    const postTable = schema?.tables.find((t) => t.name === "POST");
+    const fkColumn = postTable?.columns.find((c) => c.isForeignKey);
+    expect(fkColumn).toBeDefined();
+    expect(fkColumn?.references?.table).toBe("USER");
+
+    // Verify cardinality: left=referenced (USER), right=FK (POST)
+    const cardinality = fkColumn?.references?.cardinality;
+    expect(cardinality).toBeDefined();
+    expect(cardinality).toMatch(/^1:/); // Left side should be "1" (referenced table)
+    expect(cardinality).toMatch(/:0\.\.N$/); // Right side should be "0..N" (FK table)
+  });
+
   it("should parse multiple constraints on a column", () => {
     const mermaid = `
       erDiagram

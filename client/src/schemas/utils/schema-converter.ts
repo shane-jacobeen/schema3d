@@ -72,10 +72,15 @@ export function schemaToMermaid(schema: DatabaseSchema): string {
     }
 
     // Parse cardinality and convert to Mermaid syntax
+    // Cardinality format: "left:right" where:
+    // - left = referenced table side (the "1" side)
+    // - right = FK table side (the "many" side)
+    // Mermaid syntax: FK_TABLE [symbols]--[symbols] REFERENCED_TABLE
+    // So we need to swap: FK table (rel.from) gets right symbols, referenced (rel.to) gets left symbols
     const { left, right } = parseCardinality(cardinality);
-    const leftMermaid = symbolToMermaid(left);
-    const rightMermaid = symbolToMermaid(right);
-    const mermaidCardinality = `${leftMermaid}--${rightMermaid}`;
+    const fkMermaid = symbolToMermaid(right); // FK table symbols
+    const refMermaid = symbolToMermaid(left); // Referenced table symbols
+    const mermaidCardinality = `${fkMermaid}--${refMermaid}`;
 
     lines.push(
       `    ${rel.from} ${mermaidCardinality} ${rel.to} : "${rel.fromColumn}"`

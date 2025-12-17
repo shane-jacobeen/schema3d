@@ -164,7 +164,8 @@ export function parseMermaidSchema(mermaid: string): DatabaseSchema | null {
     // Process relationships to add foreign key references
     // For each relationship, we need to determine which column is the FK
     // In Mermaid: USER ||--o{ POST means USER (one) to POST (many)
-    // The FK should be in POST (the "many" side"), pointing to USER (the "one" side)
+    // Process relationships and assign foreign keys
+    // The FK should be in the table on the "many" side, pointing to the table on the "one" side
     relationships.forEach((rel) => {
       const fromTable = tables.get(rel.from);
       const toTable = tables.get(rel.to);
@@ -174,8 +175,8 @@ export function parseMermaidSchema(mermaid: string): DatabaseSchema | null {
       // Determine which table should have the FK based on cardinality
       // Parse cardinality to see which side is "many"
       const {
-        left: _left,
-        right: _right,
+        left: mermaidLeft,
+        right: mermaidRight,
         leftIsMany: _leftIsMany,
         rightIsMany,
       } = parseCardinality(rel.cardinality);
@@ -185,6 +186,25 @@ export function parseMermaidSchema(mermaid: string): DatabaseSchema | null {
       const fkTable = rightIsMany ? toTable : fromTable;
       const referencedTable = rightIsMany ? fromTable : toTable;
       const referencedTableName = rightIsMany ? rel.from : rel.to;
+
+      // Normalize cardinality to our internal format convention:
+      // - left = referenced table side (the "1" side)
+      // - right = FK table side (the "many" side)
+      //
+      // Mermaid syntax can have FK on either side, so we need to normalize:
+      // - If FK is on right side of Mermaid (toTable), cardinality is already correct
+      // - If FK is on left side of Mermaid (fromTable), we need to swap left/right
+      let normalizedCardinality: Cardinality;
+      if (rightIsMany) {
+        // FK is in toTable (right side of Mermaid), cardinality is already correct
+        // mermaidLeft = referenced table, mermaidRight = FK table
+        normalizedCardinality = rel.cardinality;
+      } else {
+        // FK is in fromTable (left side of Mermaid), need to swap
+        // mermaidLeft = FK table, mermaidRight = referenced table
+        // Swap to: left = referenced, right = FK
+        normalizedCardinality = `${mermaidRight}:${mermaidLeft}` as Cardinality;
+      }
 
       // Find PK in the referenced table
       const pkColumn = referencedTable.columns.find((col) => col.isPrimaryKey);
@@ -234,20 +254,20 @@ export function parseMermaidSchema(mermaid: string): DatabaseSchema | null {
         fkTable.columns.push(fkColumn);
       }
 
-      // Mark as foreign key and add reference with cardinality
+      // Mark as foreign key and add reference with normalized cardinality
       // Ensure we set both isForeignKey and references
       fkColumn.isForeignKey = true;
       if (!fkColumn.references) {
         fkColumn.references = {
           table: referencedTableName,
           column: pkColumn.name,
-          cardinality: rel.cardinality,
+          cardinality: normalizedCardinality,
         };
       } else {
         // Update existing references if needed
         fkColumn.references.table = referencedTableName;
         fkColumn.references.column = pkColumn.name;
-        fkColumn.references.cardinality = rel.cardinality;
+        fkColumn.references.cardinality = normalizedCardinality;
       }
     });
 

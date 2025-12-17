@@ -283,21 +283,33 @@ export function CardinalityNotation({
     .normalize();
 
   // Determine cardinality symbols for each side
+  // Cardinality format: "left:right" where:
+  // - left = referenced table side (the "1" side)
+  // - right = FK table side (the "many" side)
+  // Relationship structure:
+  // - fromTable = table with FK (should show "right" symbol)
+  // - toTable = referenced table (should show "left" symbol)
   const { left, right } = parseCardinality(cardinality);
 
   return (
     <group>
-      {/* Start point notation (fromTable side) */}
+      {/* Start point notation (fromTable side = FK table) */}
       {createNotationForSymbol(
-        left,
+        right, // FK table side gets "right" symbol
         startPoint,
         direction.clone().multiplyScalar(-1),
         lineColor,
         "from"
       )}
 
-      {/* End point notation (toTable side) */}
-      {createNotationForSymbol(right, endPoint, direction, lineColor, "to")}
+      {/* End point notation (toTable side = referenced table) */}
+      {createNotationForSymbol(
+        left, // Referenced table side gets "left" symbol
+        endPoint,
+        direction,
+        lineColor,
+        "to"
+      )}
     </group>
   );
 }
