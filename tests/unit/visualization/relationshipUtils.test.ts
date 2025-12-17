@@ -22,28 +22,28 @@ describe("calculateCardinality", () => {
     expect(cardinality).toBe("0..1:1");
   });
 
-  it("should return 1:N for non-unique FK with NOT NULL constraint", () => {
+  it("should return 1:1..N for non-unique FK with NOT NULL constraint", () => {
     const pkColumn = { isPrimaryKey: true };
     const fkColumn = { isUnique: false, isNullable: false }; // NOT NULL
 
     const cardinality = calculateCardinality(pkColumn, fkColumn);
-    expect(cardinality).toBe("1:N");
+    expect(cardinality).toBe("1:1..N"); // Parent must have at least 1 child
   });
 
-  it("should return 0..1:N for non-unique FK with nullable constraint", () => {
+  it("should return 0..1:0..N for non-unique FK with nullable constraint", () => {
     const pkColumn = { isPrimaryKey: true };
-    const fkColumn = { isUnique: false, isNullable: true }; // NULL
+    const fkColumn = { isUnique: false, isNullable: true }; // Explicitly NULL
 
     const cardinality = calculateCardinality(pkColumn, fkColumn);
-    expect(cardinality).toBe("0..1:N");
+    expect(cardinality).toBe("0..1:0..N"); // Parent can have 0 children
   });
 
-  it("should default to nullable when isNullable is undefined", () => {
+  it("should return 0..1:N for non-unique FK when isNullable is undefined (conservative)", () => {
     const pkColumn = { isPrimaryKey: true };
     const fkColumn = { isUnique: false }; // isNullable undefined
 
     const cardinality = calculateCardinality(pkColumn, fkColumn);
-    expect(cardinality).toBe("0..1:N"); // Defaults to nullable
+    expect(cardinality).toBe("0..1:N"); // Generic many (ambiguous participation)
   });
 
   it("should return 0..1:1 for unique FK when nullable is not specified", () => {
@@ -55,10 +55,10 @@ describe("calculateCardinality", () => {
   });
 
   it("should handle undefined PK column", () => {
-    const fkColumn = { isUnique: false, isNullable: true };
+    const fkColumn = { isUnique: false, isNullable: true }; // Explicitly NULL
 
     const cardinality = calculateCardinality(undefined, fkColumn);
-    expect(cardinality).toBe("0..1:N");
+    expect(cardinality).toBe("0..1:0..N"); // Parent can have 0 children
   });
 
   it("should treat primary key as unique", () => {
@@ -66,7 +66,23 @@ describe("calculateCardinality", () => {
     const fkColumn = { isUnique: false, isNullable: false }; // NOT NULL
 
     const cardinality = calculateCardinality(pkColumn, fkColumn);
-    expect(cardinality).toBe("1:N");
+    expect(cardinality).toBe("1:1..N"); // Parent must have at least 1 child
+  });
+
+  it("should handle 0..N cardinality on many side", () => {
+    const pkColumn = { isPrimaryKey: true };
+    const fkColumn = { isUnique: false, isNullable: true }; // Explicitly NULL
+
+    const cardinality = calculateCardinality(pkColumn, fkColumn);
+    expect(cardinality).toBe("0..1:0..N");
+  });
+
+  it("should handle 1..N cardinality on many side", () => {
+    const pkColumn = { isPrimaryKey: true };
+    const fkColumn = { isUnique: false, isNullable: false }; // NOT NULL
+
+    const cardinality = calculateCardinality(pkColumn, fkColumn);
+    expect(cardinality).toBe("1:1..N");
   });
 });
 
