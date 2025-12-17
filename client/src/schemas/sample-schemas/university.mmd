@@ -1,0 +1,123 @@
+erDiagram
+    student ||--|{ enrollment : has
+    faculty ||--o{ course : teaches
+    department ||--o{ faculty : employs
+    course ||--o{ enrollment : is_part_of
+    course ||--o{ textbook : requires
+    faculty ||--o{ research_project : leads
+    research_project ||--o{ student : hires
+    faculty ||--|{ advisor : is_one_type_of
+    advisor ||--o{ student : advises
+    graduate_program ||--o{ department : administered_by
+    student ||--o{ fee_payment : makes
+    faculty ||--o{ salary : receives
+    staff ||--o{ department : belongs_to
+    staff ||--o{ role : has
+    course ||--o{ room : scheduled_in
+    room ||--o{ building : located_in
+    student ||--o{ housing_assignment : is_given
+    housing_assignment ||--|| dormitory : in
+    library_book ||--o{ library_branch : stored_at
+    library_branch ||--o{ student : lends_to
+
+    student {
+        int student_id PK
+        string first_name
+        string last_name
+        date dob
+    }
+    faculty {
+        int faculty_id PK
+        string first_name
+        string last_name
+        string rank
+    }
+    department {
+        int dept_id PK
+        string dept_name
+        string budget_code
+    }
+    course {
+        string course_code PK
+        string course_title
+        int credits
+    }
+    enrollment {
+        int enrollment_id PK
+        int student_id FK
+        string course_code FK
+        string grade
+        date enrollment_date
+    }
+    research_project {
+        int project_id PK
+        string project_title
+        date start_date
+    }
+    graduate_program {
+        int program_id PK
+        string program_name
+        int dept_id FK
+    }
+    advisor {
+        int faculty_id PK, FK
+        string office_hours
+    }
+    textbook {
+        int isbn PK
+        string title
+        string author
+    }
+    fee_payment {
+        int payment_id PK
+        int student_id FK
+        float amount
+        date payment_date
+    }
+    salary {
+        int salary_id PK
+        int faculty_id FK
+        float annual_salary
+        date last_raise_date
+    }
+    staff {
+        int staff_id PK
+        string first_name
+        string last_name
+        int dept_id FK
+    }
+    role {
+        int role_id PK
+        string role_name
+    }
+    room {
+        string room_number PK
+        int building_id FK
+        int capacity
+    }
+    building {
+        int building_id PK
+        string building_name
+        string address
+    }
+    housing_assignment {
+        int assignment_id PK
+        int student_id FK
+        string dorm_room_number
+        date move_in_date
+    }
+    dormitory {
+        string dorm_room_number PK
+        int building_id FK
+        int beds
+    }
+    library_book {
+        int book_id PK
+        int isbn
+        string title
+    }
+    library_branch {
+        int branch_id PK
+        string branch_name
+        string address
+    }

@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    background-color: #0f172a; /* slate-900 - match app background */
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    /* Use full viewport including safe areas on mobile */
+    min-height: -webkit-fill-available;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    background-color: #0f172a; /* slate-900 - match app background */
+    /* Use full viewport including safe areas on mobile */
+    min-height: -webkit-fill-available;
+  }
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  /* Respect safe areas - content should not be cut off by header/footer */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;
+}
+
+/* Safe area utilities for mobile browser UI */
+@layer utilities {
+  .bottom-safe-bottom {
+    bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+
+  .bottom-safe-bottom-lg {
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* iOS Safari specific: URL bar can be dynamic, add extra buffer */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 640px) {
+    .bottom-safe-bottom {
+      bottom: calc(0.5rem + env(safe-area-inset-bottom) + 2.5rem);
+    }
+
+    .bottom-safe-bottom-lg {
+      bottom: calc(1rem + env(safe-area-inset-bottom) + 2.5rem);
+    }
+  }
+}
