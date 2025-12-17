@@ -78,7 +78,6 @@ describe("parseMermaidSchema", () => {
     expect(schema).not.toBeNull();
 
     const postTable = schema?.tables.find((t) => t.name === "POST");
-    const userTable = schema?.tables.find((t) => t.name === "USER");
 
     // Find FK column in POST
     const fkColumn = postTable?.columns.find((c) => c.isForeignKey);

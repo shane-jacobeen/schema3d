@@ -36,8 +36,6 @@ export function calculateCardinality(
   pkColumn: { isPrimaryKey?: boolean; isUnique?: boolean } | undefined,
   fkColumn: { isUnique?: boolean; isNullable?: boolean }
 ): Cardinality {
-  // PK is unique if it's a primary key (primary keys are always unique)
-  const pkIsUnique = pkColumn?.isPrimaryKey || pkColumn?.isUnique || false;
   const fkIsUnique = fkColumn.isUnique || false;
 
   // Determine the left side (referenced table / parent side)
