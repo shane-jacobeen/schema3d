@@ -4,6 +4,7 @@ export interface Column {
   isPrimaryKey?: boolean;
   isForeignKey?: boolean;
   isUnique?: boolean; // True if column has UNIQUE constraint
+  isNullable?: boolean; // True if column allows NULL, false if NOT NULL. Defaults to true (nullable) if not specified
   references?: {
     table: string;
     column: string;
