@@ -1,0 +1,29 @@
+{
+  "buildCommand": "NODE_ENV=production vite build",
+  "outputDirectory": "dist/public",
+  "framework": null,
+  "crons": [
+    {
+      "path": "/api/cleanup-sessions",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.schema3d.com" }],
+      "destination": "https://schema3d.com/:path*",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
