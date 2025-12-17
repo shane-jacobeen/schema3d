@@ -4,6 +4,8 @@ A 3D database schema visualization tool that renders database tables as interact
 
 ![Schema3D](https://img.shields.io/badge/React-18.3.1-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue) ![Three.js](https://img.shields.io/badge/Three.js-0.170.0-green)
 
+**🌐 [Live Demo](https://schema3d.com)** | [Documentation](#getting-started) | [Contributing](CONTRIBUTING.md)
+
 ## Features
 
 ### 🎨 Interactive 3D Visualization

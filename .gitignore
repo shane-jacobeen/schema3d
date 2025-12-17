@@ -9,4 +9,5 @@ vite.config.ts.*
 .env.*.local
 coverage
 .vitest
+*.bundle
 *.log
