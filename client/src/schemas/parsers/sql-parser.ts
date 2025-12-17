@@ -33,6 +33,7 @@ interface ParsedTable {
     type: string;
     isPrimaryKey: boolean;
     isUnique?: boolean; // True if column has UNIQUE constraint
+    isNullable?: boolean; // True if column allows NULL, false if NOT NULL
     references?: { table: string; column: string };
   }>;
 }
@@ -203,6 +204,7 @@ const REGEX = {
   IDENTITY: /\bIDENTITY\b/i,
   UNIQUE: /\bUNIQUE\b/i,
   FOREIGN_KEY: /FOREIGN\s+KEY/i,
+  NOT_NULL: /\bNOT\s+NULL\b/i,
 
   // REFERENCES: REFERENCES [schema].[table]([column])
   REFERENCES:
@@ -357,11 +359,38 @@ function findColumnByName(
 function detectColumnConstraints(columnDef: string): {
   isPrimaryKey: boolean;
   isUnique: boolean;
+  isNullable?: boolean;
   references?: { table: string; column: string };
 } {
   const isPrimaryKey =
     REGEX.PRIMARY_KEY.test(columnDef) || REGEX.IDENTITY.test(columnDef);
   const isUnique = REGEX.UNIQUE.test(columnDef);
+
+  // Detect NULL/NOT NULL constraint
+  // Default to nullable (true) unless explicitly marked as NOT NULL
+  // Primary keys are implicitly NOT NULL, so we check that too
+  let isNullable: boolean | undefined;
+
+  // Check for NOT NULL first (more specific)
+  if (REGEX.NOT_NULL.test(columnDef)) {
+    isNullable = false; // NOT NULL explicitly specified
+  } else if (isPrimaryKey) {
+    // Primary keys are implicitly NOT NULL
+    isNullable = false;
+  } else {
+    // Check for explicit NULL constraint (rare, but some databases allow it)
+    // Only match if it's a standalone NULL word, not part of "NOT NULL"
+    const nullMatch = columnDef.match(/\bNULL\b/i);
+    if (nullMatch) {
+      // Check if it's NOT NULL by looking at the context
+      const beforeNull = columnDef.substring(0, nullMatch.index || 0);
+      if (!beforeNull.match(/\bNOT\s+$/i)) {
+        // Explicitly NULL (though this is rare, as NULL is usually the default)
+        isNullable = true;
+      }
+    }
+    // If neither NULL nor NOT NULL is specified, leave undefined (defaults to nullable in most SQL dialects)
+  }
 
   let references: { table: string; column: string } | undefined;
   const referencesMatch = columnDef.match(REGEX.REFERENCES);
@@ -372,7 +401,7 @@ function detectColumnConstraints(columnDef: string): {
     };
   }
 
-  return { isPrimaryKey, isUnique, references };
+  return { isPrimaryKey, isUnique, isNullable, references };
 }
 
 /**
@@ -594,6 +623,7 @@ function convertParsedTableToTable(
       type: col.type,
       isPrimaryKey: col.isPrimaryKey,
       isUnique: col.isUnique,
+      isNullable: col.isNullable,
       isForeignKey: !!col.references,
       references: col.references,
     })

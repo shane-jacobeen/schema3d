@@ -2,25 +2,48 @@ import * as THREE from "three";
 import type { Cardinality, CardinalitySymbol, LineStyle } from "../../types";
 
 /**
- * Calculate relationship cardinality based on UNIQUE constraints
+ * Calculate relationship cardinality based on UNIQUE constraints and NULL/NOT NULL constraints
+ *
+ * Rules:
+ * - The table with the FK is always the many side (right side of cardinality)
+ * - The table being pointed to is always the 1 side (left side of cardinality)
+ * - If the FK column is nullable, the parent (referenced table) is 0 or 1 (0..1)
+ * - If the FK column is NOT NULL, the parent (referenced table) is 1 and only 1 (1)
+ *
+ * Cardinality format: "left:right" where:
+ * - left = referenced table side (the "1" side)
+ * - right = FK table side (the "many" side, unless FK is unique then it's "1")
+ *
+ * Examples:
+ * - FK nullable, not unique → "0..1:N" (many children can reference 0 or 1 parent)
+ * - FK NOT NULL, not unique → "1:N" (many children must reference exactly 1 parent)
+ * - FK nullable, unique → "0..1:1" (one child can reference 0 or 1 parent)
+ * - FK NOT NULL, unique → "1:1" (one child must reference exactly 1 parent)
  */
 export function calculateCardinality(
   pkColumn: { isPrimaryKey?: boolean; isUnique?: boolean } | undefined,
-  fkColumn: { isUnique?: boolean }
+  fkColumn: { isUnique?: boolean; isNullable?: boolean }
 ): Cardinality {
   // PK is unique if it's a primary key (primary keys are always unique)
   const pkIsUnique = pkColumn?.isPrimaryKey || pkColumn?.isUnique || false;
   const fkIsUnique = fkColumn.isUnique || false;
 
-  if (!pkIsUnique && !fkIsUnique) {
-    return "N:N"; // Many-to-many
-  } else if (pkIsUnique && !fkIsUnique) {
-    return "1:N"; // One-to-many
-  } else if (!pkIsUnique && fkIsUnique) {
-    return "N:1"; // Many-to-one
-  } else {
-    return "1:1"; // One-to-one
-  }
+  // Determine if FK is nullable (defaults to true if not specified)
+  // isNullable === false means NOT NULL, isNullable === true or undefined means nullable
+  const fkIsNullable = fkColumn.isNullable !== false;
+
+  // Determine the left side (referenced table / parent side)
+  // If FK is nullable → parent is 0 or 1 (0..1)
+  // If FK is NOT NULL → parent is 1 and only 1 (1)
+  const leftSide: CardinalitySymbol = fkIsNullable ? "0..1" : "1";
+
+  // Determine the right side (FK table / child side)
+  // If FK is unique, the FK table side is 1 (one-to-one relationship)
+  // If FK is not unique, the FK table side is N (many children)
+  const rightSide: CardinalitySymbol = fkIsUnique ? "1" : "N";
+
+  // Combine into cardinality string
+  return `${leftSide}:${rightSide}` as Cardinality;
 }
 
 /**

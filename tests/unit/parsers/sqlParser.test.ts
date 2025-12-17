@@ -112,6 +112,65 @@ describe("parseSqlSchema", () => {
     expect(usernameColumn?.isUnique).toBe(true);
   });
 
+  it("should detect NOT NULL constraints", () => {
+    const sql = `
+      CREATE TABLE users (
+        id INT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        username VARCHAR(50),
+        phone VARCHAR(20) NULL
+      );
+    `;
+
+    const schema = parseSqlSchema(sql);
+    expect(schema).not.toBeNull();
+    const emailColumn = schema?.tables[0].columns.find(
+      (c) => c.name === "email"
+    );
+    const usernameColumn = schema?.tables[0].columns.find(
+      (c) => c.name === "username"
+    );
+    const phoneColumn = schema?.tables[0].columns.find(
+      (c) => c.name === "phone"
+    );
+    const idColumn = schema?.tables[0].columns.find((c) => c.name === "id");
+
+    // NOT NULL should be false
+    expect(emailColumn?.isNullable).toBe(false);
+    // Primary keys are implicitly NOT NULL
+    expect(idColumn?.isNullable).toBe(false);
+    // No constraint specified should be undefined (defaults to nullable)
+    expect(usernameColumn?.isNullable).toBeUndefined();
+    // Explicit NULL should be true
+    expect(phoneColumn?.isNullable).toBe(true);
+  });
+
+  it("should use NULL/NOT NULL for cardinality calculation in foreign keys", () => {
+    const sql = `
+      CREATE TABLE users (
+        id INT PRIMARY KEY
+      );
+      CREATE TABLE posts (
+        id INT PRIMARY KEY,
+        user_id_nullable INT REFERENCES users(id),
+        user_id_not_null INT NOT NULL REFERENCES users(id)
+      );
+    `;
+
+    const schema = parseSqlSchema(sql);
+    expect(schema).not.toBeNull();
+    const postsTable = schema?.tables.find((t) => t.name === "posts");
+    const nullableFk = postsTable?.columns.find(
+      (c) => c.name === "user_id_nullable"
+    );
+    const notNullFk = postsTable?.columns.find(
+      (c) => c.name === "user_id_not_null"
+    );
+
+    expect(nullableFk?.isNullable).toBeUndefined(); // Defaults to nullable
+    expect(notNullFk?.isNullable).toBe(false); // NOT NULL
+  });
+
   it("should return null for invalid SQL", () => {
     const sql = "INVALID SQL STATEMENT";
     const schema = parseSqlSchema(sql);
