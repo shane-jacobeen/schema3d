@@ -500,7 +500,7 @@ export function SchemaVisualizer() {
           name="description"
           content="Visualize your database schemas in stunning 3D. Interactive schema visualizer tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation. Perfect for database design and documentation."
         />
-        <link rel="canonical" href="https://schema3d.com/" />
+        <link rel="canonical" href="https://schema3d.com" />
       </Helmet>
       <div
         ref={containerRef}
