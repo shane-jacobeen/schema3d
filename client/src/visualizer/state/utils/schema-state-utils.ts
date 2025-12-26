@@ -76,10 +76,8 @@ export function updateCategoriesForSchema(
         // Check if this is a new category (not a rename)
         const wasRenamed = Array.from(categoryMapping.values()).includes(cat);
         if (!wasRenamed) {
-          // New category - add it if no categories were selected before
-          if (prevCategories.size === 0) {
-            next.add(cat);
-          }
+          // New category - automatically select it so it appears in the legend
+          next.add(cat);
         }
       }
     });
