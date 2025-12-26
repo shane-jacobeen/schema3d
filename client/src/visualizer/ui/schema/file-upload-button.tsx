@@ -79,9 +79,8 @@ export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
         className="hidden"
       />
       <Button
-        size="icon"
+        size="icon-sm"
         variant="outline"
-        className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm shadow-lg w-10 h-10 sm:w-12 sm:h-12"
         onClick={handleClick}
         title="Upload Schema File"
       >

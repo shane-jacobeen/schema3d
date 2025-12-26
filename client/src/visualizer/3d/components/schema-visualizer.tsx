@@ -197,6 +197,12 @@ export function SchemaVisualizer() {
           glCanvasRef={glCanvasRef}
           detailsPanelRef={detailsPanelRef}
           onSchemaChange={schemaState.handleSchemaChange}
+          onCategoryUpdate={(updatedSchema) => {
+            // Direct schema update for category changes (no animation)
+            // The useFilterState hook will automatically handle category updates via its useEffect
+            // which watches currentSchema and calls updateCategoriesForSchema
+            schemaState.setCurrentSchema(updatedSchema);
+          }}
           onSchemaChangeFromSelector={(newSchema) =>
             schemaState.handleSchemaChangeFromSelector(newSchema, (schema) =>
               filterState.resetCategories(schema)

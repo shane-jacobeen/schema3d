@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { Button } from "./button";
 
 interface PanelHeaderProps {
   title: string;
@@ -17,13 +18,14 @@ export function PanelHeader({ title, subtitle, onClose }: PanelHeaderProps) {
           <p className="text-xs sm:text-sm text-slate-400">{subtitle}</p>
         )}
       </div>
-      <button
+      <Button
         onClick={onClose}
-        className="text-slate-400 hover:text-white transition-colors flex-shrink-0 p-1"
+        variant="closeButton"
+        size="icon-close"
         aria-label="Close"
       >
         <X size={18} className="sm:w-5 sm:h-5" />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -28,6 +28,7 @@ interface SchemaOverlayProps {
     newSchema: DatabaseSchema,
     onCategoriesReset?: (schema: DatabaseSchema) => void
   ) => void;
+  onCategoryUpdate?: (newSchema: DatabaseSchema) => void;
   onLayoutChange: (layout: LayoutType) => void;
   onViewModeChange: (mode: "2D" | "3D") => void;
   onCategoryToggle: (category: string) => void;
@@ -49,6 +50,7 @@ export function SchemaOverlay({
   detailsPanelRef,
   onSchemaChange,
   onSchemaChangeFromSelector,
+  onCategoryUpdate,
   onLayoutChange,
   onViewModeChange,
   onCategoryToggle,
@@ -68,7 +70,7 @@ export function SchemaOverlay({
           <Button
             variant="outline"
             size="icon"
-            className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm w-9 h-9 sm:w-10 sm:h-10"
+            className="w-9 h-9 sm:w-10 sm:h-10"
             title="About Schema3D"
           >
             <Info size={18} className="sm:w-5 sm:h-5" />
@@ -105,6 +107,7 @@ export function SchemaOverlay({
       <ViewControls
         schema={schema}
         onSchemaChange={onSchemaChange}
+        onCategoryUpdate={onCategoryUpdate}
         currentLayout={currentLayout}
         onLayoutChange={onLayoutChange}
         viewMode={viewMode}
@@ -118,7 +121,7 @@ export function SchemaOverlay({
           onClick={onRecenter}
           variant="outline"
           size="icon"
-          className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm w-9 h-9 sm:w-10 sm:h-10"
+          className="w-9 h-9 sm:w-10 sm:h-10"
           title="Re-center camera"
         >
           <Compass size={18} className="sm:w-5 sm:h-5" />

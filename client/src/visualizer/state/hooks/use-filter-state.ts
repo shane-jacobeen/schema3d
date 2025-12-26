@@ -58,22 +58,25 @@ export function useFilterState(
     });
   }, []);
 
-  // Track previous schema name to detect when a completely new schema is loaded
+  // Track previous schema name and schema to detect when a completely new schema is loaded
   const prevSchemaNameRef = useRef<string>(currentSchema.name);
+  const prevSchemaRef = useRef<DatabaseSchema | undefined>(undefined);
 
   // Update selected categories when schema changes
   useEffect(() => {
     const isNewSchema = prevSchemaNameRef.current !== currentSchema.name;
+    const prevSchema = prevSchemaRef.current;
     prevSchemaNameRef.current = currentSchema.name;
+    prevSchemaRef.current = currentSchema;
 
     startTransition(() => {
       if (isNewSchema) {
         // Reset to all categories when a new schema is loaded
         setSelectedCategories(initializeCategories(currentSchema));
       } else {
-        // Only update if categories exist in new schema, don't reset
+        // Update categories, handling renames if we have the previous schema
         setSelectedCategories((prev) =>
-          updateCategoriesForSchema(currentSchema, prev)
+          updateCategoriesForSchema(currentSchema, prev, prevSchema)
         );
       }
     });

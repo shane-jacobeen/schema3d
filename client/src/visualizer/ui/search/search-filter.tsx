@@ -84,7 +84,7 @@ export function SearchFilter({
             variant="outline"
             size="icon"
             onClick={() => handleExpand(true)}
-            className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm w-9 h-9 sm:w-10 sm:h-10"
+            className="w-9 h-9 sm:w-10 sm:h-10"
             aria-label="Open search"
           >
             <Search size={18} />

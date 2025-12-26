@@ -228,10 +228,7 @@ export default function About() {
         {/* Floating Action Button */}
         <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
           <Link to="/">
-            <Button
-              variant="outline"
-              className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:border-slate-600 backdrop-blur-sm shadow-lg flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-3"
-            >
+            <Button variant="outline">
               <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
               <span className="text-sm sm:text-base">Back to Visualizer</span>
             </Button>

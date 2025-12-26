@@ -40,6 +40,19 @@ export function useTableAnimation(
 
   const startTableAnimation = useCallback(
     (schemaLayout: DatabaseSchema) => {
+      // Validate schemaLayout
+      if (
+        !schemaLayout ||
+        !schemaLayout.tables ||
+        !Array.isArray(schemaLayout.tables)
+      ) {
+        console.error(
+          "Invalid schemaLayout passed to startTableAnimation:",
+          schemaLayout
+        );
+        return;
+      }
+
       // Cancel any pending animation
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
@@ -48,6 +61,19 @@ export function useTableAnimation(
 
       // Get current schema positions as starting points
       setCurrentSchema((prevSchema) => {
+        // Validate prevSchema
+        if (
+          !prevSchema ||
+          !prevSchema.tables ||
+          !Array.isArray(prevSchema.tables)
+        ) {
+          console.error(
+            "Invalid prevSchema in startTableAnimation:",
+            prevSchema
+          );
+          return prevSchema;
+        }
+
         // Initialize animatedPositions with current table positions
         const initialPositions = new Map<string, [number, number, number]>();
         prevSchema.tables.forEach((table) => {

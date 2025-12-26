@@ -172,7 +172,7 @@ export function SchemaSelector({
         <Button
           variant="outline"
           size="icon"
-          className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0"
+          className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0"
           title="Change Schema"
         >
           <Pencil size={14} className="sm:w-4 sm:h-4" />

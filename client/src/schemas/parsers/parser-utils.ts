@@ -31,67 +31,67 @@ export function guessCategory(tableName: string): string {
 
   const categories = [
     {
-      name: "auth",
+      name: "Auth",
       keywords: ["user", "auth", "account", "profile"],
     },
     {
-      name: "product",
+      name: "Product",
       keywords: ["product", "item", "inventory", "category"],
     },
     {
-      name: "order",
+      name: "Order",
       keywords: ["order", "purchase", "cart"],
     },
     {
-      name: "customer",
+      name: "Customer",
       keywords: ["customer", "client"],
     },
     {
-      name: "content",
+      name: "Content",
       keywords: ["post", "article", "comment", "content"],
     },
     {
-      name: "metadata",
+      name: "Metadata",
       keywords: ["tag", "category", "meta"],
     },
     {
-      name: "financial",
+      name: "Financial",
       keywords: ["payment", "transaction", "invoice", "salary"],
     },
     {
-      name: "schedule",
+      name: "Schedule",
       keywords: ["schedule", "queue"],
     },
     {
-      name: "media",
+      name: "Media",
       keywords: ["media", "image", "video", "audio"],
     },
     {
-      name: "search",
+      name: "Search",
       keywords: ["search", "index", "full-text"],
     },
     {
-      name: "analytics",
+      name: "Analytics",
       keywords: ["analytics", "metrics", "reports"],
     },
     {
-      name: "notification",
+      name: "Notification",
       keywords: ["notification", "alert", "message"],
     },
     {
-      name: "logs",
+      name: "Logs",
       keywords: ["log", "audit", "history"],
     },
     {
-      name: "security",
+      name: "Security",
       keywords: ["security", "authentication", "authorization"],
     },
     {
-      name: "system",
+      name: "System",
       keywords: ["system", "config", "settings"],
     },
     {
-      name: "positions",
+      name: "Positions",
       keywords: [
         "position",
         "role",
@@ -128,7 +128,7 @@ export function guessCategory(tableName: string): string {
     }
   }
 
-  return "general";
+  return "General";
 }
 
 /**

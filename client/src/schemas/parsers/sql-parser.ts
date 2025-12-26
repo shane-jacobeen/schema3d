@@ -648,7 +648,7 @@ function convertParsedViewToTable(
   categoryMap: Map<string, string>,
   schemaTablesList: Table[]
 ): Table {
-  const category = "view";
+  const category = "View";
 
   if (!categoryMap.has(category)) {
     categoryMap.set(
