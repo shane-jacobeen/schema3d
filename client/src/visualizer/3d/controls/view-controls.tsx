@@ -305,6 +305,93 @@ export function ViewControls({
           }}
           category={isNewCategory ? "new" : editingCategory}
           schema={schema}
+          onDelete={(categoryName) => {
+            // Validate schema before updating
+            if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
+              console.error("Invalid schema in category delete:", schema);
+              return;
+            }
+
+            // Find the default "General" color or create one
+            const COLOR_PALETTE = [
+              "#3b82f6", // Blue
+              "#10b981", // Emerald
+              "#f59e0b", // Amber
+              "#8b5cf6", // Violet
+              "#ec4899", // Pink
+              "#06b6d4", // Cyan
+              "#84cc16", // Lime
+              "#f97316", // Orange
+              "#ef4444", // Red
+              "#14b8a6", // Teal
+              "#a855f7", // Purple
+              "#f43f5e", // Rose
+              "#22d3ee", // Sky
+              "#34d399", // Green
+              "#fbbf24", // Yellow
+            ];
+
+            // Check if "General" category exists and get its color
+            const generalTable = schema.tables.find(
+              (t) => t.category === "General"
+            );
+            let generalColor = generalTable?.color;
+
+            // If no General category exists, assign a new color
+            if (!generalColor) {
+              const usedColors = new Set(
+                schema.tables.map((table) => table.color)
+              );
+              generalColor =
+                COLOR_PALETTE.find((color) => !usedColors.has(color)) ||
+                COLOR_PALETTE[usedColors.size % COLOR_PALETTE.length]!;
+            }
+
+            // Update tables: move deleted category's tables to "General"
+            const updatedTables = schema.tables.map((table) => {
+              if (table.category === categoryName) {
+                return {
+                  ...table,
+                  category: "General",
+                  color: generalColor,
+                };
+              }
+              return table;
+            });
+
+            const updatedSchema: DatabaseSchema = {
+              format: schema.format,
+              name: schema.name,
+              tables: updatedTables.map((table) => {
+                const originalTable = schema.tables.find(
+                  (t) => t.name === table.name
+                );
+                if (originalTable) {
+                  return {
+                    ...originalTable,
+                    category: table.category,
+                    color: table.color,
+                    columns: [...originalTable.columns],
+                    position: [...originalTable.position] as [
+                      number,
+                      number,
+                      number,
+                    ],
+                  };
+                }
+                return table;
+              }),
+            };
+
+            // Use onCategoryUpdate if available
+            if (onCategoryUpdate) {
+              onCategoryUpdate(updatedSchema);
+            } else {
+              onSchemaChange(updatedSchema);
+            }
+            setEditingCategory(null);
+            setIsNewCategory(false);
+          }}
           onSave={(categoryName, tableNames, categoryColor) => {
             // Validate schema before updating
             if (!schema || !schema.tables || !Array.isArray(schema.tables)) {

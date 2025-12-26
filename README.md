@@ -36,6 +36,14 @@ A 3D database schema visualization tool that renders database tables as interact
 - **Smart Highlighting**: Highlights matched tables and related connections
 - **Focus Mode**: Dims non-matched tables for better focus
 
+### 🏷️ Category Management
+
+- **Dynamic Filtering**: Toggle visibility of specific table categories via the interactive legend
+- **Custom Categories**: Create, rename, and delete categories to organize your schema
+- **Color Customization**: Assign custom colors to categories for better visual distinction
+- **Table Organization**: Easily move tables between categories using the category editor
+- **Auto-Assignment**: New categories are automatically assigned distinct colors
+
 ### 📤 Export Functionality
 
 - **PNG Screenshots**: Export your visualization as a high-quality image

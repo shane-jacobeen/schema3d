@@ -58,22 +58,40 @@ export function useFilterState(
     });
   }, []);
 
-  // Track previous schema name and schema to detect when a completely new schema is loaded
+  // Track previous schema name and categories to detect when they actually change
   const prevSchemaNameRef = useRef<string>(currentSchema.name);
   const prevSchemaRef = useRef<DatabaseSchema | undefined>(undefined);
+  const prevCategoriesInSchemaRef = useRef<string>("");
 
   // Update selected categories when schema changes
   useEffect(() => {
     const isNewSchema = prevSchemaNameRef.current !== currentSchema.name;
     const prevSchema = prevSchemaRef.current;
+
+    // Build a stable representation of categories in the schema
+    const categoriesInSchema = Array.from(
+      new Set(currentSchema.tables.map((t) => t.category))
+    )
+      .sort()
+      .join(",");
+    const categoriesChanged =
+      prevCategoriesInSchemaRef.current !== categoriesInSchema;
+
     prevSchemaNameRef.current = currentSchema.name;
     prevSchemaRef.current = currentSchema;
+    prevCategoriesInSchemaRef.current = categoriesInSchema;
+
+    // Only update categories if schema name changed OR categories in schema changed
+    // This prevents re-adding categories when schema reference changes due to animations
+    if (!isNewSchema && !categoriesChanged) {
+      return;
+    }
 
     startTransition(() => {
       if (isNewSchema) {
         // Reset to all categories when a new schema is loaded
         setSelectedCategories(initializeCategories(currentSchema));
-      } else {
+      } else if (categoriesChanged) {
         // Update categories, handling renames if we have the previous schema
         setSelectedCategories((prev) =>
           updateCategoriesForSchema(currentSchema, prev, prevSchema)

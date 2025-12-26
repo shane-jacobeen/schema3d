@@ -6,10 +6,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/shared/ui-components/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/ui-components/alert-dialog";
 import { Button } from "@/shared/ui-components/button";
 import { Input } from "@/shared/ui-components/input";
 import { Label } from "@/shared/ui-components/label";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 
 interface CategoryEditDialogProps {
@@ -22,6 +33,7 @@ interface CategoryEditDialogProps {
     tableNames: Set<string>,
     color?: string
   ) => void;
+  onDelete?: (categoryName: string) => void;
 }
 
 export function CategoryEditDialog({
@@ -30,6 +42,7 @@ export function CategoryEditDialog({
   category,
   schema,
   onSave,
+  onDelete,
 }: CategoryEditDialogProps) {
   const [categoryName, setCategoryName] = useState(category);
   const [categoryColor, setCategoryColor] = useState("#3b82f6");
@@ -169,6 +182,13 @@ export function CategoryEditDialog({
     onSave(categoryName.trim(), tableNames, categoryColor);
     onOpenChange(false);
   }, [categoryName, tablesInCategory, categoryColor, onSave, onOpenChange]);
+
+  const handleDelete = useCallback(() => {
+    if (category !== "new" && onDelete) {
+      onDelete(category);
+      onOpenChange(false);
+    }
+  }, [category, onDelete, onOpenChange]);
 
   const toggleInCategory = useCallback((tableName: string) => {
     setSelectedInCategory((prev) => {
@@ -324,11 +344,50 @@ export function CategoryEditDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex gap-2">
+          {category !== "new" && onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-slate-900 border-slate-700">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-white">
+                    Delete Category
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-slate-400">
+                    Are you sure you want to delete the &quot;{category}&quot;
+                    category? All tables in this category will be moved to
+                    &quot;General&quot;.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Delete Category
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Button
             onClick={handleSave}
-            disabled={!categoryName.trim()}
-            className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+            disabled={
+              !categoryName.trim() ||
+              (category === "new" && tablesInCategory.length === 0)
+            }
+            className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
           >
             Save Changes
           </Button>

@@ -388,6 +388,57 @@ describe("CategoryEditDialog", () => {
       const colorPicker = screen.getByLabelText("Color");
       expect(colorPicker).toHaveValue("#3b82f6");
     });
+
+    it("should disable save button for new category with no tables", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <CategoryEditDialog
+          open={true}
+          onOpenChange={mockOnOpenChange}
+          category="new"
+          schema={mockSchema}
+          onSave={mockOnSave}
+        />
+      );
+
+      const saveButton = screen.getByRole("button", { name: /Save Changes/i });
+      const input = screen.getByLabelText("Category Name");
+
+      await user.type(input, "New Category");
+
+      // Should still be disabled because no tables are selected
+      expect(saveButton).toBeDisabled();
+    });
+
+    it("should enable save button for new category when tables are added", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <CategoryEditDialog
+          open={true}
+          onOpenChange={mockOnOpenChange}
+          category="new"
+          schema={mockSchema}
+          onSave={mockOnSave}
+        />
+      );
+
+      const saveButton = screen.getByRole("button", { name: /Save Changes/i });
+      const input = screen.getByLabelText("Category Name");
+      await user.type(input, "New Category");
+
+      // Select a table
+      const table = screen.getByText("users");
+      await user.click(table);
+
+      // Add to category
+      const addButton = screen.getByRole("button", { name: /Add to/i });
+      await user.click(addButton);
+
+      // Should be enabled now
+      expect(saveButton).not.toBeDisabled();
+    });
   });
 
   describe("Placeholder Text", () => {
