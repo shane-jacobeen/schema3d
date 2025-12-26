@@ -73,6 +73,17 @@ export function SchemaVisualizer() {
     useState<Relationship | null>(null);
   const [filteredTables, setFilteredTables] = useState<Set<string>>(new Set());
   const [relatedTables, setRelatedTables] = useState<Set<string>>(new Set());
+  // Track selected categories for filtering - initialized with all categories
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    () => {
+      const initialSchema = getRetailerSchema();
+      const categories = new Set<string>();
+      initialSchema.tables.forEach((table) => {
+        categories.add(table.category);
+      });
+      return categories;
+    }
+  );
   const [shouldRecenter, setShouldRecenter] = useState(false);
   const [recenterTarget, setRecenterTarget] = useState<THREE.Vector3 | null>(
     null
@@ -182,28 +193,92 @@ export function SchemaVisualizer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount, not when viewMode changes
 
+  // Track selected categories in a ref to avoid stale closures
+  const selectedCategoriesRef = useRef<Set<string>>(selectedCategories);
+  useEffect(() => {
+    selectedCategoriesRef.current = selectedCategories;
+  }, [selectedCategories]);
+
   // Reapply layout when view mode or layout changes (but not on initial mount)
   const isInitialMountRef = useRef(true);
+  const prevViewModeRef = useRef<"2D" | "3D">(viewMode);
+  const prevLayoutRef = useRef<LayoutType>(currentLayout);
   useEffect(() => {
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
+      prevViewModeRef.current = viewMode;
+      prevLayoutRef.current = currentLayout;
       return;
     }
     // Don't animate if layout is being changed (it will be handled by handleSchemaChange)
     if (isLayoutChangingRef.current) {
+      prevViewModeRef.current = viewMode;
+      prevLayoutRef.current = currentLayout;
       return;
     }
-    // Get current schema, apply new layout, and animate
-    setCurrentSchema((prevSchema) => {
-      const schemaLayout = applyLayout(prevSchema, currentLayout, viewMode);
-      startTableAnimation(schemaLayout);
-      return prevSchema; // Don't update yet, animation will handle it
-    });
+
+    // Only recalculate if view mode or layout actually changed
+    const viewModeChanged = prevViewModeRef.current !== viewMode;
+    const layoutChanged = prevLayoutRef.current !== currentLayout;
+
+    if (viewModeChanged || layoutChanged) {
+      isViewModeChangingRef.current = true;
+      // Get current schema, filter to visible tables, apply new layout, and animate
+      setCurrentSchema((prevSchema) => {
+        // Filter to only visible tables before applying layout (use ref for current value)
+        const visibleTablesForLayout = prevSchema.tables.filter((table) =>
+          selectedCategoriesRef.current.has(table.category)
+        );
+        const filteredSchema: DatabaseSchema = {
+          ...prevSchema,
+          tables: visibleTablesForLayout,
+        };
+
+        // Apply layout to filtered schema
+        const layoutedSchema = applyLayout(
+          filteredSchema,
+          currentLayout,
+          viewMode
+        );
+
+        // Create a new schema with updated positions for visible tables
+        // Keep hidden tables at their current positions
+        const schemaLayout: DatabaseSchema = {
+          ...prevSchema,
+          tables: prevSchema.tables.map((table) => {
+            const layoutedTable = layoutedSchema.tables.find(
+              (t) => t.name === table.name
+            );
+            if (layoutedTable) {
+              return {
+                ...table,
+                position: layoutedTable.position,
+              };
+            }
+            // Keep hidden tables at their current positions
+            return table;
+          }),
+        };
+
+        startTableAnimation(schemaLayout);
+        return prevSchema; // Don't update yet, animation will handle it
+      });
+
+      // Clear the flag after animation completes
+      setTimeout(() => {
+        isViewModeChangingRef.current = false;
+      }, 1100); // Slightly longer than animation duration (1000ms)
+    }
+
+    prevViewModeRef.current = viewMode;
+    prevLayoutRef.current = currentLayout;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, currentLayout, startTableAnimation]);
 
   // Track if layout is being changed to avoid double application
   const isLayoutChangingRef = useRef(false);
+  // Track if view mode is changing to prevent category filter effect from running
+  const isViewModeChangingRef = useRef(false);
 
   // Helper function to clear all selections
   const clearAllSelections = useCallback(() => {
@@ -354,6 +429,147 @@ export function SchemaVisualizer() {
     },
     []
   );
+
+  // Handle category toggle
+  const handleCategoryToggle = useCallback((category: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  }, []);
+
+  // Update selected categories when schema changes
+  useEffect(() => {
+    const categories = new Set<string>();
+    currentSchema.tables.forEach((table) => {
+      categories.add(table.category);
+    });
+    // Only add new categories, don't remove existing ones unless they don't exist in new schema
+    setSelectedCategories((prev) => {
+      const next = new Set<string>();
+      categories.forEach((cat) => {
+        if (prev.has(cat) || prev.size === 0) {
+          next.add(cat);
+        }
+      });
+      // If no categories were selected before, select all
+      if (next.size === 0) {
+        return categories;
+      }
+      return next;
+    });
+  }, [currentSchema]);
+
+  // Filter tables and relationships based on selected categories
+  const visibleTables = useMemo(() => {
+    return currentSchema.tables.filter((table) =>
+      selectedCategories.has(table.category)
+    );
+  }, [currentSchema.tables, selectedCategories]);
+
+  const visibleTableNames = useMemo(() => {
+    return new Set(visibleTables.map((t) => t.name));
+  }, [visibleTables]);
+
+  // Recalculate layout when category selection changes
+  const prevSelectedCategoriesRef = useRef<Set<string>>(selectedCategories);
+  const isInitialCategoryLoadRef = useRef(true);
+  useEffect(() => {
+    // Skip on initial load
+    if (isInitialCategoryLoadRef.current) {
+      isInitialCategoryLoadRef.current = false;
+      prevSelectedCategoriesRef.current = new Set(selectedCategories);
+      return;
+    }
+
+    // Don't recalculate if layout is being changed (it will be handled by handleSchemaChange)
+    if (isLayoutChangingRef.current) {
+      prevSelectedCategoriesRef.current = new Set(selectedCategories);
+      return;
+    }
+
+    // Don't recalculate if view mode is changing (it will handle layout recalculation)
+    if (isViewModeChangingRef.current) {
+      prevSelectedCategoriesRef.current = new Set(selectedCategories);
+      return;
+    }
+
+    // Only recalculate if categories actually changed
+    const categoriesChanged =
+      prevSelectedCategoriesRef.current.size !== selectedCategories.size ||
+      Array.from(prevSelectedCategoriesRef.current).some(
+        (cat) => !selectedCategories.has(cat)
+      ) ||
+      Array.from(selectedCategories).some(
+        (cat) => !prevSelectedCategoriesRef.current.has(cat)
+      );
+
+    if (categoriesChanged && visibleTables.length > 0) {
+      // Create a filtered schema with only visible tables
+      const filteredSchema: DatabaseSchema = {
+        ...currentSchema,
+        tables: visibleTables,
+      };
+
+      // Apply current layout to filtered schema
+      const layoutedSchema = applyLayout(
+        filteredSchema,
+        currentLayout,
+        viewMode
+      );
+
+      // Create a new schema with updated positions for visible tables
+      // Keep hidden tables at their current positions
+      const updatedSchema: DatabaseSchema = {
+        ...currentSchema,
+        tables: currentSchema.tables.map((table) => {
+          const layoutedTable = layoutedSchema.tables.find(
+            (t) => t.name === table.name
+          );
+          if (layoutedTable) {
+            return {
+              ...table,
+              position: layoutedTable.position,
+            };
+          }
+          // Keep hidden tables at their current positions
+          return table;
+        }),
+      };
+
+      // Animate to new positions
+      startTableAnimation(updatedSchema);
+    }
+
+    prevSelectedCategoriesRef.current = new Set(selectedCategories);
+  }, [
+    selectedCategories,
+    visibleTables,
+    currentSchema,
+    currentLayout,
+    viewMode,
+    applyLayout,
+    startTableAnimation,
+  ]);
+
+  // Clear selections if selected table/relationship becomes invisible
+  useEffect(() => {
+    if (selectedTable && !visibleTableNames.has(selectedTable.name)) {
+      setSelectedTable(null);
+    }
+    if (
+      selectedRelationship &&
+      (!visibleTableNames.has(selectedRelationship.fromTable) ||
+        !visibleTableNames.has(selectedRelationship.toTable))
+    ) {
+      setSelectedRelationship(null);
+    }
+  }, [selectedTable, selectedRelationship, visibleTableNames]);
 
   const handleTableLongPress = useCallback(
     (table: Table) => {
@@ -591,9 +807,10 @@ export function SchemaVisualizer() {
               animatedPositions={
                 isAnimatingRef.current ? animatedPositions : undefined
               }
+              visibleTableNames={visibleTableNames}
             />
 
-            {currentSchema.tables.map((table) => {
+            {visibleTables.map((table) => {
               const isMatched = filteredTables.has(table.name);
               const isRelated = relatedTables.has(table.name);
               const hasSelection = !!(selectedTable || selectedRelationship);
@@ -702,6 +919,8 @@ export function SchemaVisualizer() {
           onLayoutChange={handleLayoutChange}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={handleCategoryToggle}
         />
 
         <div className="absolute top-2 right-[52px] bottom-auto left-auto sm:right-auto sm:bottom-safe-bottom-lg sm:left-1/2 sm:-translate-x-1/2 sm:top-auto z-10">

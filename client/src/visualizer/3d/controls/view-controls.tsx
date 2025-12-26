@@ -29,6 +29,8 @@ interface ViewControlsProps {
   onLayoutChange?: (layout: LayoutType) => void;
   viewMode?: "2D" | "3D";
   onViewModeChange?: (mode: "2D" | "3D") => void;
+  selectedCategories?: Set<string>;
+  onCategoryToggle?: (category: string) => void;
 }
 
 interface LayoutButtonProps {
@@ -86,6 +88,8 @@ export function ViewControls({
   onLayoutChange,
   viewMode = "2D",
   onViewModeChange,
+  selectedCategories,
+  onCategoryToggle,
 }: ViewControlsProps) {
   // Default to open on large screens, collapsed on mobile
   // Initialize based on window width if available, otherwise default to false (mobile-first)
@@ -135,17 +139,41 @@ export function ViewControls({
             />
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-1 sm:space-y-2 text-xs sm:text-sm mb-2 sm:mb-3">
-            {categories.map(([category, color]) => (
-              <div key={category} className="flex items-center gap-2">
+            {categories.map(([category, color]) => {
+              const isSelected =
+                !selectedCategories || selectedCategories.has(category);
+              return (
                 <div
-                  className="w-3 h-3 sm:w-4 sm:h-4 rounded"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-slate-300 capitalize truncate">
-                  {category === "view" ? "Views" : `${category} Tables`}
-                </span>
-              </div>
-            ))}
+                  key={category}
+                  className={`flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity ${
+                    !isSelected ? "opacity-50" : ""
+                  }`}
+                  onClick={() => onCategoryToggle?.(category)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onCategoryToggle?.(category);
+                    }
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-slate-600"
+                    style={{
+                      backgroundColor: isSelected ? color : "transparent",
+                      borderColor: color,
+                    }}
+                  />
+                  <span className="text-slate-300 capitalize truncate">
+                    {category === "view" ? "Views" : `${category} Tables`}
+                  </span>
+                </div>
+              );
+            })}
+            <p className="text-xs text-slate-500 pt-1 sm:pt-2">
+              Click legend categories to filter
+            </p>
           </CollapsibleContent>
         </Collapsible>
 

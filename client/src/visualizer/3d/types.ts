@@ -52,6 +52,7 @@ export interface RelationshipLinesProps {
   onHover?: (relationship: Relationship | null) => void;
   onLongPress?: (relationship: Relationship) => void;
   animatedPositions?: Map<string, [number, number, number]>;
+  visibleTableNames?: Set<string>;
 }
 
 export interface RelationshipLineProps {
