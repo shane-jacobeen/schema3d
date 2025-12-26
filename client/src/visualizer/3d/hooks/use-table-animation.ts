@@ -109,12 +109,6 @@ export function useTableAnimation(
     []
   );
 
-  // Use state to track ref values for render (to avoid accessing refs during render)
-  const [animationStartTimeState, setAnimationStartTimeState] = useState<
-    number | null
-  >(null);
-  const [isAnimatingState, setIsAnimatingState] = useState(false);
-
   return {
     targetPositions,
     animatedPositions,

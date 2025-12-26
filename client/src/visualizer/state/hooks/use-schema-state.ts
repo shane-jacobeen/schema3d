@@ -8,7 +8,10 @@ interface UseSchemaStateReturn {
   currentSchema: DatabaseSchema;
   setCurrentSchema: React.Dispatch<React.SetStateAction<DatabaseSchema>>;
   persistedSchemaRef: React.MutableRefObject<DatabaseSchema>;
-  handleSchemaChangeFromSelector: (newSchema: DatabaseSchema) => void;
+  handleSchemaChangeFromSelector: (
+    newSchema: DatabaseSchema,
+    onCategoriesReset?: (schema: DatabaseSchema) => void
+  ) => void;
   handleSchemaChange: (newSchema: DatabaseSchema) => void;
 }
 
@@ -48,7 +51,10 @@ export function useSchemaState(
 
   // When schema changes from SchemaSelector, just set it directly (no animation)
   const handleSchemaChangeFromSelector = useCallback(
-    (newSchema: DatabaseSchema) => {
+    (
+      newSchema: DatabaseSchema,
+      onCategoriesReset?: (schema: DatabaseSchema) => void
+    ) => {
       // Apply force layout to the new schema with current view mode
       const forceLayoutSchema = applyLayout(newSchema, "force");
 
@@ -59,6 +65,12 @@ export function useSchemaState(
       setCurrentSchema(forceLayoutSchema);
 
       clearAllSelections();
+
+      // Reset category filters when a new schema is loaded
+      // Pass the new schema so resetCategories uses the correct schema
+      if (onCategoriesReset) {
+        onCategoriesReset(forceLayoutSchema);
+      }
 
       // Reset camera to default position when schema changes
       handleRecenter();

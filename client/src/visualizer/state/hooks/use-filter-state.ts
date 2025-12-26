@@ -3,12 +3,14 @@ import {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
   startTransition,
 } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import {
   getInitialCategories,
   updateCategoriesForSchema,
+  initializeCategories,
 } from "../utils/schema-state-utils";
 
 interface UseFilterStateReturn {
@@ -19,6 +21,7 @@ interface UseFilterStateReturn {
   visibleTableNames: Set<string>;
   handleFilter: (matched: Set<string>, related: Set<string>) => void;
   handleCategoryToggle: (category: string) => void;
+  resetCategories: (schema: DatabaseSchema) => void;
 }
 
 export function useFilterState(
@@ -49,12 +52,30 @@ export function useFilterState(
     });
   }, []);
 
+  const resetCategories = useCallback((schema: DatabaseSchema) => {
+    startTransition(() => {
+      setSelectedCategories(initializeCategories(schema));
+    });
+  }, []);
+
+  // Track previous schema name to detect when a completely new schema is loaded
+  const prevSchemaNameRef = useRef<string>(currentSchema.name);
+
   // Update selected categories when schema changes
   useEffect(() => {
+    const isNewSchema = prevSchemaNameRef.current !== currentSchema.name;
+    prevSchemaNameRef.current = currentSchema.name;
+
     startTransition(() => {
-      setSelectedCategories((prev) =>
-        updateCategoriesForSchema(currentSchema, prev)
-      );
+      if (isNewSchema) {
+        // Reset to all categories when a new schema is loaded
+        setSelectedCategories(initializeCategories(currentSchema));
+      } else {
+        // Only update if categories exist in new schema, don't reset
+        setSelectedCategories((prev) =>
+          updateCategoriesForSchema(currentSchema, prev)
+        );
+      }
     });
   }, [currentSchema]);
 
@@ -77,5 +98,6 @@ export function useFilterState(
     visibleTableNames,
     handleFilter,
     handleCategoryToggle,
+    resetCategories,
   };
 }

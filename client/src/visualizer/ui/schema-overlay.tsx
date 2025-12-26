@@ -24,7 +24,10 @@ interface SchemaOverlayProps {
   glCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   detailsPanelRef: React.RefObject<HTMLDivElement>;
   onSchemaChange: (newSchema: DatabaseSchema) => void;
-  onSchemaChangeFromSelector: (newSchema: DatabaseSchema) => void;
+  onSchemaChangeFromSelector: (
+    newSchema: DatabaseSchema,
+    onCategoriesReset?: (schema: DatabaseSchema) => void
+  ) => void;
   onLayoutChange: (layout: LayoutType) => void;
   onViewModeChange: (mode: "2D" | "3D") => void;
   onCategoryToggle: (category: string) => void;

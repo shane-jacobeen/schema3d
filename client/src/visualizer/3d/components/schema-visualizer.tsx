@@ -197,8 +197,10 @@ export function SchemaVisualizer() {
           glCanvasRef={glCanvasRef}
           detailsPanelRef={detailsPanelRef}
           onSchemaChange={schemaState.handleSchemaChange}
-          onSchemaChangeFromSelector={
-            schemaState.handleSchemaChangeFromSelector
+          onSchemaChangeFromSelector={(newSchema) =>
+            schemaState.handleSchemaChangeFromSelector(newSchema, (schema) =>
+              filterState.resetCategories(schema)
+            )
           }
           onLayoutChange={layoutState.handleLayoutChange}
           onViewModeChange={layoutState.setViewMode}
