@@ -154,15 +154,14 @@ Schema3D/
 │   │   │   ├── App.tsx         # Main app component with routing
 │   │   │   └── main.tsx        # Application entry point
 │   │   │
-│   │   ├── schemas/            # Schema management domain
-│   │   │   ├── parsers/        # SQL and Mermaid parsers
+│   │   ├── schemas/            # Schema parsing and format conversion
+│   │   │   ├── parsers/        # SQL and Mermaid parsers (format-agnostic)
 │   │   │   │   ├── sql-parser.ts
 │   │   │   │   ├── mermaid-parser.ts
 │   │   │   │   ├── parser-utils.ts
 │   │   │   │   ├── parsers.ts
 │   │   │   │   └── index.ts
-│   │   │   ├── utils/          # Schema utilities
-│   │   │   │   ├── schema-utils.ts
+│   │   │   ├── utils/          # Schema format utilities
 │   │   │   │   ├── schema-converter.ts
 │   │   │   │   ├── load-schemas.ts
 │   │   │   │   └── index.ts
@@ -173,6 +172,16 @@ Schema3D/
 │   │   │   └── index.ts
 │   │   │
 │   │   ├── visualizer/         # Visualization domain
+│   │   │   ├── state/          # Visualization state management
+│   │   │   │   ├── hooks/      # State management hooks
+│   │   │   │   │   ├── use-schema-state.ts
+│   │   │   │   │   ├── use-selection-state.ts
+│   │   │   │   │   ├── use-filter-state.ts
+│   │   │   │   │   └── ...
+│   │   │   │   ├── utils/      # State utilities
+│   │   │   │   │   ├── schema-utils.ts      # Layout, selections, comparisons
+│   │   │   │   │   └── schema-state-utils.ts # Category management
+│   │   │   │   └── types.ts
 │   │   │   ├── 3d/             # 3D visualization components
 │   │   │   │   ├── components/ # 3D scene components
 │   │   │   │   │   ├── relationships/
@@ -186,9 +195,15 @@ Schema3D/
 │   │   │   │   ├── controls/   # 3D camera and view controls
 │   │   │   │   │   ├── camera-controller.tsx
 │   │   │   │   │   └── view-controls.tsx
+│   │   │   │   ├── hooks/      # 3D-specific hooks
+│   │   │   │   │   ├── use-table-animation.ts
+│   │   │   │   │   ├── use-layout-management.ts
+│   │   │   │   │   ├── use-camera-controls.ts
+│   │   │   │   │   └── use-interaction-handlers.ts
 │   │   │   │   ├── utils/      # 3D visualization utilities
 │   │   │   │   │   ├── camera-utils.ts
-│   │   │   │   │   └── layout-algorithm.ts
+│   │   │   │   │   ├── layout-algorithm.ts
+│   │   │   │   │   └── layout-utils.ts
 │   │   │   │   ├── constants.ts
 │   │   │   │   ├── types.ts
 │   │   │   │   └── index.ts
@@ -204,13 +219,14 @@ Schema3D/
 │   │   │       │   ├── panel.tsx
 │   │   │       │   ├── table-info.tsx
 │   │   │       │   └── relationship-info.tsx
-│   │   │       ├── export/     # Export functionality
+│   │   │       ├── export/      # Export functionality
 │   │   │       │   ├── export-controls.tsx
 │   │   │       │   └── export-utils.ts
 │   │   │       ├── search/     # Search/filter functionality
 │   │   │       │   └── search-filter.tsx
-│   │   │       └── stats/      # Statistics display
-│   │   │           └── stats-display.tsx
+│   │   │       ├── stats/      # Statistics display
+│   │   │       │   └── stats-display.tsx
+│   │   │       └── schema-overlay.tsx # Main UI overlay component
 │   │   │
 │   │   ├── shared/             # Shared across domains
 │   │   │   ├── ui-components/  # Base UI components (Radix UI wrappers)
@@ -219,6 +235,7 @@ Schema3D/
 │   │   │   │   ├── dialog.tsx
 │   │   │   │   ├── input.tsx
 │   │   │   │   ├── toggle-group.tsx
+│   │   │   │   ├── toast.tsx
 │   │   │   │   └── ...         # Other UI components
 │   │   │   ├── hooks/          # Shared React hooks
 │   │   │   │   └── use-is-mobile.tsx
@@ -227,8 +244,9 @@ Schema3D/
 │   │   │   │   ├── browser-info.ts
 │   │   │   │   ├── button-styles.ts
 │   │   │   │   └── utils.ts
-│   │   │   └── types/          # Shared TypeScript types
-│   │   │       └── schema.ts
+│   │   │   ├── types/          # Shared TypeScript types
+│   │   │   │   └── schema.ts
+│   │   │   └── metadata.tsx   # SEO metadata components
 │   │   │
 │   │   └── pages/              # Route pages
 │   │       ├── about.tsx
@@ -258,12 +276,25 @@ Schema3D/
 
 - **Domain-based**: Code is organized by domain (schemas, visualizer) rather than by technical type
 - **Clear separation**:
-  - `schemas/` - All schema-related code (parsers, utilities, sample schemas)
-  - `visualizer/` - All visualization code (3D components and UI components)
+  - `schemas/` - Schema parsing and format conversion (format-agnostic, reusable)
+    - `parsers/` - SQL and Mermaid parsers
+    - `utils/` - Format conversion utilities
+    - `sample-schemas/` - Sample data files
+  - `visualizer/` - Visualization domain
+    - `state/` - Visualization state management
+      - `hooks/` - State management hooks
+      - `utils/` - Visualization-specific utilities (layout, selections, categories)
+    - `3d/` - 3D rendering components and hooks
+    - `ui/` - UI overlays and controls
   - `shared/` - Reusable code across domains
+    - `ui-components/` - Base UI components
+    - `utils/` - General utilities
+    - `types/` - Shared TypeScript types
+    - `metadata.tsx` - SEO metadata components
 - **Consistent naming**: All files use kebab-case (e.g., `schema-visualizer.tsx`, `table-3d.tsx`)
 - **Index files**: Each domain exports a public API through `index.ts` files
 - **UI components location**: Base UI components are in `shared/ui-components/`, while feature-specific UI is in `visualizer/ui/`
+- **State management**: Visualization state utilities are in `visualizer/state/utils/`, while format parsing stays in `schemas/`
 
 ## Technology Stack
 

@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/shared/ui-components/dialog";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { areSchemasEqual } from "@/schemas/utils/schema-utils";
+import { areSchemasEqual } from "@/visualizer/state/utils/schema-utils";
 import { getSchemaText } from "@/schemas/utils/load-schemas";
 import { schemaToFormat } from "@/schemas/utils/schema-converter";
 import {

@@ -18,7 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/shared/ui-components/collapsible";
 import { useMemo, useState, useCallback } from "react";
-import { applyLayoutToSchema } from "@/schemas/utils/schema-utils";
+import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
 
 export type LayoutType = "force" | "hierarchical" | "circular";
 
@@ -114,11 +114,14 @@ export function ViewControls({
 
   const applyLayout = useCallback(
     (type: LayoutType) => {
+      // Use current props to avoid stale closures
       const updatedSchema = applyLayoutToSchema(schema, type, viewMode);
 
       // Set the layout change flag before calling onSchemaChange
       // This ensures handleSchemaChange knows the layout is already applied
-      onLayoutChange?.(type);
+      if (onLayoutChange) {
+        onLayoutChange(type);
+      }
       onSchemaChange(updatedSchema);
     },
     [schema, viewMode, onLayoutChange, onSchemaChange]

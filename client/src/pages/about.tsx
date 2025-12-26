@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { AboutPageMetadata } from "@/shared/metadata";
 import {
   Card,
   CardContent,
@@ -15,47 +15,7 @@ import { Suspense } from "react";
 export default function About() {
   return (
     <>
-      <Helmet>
-        <title>About Schema3D - Database Visualization Tool | Schema3D</title>
-        <meta
-          name="description"
-          content="Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Features SQL/T-SQL & Mermaid Markdown support, and database relationship mapping."
-        />
-        <link rel="canonical" href="https://schema3d.com/about" />
-        <meta
-          property="og:title"
-          content="About Schema3D - Database Visualization Tool"
-        />
-        <meta
-          property="og:description"
-          content="Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping."
-        />
-        <meta property="og:url" content="https://schema3d.com/about" />
-        <meta
-          name="twitter:title"
-          content="About Schema3D - Database Visualization Tool"
-        />
-        <meta
-          name="twitter:description"
-          content="Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown."
-        />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "AboutPage",
-            name: "About Schema3D",
-            description:
-              "Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping",
-            url: "https://schema3d.com/about",
-            mainEntity: {
-              "@type": "WebApplication",
-              name: "Schema3D",
-              applicationCategory: "DeveloperApplication",
-              operatingSystem: "Web Browser",
-            },
-          })}
-        </script>
-      </Helmet>
+      <AboutPageMetadata />
       <div className="h-screen w-full overflow-y-auto relative">
         {/* Starry sky background */}
         <div className="fixed inset-0 z-0">
