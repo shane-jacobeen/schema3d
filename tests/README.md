@@ -17,6 +17,9 @@ We use [Vitest](https://vitest.dev/) as our test framework, which is optimized f
 tests/
 ├── setup.ts                    # Test setup and global configuration
 ├── unit/                        # Unit tests for individual functions
+│   ├── filtering/              # Category filtering tests
+│   │   ├── categoryFiltering.test.ts   # guessCategory function, color palette
+│   │   └── categoryManagement.test.ts  # Category assignment, filtering logic, management
 │   ├── parsers/                # Parser tests
 │   │   ├── sqlParser.test.ts
 │   │   └── mermaidParser.test.ts
@@ -25,6 +28,7 @@ tests/
 │   └── visualization/          # Visualization utility tests
 │       └── relationshipUtils.test.ts
 ├── integration/                 # Integration/component tests
+│   ├── CategoryEditDialog.test.tsx  # Category edit dialog interactions
 │   ├── SchemaControls.test.tsx
 │   └── SchemaEditor.test.tsx
 ├── examples/                   # Example/test schema files
@@ -60,8 +64,13 @@ npm run test -- tests/unit
 # Run only integration tests
 npm run test -- tests/integration
 
+# Run filtering tests
+npm run test -- tests/unit/filtering
+
 # Run a specific test file
 npm run test -- tests/unit/parsers/sqlParser.test.ts
+npm run test -- tests/unit/filtering/categoryFiltering.test.ts
+npm run test -- tests/integration/CategoryEditDialog.test.tsx
 ```
 
 ## Writing Tests
@@ -110,6 +119,57 @@ Coverage reports are generated in the `coverage/` directory. Open `coverage/inde
 - **Statements**: 50%
 
 These are intentionally low to start - increase them as test coverage improves.
+
+## Test Suites
+
+### Unit Tests
+
+#### Filtering (`tests/unit/filtering/`)
+
+- **categoryFiltering.test.ts** - Tests for the `guessCategory` function and color palette:
+  - Table name categorization (Auth, Product, Order, Customer, Content, Financial, Notification, Log, System, General)
+  - Case-insensitivity and prefix/suffix handling
+  - Color palette validation (15 unique hex colors)
+
+- **categoryManagement.test.ts** - Tests for category management logic:
+  - Category assignment based on table names
+  - Color assignment per category
+  - Category filtering and toggling
+  - Category renaming across all tables
+  - Moving tables between categories
+  - Updating category colors
+  - Category validation (name and color format)
+  - Edge cases (empty schemas, single category, empty categories)
+
+#### Parsers (`tests/unit/parsers/`)
+
+- **sqlParser.test.ts** - SQL schema parsing tests
+- **mermaidParser.test.ts** - Mermaid ER diagram parsing tests
+
+#### Schema (`tests/unit/schema/`)
+
+- **schemaUtils.test.ts** - Schema utility function tests
+
+#### Visualization (`tests/unit/visualization/`)
+
+- **relationshipUtils.test.ts** - Foreign key relationship utility tests
+
+### Integration Tests
+
+#### Component Tests (`tests/integration/`)
+
+- **CategoryEditDialog.test.tsx** - Category edit dialog component tests:
+  - Dialog rendering (open/closed states)
+  - Category name and color display
+  - Table lists (tables in category, available tables)
+  - User interactions (name change, color change, table selection)
+  - Transfer buttons (add/remove tables with icon-only buttons)
+  - Save functionality (validation, callbacks)
+  - New category creation workflow
+  - Placeholder and styling validation
+
+- **SchemaControls.test.tsx** - Schema controls component tests
+- **SchemaEditor.test.tsx** - Schema editor component tests
 
 ## Test Best Practices
 

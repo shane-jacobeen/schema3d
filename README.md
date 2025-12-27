@@ -199,10 +199,10 @@ Schema3D/
 │   │   │   │   │   ├── tables/
 │   │   │   │   │   │   ├── table-3d.tsx
 │   │   │   │   │   │   └── table-utils.ts
+│   │   │   │   │   ├── schema-scene.tsx
 │   │   │   │   │   └── schema-visualizer.tsx
-│   │   │   │   ├── controls/   # 3D camera and view controls
-│   │   │   │   │   ├── camera-controller.tsx
-│   │   │   │   │   └── view-controls.tsx
+│   │   │   │   ├── controls/   # 3D camera controls
+│   │   │   │   │   └── camera-controller.tsx
 │   │   │   │   ├── hooks/      # 3D-specific hooks
 │   │   │   │   │   ├── use-table-animation.ts
 │   │   │   │   │   ├── use-layout-management.ts
@@ -217,6 +217,10 @@ Schema3D/
 │   │   │   │   └── index.ts
 │   │   │   │
 │   │   │   └── ui/             # UI components for visualizer
+│   │   │       ├── layout/     # Layout and category controls
+│   │   │       │   ├── layout-controls.tsx
+│   │   │       │   ├── category-legend.tsx
+│   │   │       │   └── category-edit-dialog.tsx
 │   │   │       ├── schema/     # Schema-related UI components
 │   │   │       │   ├── schema-controls.tsx
 │   │   │       │   ├── schema-editor.tsx

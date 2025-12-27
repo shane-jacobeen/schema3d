@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Stars } from "@react-three/drei";
 import { Suspense, type ComponentRef } from "react";
+import * as THREE from "three";
 import { Table3D } from "./tables/table-3d";
 import { RelationshipLines } from "./relationships/relationship-lines";
 import { CameraController } from "@/visualizer/3d/controls/camera-controller";

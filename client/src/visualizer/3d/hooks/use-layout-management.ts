@@ -50,7 +50,7 @@ export function useLayoutManagement(
     const currentVisibleNames = new Set(visibleTables.map((t) => t.name));
     const visibleTablesChanged =
       prevVisibleTableNamesRef.current.size !== currentVisibleNames.size ||
-      [...prevVisibleTableNamesRef.current].some(
+      Array.from(prevVisibleTableNamesRef.current).some(
         (name) => !currentVisibleNames.has(name)
       );
 
