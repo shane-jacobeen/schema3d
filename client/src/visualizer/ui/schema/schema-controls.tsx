@@ -109,7 +109,16 @@ export function SchemaSelector({
       // Only update format state if it actually changed to avoid unnecessary re-renders
       if (result.schema) {
         const schema = result.schema;
-        persistedSchemaRef.current = schema;
+        // Preserve the existing name if it's not the parser's default
+        // This prevents losing meaningful names when validation re-parses
+        const preservedName = persistedSchemaRef.current?.name;
+        const shouldPreserveName =
+          preservedName && preservedName !== "Custom Database";
+
+        persistedSchemaRef.current = {
+          ...schema,
+          name: shouldPreserveName ? preservedName : schema.name,
+        };
         // Only update format if it's different from current to prevent re-render loops
         setCurrentFormat((prevFormat) => {
           return schema.format !== prevFormat ? schema.format : prevFormat;
@@ -131,16 +140,22 @@ export function SchemaSelector({
     const parsed = parseSchema(scriptInput);
 
     if (parsed && parsed.tables.length > 0) {
+      // Preserve the name from persistedSchemaRef if it exists (e.g., from sample schema selection)
+      const schemaWithName = {
+        ...parsed,
+        name: persistedSchemaRef.current?.name || parsed.name,
+      };
+
       // Check if schema changed
       if (
         !initialSchemaRef.current ||
-        !areSchemasEqual(parsed, initialSchemaRef.current)
+        !areSchemasEqual(schemaWithName, initialSchemaRef.current)
       ) {
         logSchemaAction("schema_change").catch(() => {});
       }
 
-      persistedSchemaRef.current = parsed;
-      onSchemaChange(parsed);
+      persistedSchemaRef.current = schemaWithName;
+      onSchemaChange(schemaWithName);
       setIsOpen(false);
     } else {
       toast.error(
