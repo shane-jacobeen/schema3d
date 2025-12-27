@@ -12,14 +12,11 @@ interface UseSchemaStateReturn {
     newSchema: DatabaseSchema,
     onCategoriesReset?: (schema: DatabaseSchema) => void
   ) => void;
-  handleSchemaChange: (newSchema: DatabaseSchema) => void;
 }
 
 export function useSchemaState(
-  startTableAnimation: (schema: DatabaseSchema) => void,
   clearAllSelections: () => void,
   handleRecenter: () => void,
-  isLayoutChangingRef: React.MutableRefObject<boolean>,
   getViewMode: () => "2D" | "3D"
 ): UseSchemaStateReturn {
   const [currentSchema, setCurrentSchema] =
@@ -38,18 +35,7 @@ export function useSchemaState(
     [getViewMode]
   );
 
-  const handleSchemaChange = useCallback(
-    (newSchema: DatabaseSchema) => {
-      // Layout change - the schema already has the layout applied
-      // Animate to the new positions
-      startTableAnimation(newSchema);
-      clearAllSelections();
-      isLayoutChangingRef.current = false;
-    },
-    [startTableAnimation, clearAllSelections, isLayoutChangingRef]
-  );
-
-  // When schema changes from SchemaSelector, just set it directly (no animation)
+  // When schema changes from SchemaSelector, apply force layout and set directly
   const handleSchemaChangeFromSelector = useCallback(
     (
       newSchema: DatabaseSchema,
@@ -58,32 +44,20 @@ export function useSchemaState(
       // Apply force layout to the new schema with current view mode
       const forceLayoutSchema = applyLayout(newSchema, "force");
 
-      // Set layout change flag BEFORE setting layout to prevent view mode effect
-      isLayoutChangingRef.current = true;
-
-      // Set the schema directly - no animation
+      // Set the schema directly - no animation for schema selector changes
       setCurrentSchema(forceLayoutSchema);
 
       clearAllSelections();
 
       // Reset category filters when a new schema is loaded
-      // Pass the new schema so resetCategories uses the correct schema
       if (onCategoriesReset) {
         onCategoriesReset(forceLayoutSchema);
       }
 
       // Reset camera to default position when schema changes
       handleRecenter();
-
-      // Clear the flag after React has processed the state updates
-      // Use requestAnimationFrame to ensure it happens after the effect runs
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          isLayoutChangingRef.current = false;
-        });
-      });
     },
-    [applyLayout, clearAllSelections, handleRecenter, isLayoutChangingRef]
+    [applyLayout, clearAllSelections, handleRecenter]
   );
 
   return {
@@ -91,6 +65,5 @@ export function useSchemaState(
     setCurrentSchema,
     persistedSchemaRef,
     handleSchemaChangeFromSelector,
-    handleSchemaChange,
   };
 }

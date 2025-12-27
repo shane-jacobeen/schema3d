@@ -6,8 +6,7 @@ import {
   ToggleGroupItem,
 } from "@/shared/ui-components/toggle-group";
 import { CustomToggleGroupItem } from "@/shared/ui-components/custom-toggle-group-item";
-import { useState, useCallback } from "react";
-import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
+import { useState } from "react";
 import { CategoryLegend } from "@/visualizer/ui/layout/category-legend";
 
 export type LayoutType = "force" | "hierarchical" | "circular";
@@ -85,21 +84,6 @@ export function LayoutControls({
 }: LayoutControlsProps) {
   const [hoveredButton, setHoveredButton] = useState<LayoutType | null>(null);
 
-  const applyLayout = useCallback(
-    (type: LayoutType) => {
-      // Use current props to avoid stale closures
-      const updatedSchema = applyLayoutToSchema(schema, type, viewMode);
-
-      // Set the layout change flag before calling onSchemaChange
-      // This ensures handleSchemaChange knows the layout is already applied
-      if (onLayoutChange) {
-        onLayoutChange(type);
-      }
-      onSchemaChange(updatedSchema);
-    },
-    [schema, viewMode, onLayoutChange, onSchemaChange]
-  );
-
   return (
     <div className="absolute bottom-safe-bottom left-2 sm:bottom-safe-bottom-lg sm:left-4">
       <Card className="bg-slate-900/70 border-slate-700 text-white backdrop-blur-sm p-2 sm:p-4 min-w-[164px] sm:min-w-[200px]">
@@ -141,8 +125,8 @@ export function LayoutControls({
             type="single"
             value={currentLayout}
             onValueChange={(value: string | undefined) => {
-              if (value) {
-                applyLayout(value as LayoutType);
+              if (value && onLayoutChange) {
+                onLayoutChange(value as LayoutType);
               }
             }}
             className="flex gap-1.5 sm:gap-2 w-[164px] sm:w-[200px]"

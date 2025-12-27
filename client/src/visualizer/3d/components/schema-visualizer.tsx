@@ -10,7 +10,6 @@ import { useLayoutManagement } from "../hooks/use-layout-management";
 import { useCameraControls } from "../hooks/use-camera-controls";
 import { useInteractionHandlers } from "../hooks/use-interaction-handlers";
 import { getConnectedTables } from "../index";
-import type { DatabaseSchema } from "@/shared/types/schema";
 
 /**
  * Main 3D schema visualization component.
@@ -36,11 +35,7 @@ export function SchemaVisualizer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const detailsPanelRef = useRef<HTMLDivElement>(null);
 
-  // Initialize refs
-  const isLayoutChangingRef = useRef(false);
-
   // Temporary refs for circular dependencies - will be updated in useEffect
-  const tempAnimationRef = useRef<(schema: DatabaseSchema) => void>(() => {});
   const tempClearSelectionsRef = useRef<() => void>(() => {});
   const tempRecenterRef = useRef<() => void>(() => {});
   const getViewModeRef = useRef<() => "2D" | "3D">(() => "2D");
@@ -48,10 +43,8 @@ export function SchemaVisualizer() {
   // Initialize schema state first (with temporary callbacks)
   // These will be updated in useEffect after other hooks are initialized
   const schemaState = useSchemaState(
-    () => tempAnimationRef.current({} as DatabaseSchema),
     () => tempClearSelectionsRef.current(),
     () => tempRecenterRef.current(),
-    isLayoutChangingRef,
     () => getViewModeRef.current()
   );
 
@@ -67,7 +60,7 @@ export function SchemaVisualizer() {
   // Initialize selection state
   const selectionState = useSelectionState(filterState.visibleTableNames);
 
-  // Initialize layout management
+  // Initialize layout management - this is the single source of truth for layout
   const layoutState = useLayoutManagement(
     schemaState.currentSchema,
     schemaState.setCurrentSchema,
@@ -79,12 +72,10 @@ export function SchemaVisualizer() {
   // Update refs with actual functions after all hooks are initialized
   // This must be done in useEffect to avoid accessing refs during render
   useEffect(() => {
-    tempAnimationRef.current = animationState.startTableAnimation;
     tempClearSelectionsRef.current = selectionState.clearAllSelections;
     tempRecenterRef.current = cameraState.handleRecenter;
     getViewModeRef.current = () => layoutState.viewMode;
   }, [
-    animationState.startTableAnimation,
     selectionState.clearAllSelections,
     cameraState.handleRecenter,
     layoutState.viewMode,
@@ -196,7 +187,7 @@ export function SchemaVisualizer() {
           persistedSchemaRef={schemaState.persistedSchemaRef}
           glCanvasRef={glCanvasRef}
           detailsPanelRef={detailsPanelRef}
-          onSchemaChange={schemaState.handleSchemaChange}
+          onSchemaChange={schemaState.setCurrentSchema}
           onCategoryUpdate={(updatedSchema) => {
             // Direct schema update for category changes (no animation)
             // The useFilterState hook will automatically handle category updates via its useEffect
