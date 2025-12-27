@@ -5,13 +5,13 @@ import { Card } from "@/shared/ui-components/card";
 import { StatsDisplay } from "@/visualizer/ui/stats/stats-display";
 import { SearchFilter } from "@/visualizer/ui/search/search-filter";
 import { SchemaSelector } from "@/visualizer/ui/schema/schema-controls";
-import { ViewControls } from "@/visualizer/3d/controls/view-controls";
+import { LayoutControls } from "@/visualizer/ui/layout/layout-controls";
 import { ExportControls } from "@/visualizer/ui/export/export-controls";
 import { TableInfo } from "@/visualizer/ui/panels/table-info";
 import { RelationshipInfo } from "@/visualizer/ui/panels/relationship-info";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
-import type { LayoutType } from "@/visualizer/3d/controls/view-controls";
+import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
 
 interface SchemaOverlayProps {
   schema: DatabaseSchema;
@@ -65,6 +65,7 @@ export function SchemaOverlay({
         <StatsDisplay />
       </div>
 
+      {/* About button */}
       <div className="absolute right-2 sm:top-4 sm:right-4 top-2 z-10">
         <Link to="/about">
           <Button
@@ -78,6 +79,7 @@ export function SchemaOverlay({
         </Link>
       </div>
 
+      {/* Search bar */}
       <div className="absolute top-2 right-[96px] sm:top-4 sm:right-16 sm:w-64">
         <SearchFilter tables={schema.tables} onFilter={onFilter} />
       </div>
@@ -104,7 +106,8 @@ export function SchemaOverlay({
         </Card>
       </div>
 
-      <ViewControls
+      {/* Legend and layout controls */}
+      <LayoutControls
         schema={schema}
         onSchemaChange={onSchemaChange}
         onCategoryUpdate={onCategoryUpdate}
@@ -116,6 +119,7 @@ export function SchemaOverlay({
         onCategoryToggle={onCategoryToggle}
       />
 
+      {/* Re-center button */}
       <div className="absolute top-2 right-[52px] bottom-auto left-auto sm:right-auto sm:bottom-safe-bottom-lg sm:left-1/2 sm:-translate-x-1/2 sm:top-auto z-10">
         <Button
           onClick={onRecenter}
@@ -128,10 +132,12 @@ export function SchemaOverlay({
         </Button>
       </div>
 
+      {/* Export controls */}
       <div className="absolute bottom-safe-bottom right-2 sm:bottom-safe-bottom-lg sm:right-4">
         <ExportControls schema={schema} canvasRef={glCanvasRef} />
       </div>
 
+      {/* Detail panels for elected table / relationship */}
       {selectedTable && (
         <div ref={detailsPanelRef}>
           <TableInfo table={selectedTable} onClose={onTableClose} />

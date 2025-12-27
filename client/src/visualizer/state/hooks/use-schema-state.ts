@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { getRetailerSchema } from "@/schemas/utils/load-schemas";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
-import type { LayoutType } from "@/visualizer/3d/controls/view-controls";
+import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
 
 interface UseSchemaStateReturn {
   currentSchema: DatabaseSchema;

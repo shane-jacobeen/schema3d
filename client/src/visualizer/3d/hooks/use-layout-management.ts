@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import type { LayoutType } from "@/visualizer/3d/controls/view-controls";
+import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
 import { applyLayoutToFilteredSchema } from "../utils/layout-utils";
 

@@ -20,6 +20,12 @@ import {
 import { Button } from "@/shared/ui-components/button";
 import { Input } from "@/shared/ui-components/input";
 import { Label } from "@/shared/ui-components/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/tooltip";
 import { ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 
@@ -222,8 +228,8 @@ export function CategoryEditDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-500/70 [scrollbar-width:thin] [scrollbar-color:rgb(59,130,246,0.5)_transparent]">
-          {/* Category Name and Color Picker - same row */}
-          <div className="grid grid-cols-[1fr_auto] gap-4">
+          {/* Category Name, Color Picker, and Delete - same row */}
+          <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-end">
             <div className="space-y-2">
               <Label htmlFor="category-name" className="text-slate-300">
                 Category Name
@@ -252,10 +258,48 @@ export function CategoryEditDialog({
                 />
               </div>
             </div>
+
+            {category !== "new" && onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                    title="Delete category"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-slate-900 border-slate-700">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">
+                      Delete Category
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-slate-400">
+                      Are you sure you want to delete the &quot;{category}&quot;
+                      category? All tables in this category will be moved to
+                      &quot;General&quot;.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Delete Category
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
 
           {/* Transfer List */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
             {/* Tables Not In Category */}
             <div className="space-y-2">
               <Label className="text-slate-300">
@@ -273,7 +317,7 @@ export function CategoryEditDialog({
                         key={table.name}
                         className={`p-2 rounded cursor-pointer text-sm transition-colors ${
                           selectedNotInCategory.has(table.name)
-                            ? "bg-blue-600/30 border border-blue-500"
+                            ? "bg-green-600/30 border border-green-500"
                             : "bg-slate-700/50 hover:bg-slate-700 border border-transparent"
                         }`}
                         onClick={() => toggleNotInCategory(table.name)}
@@ -289,16 +333,52 @@ export function CategoryEditDialog({
                   </div>
                 )}
               </div>
-              <Button
-                onClick={handleMoveToCategory}
-                disabled={selectedNotInCategory.size === 0}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                <ChevronRight className="w-4 h-4 mr-1" />
-                Add to <strong>{categoryName || "Category"}</strong>
-              </Button>
+            </div>
+
+            {/* Transfer Buttons */}
+            <div className="flex flex-col items-center justify-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleMoveToCategory}
+                      disabled={selectedNotInCategory.size === 0}
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="bg-slate-800 text-white border-slate-700"
+                  >
+                    Add to {categoryName || "Category"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleMoveFromCategory}
+                      disabled={selectedInCategory.size === 0}
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="bg-slate-800 text-white border-slate-700"
+                  >
+                    Remove from {categoryName || "Category"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             {/* Tables In Category */}
@@ -330,64 +410,19 @@ export function CategoryEditDialog({
                   </div>
                 )}
               </div>
-              <Button
-                onClick={handleMoveFromCategory}
-                disabled={selectedInCategory.size === 0}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Remove from <strong>{categoryName || "Category"}</strong>
-              </Button>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
-          {category !== "new" && onDelete && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-slate-900 border-slate-700">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-white">
-                    Delete Category
-                  </AlertDialogTitle>
-                  <AlertDialogDescription className="text-slate-400">
-                    Are you sure you want to delete the &quot;{category}&quot;
-                    category? All tables in this category will be moved to
-                    &quot;General&quot;.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    Delete Category
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
+        <DialogFooter>
           <Button
             onClick={handleSave}
             disabled={
               !categoryName.trim() ||
               (category === "new" && tablesInCategory.length === 0)
             }
-            className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+            variant="primary"
+            className="w-full"
           >
             Save Changes
           </Button>

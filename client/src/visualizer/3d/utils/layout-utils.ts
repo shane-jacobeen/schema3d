@@ -1,6 +1,6 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
-import type { LayoutType } from "@/visualizer/3d/controls/view-controls";
+import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
 
 /**
  * Apply layout to filtered schema and merge positions back into full schema

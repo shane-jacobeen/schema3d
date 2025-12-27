@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "rounded-md bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive:
-          "rounded-md bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "rounded-full bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
           "rounded-full bg-slate-900/95 border border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 hover:border-slate-600 backdrop-blur-sm shadow-lg",
         secondary:
@@ -22,11 +22,12 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         closeButton:
           "text-slate-400 hover:text-white transition-colors flex-shrink-0 p-1",
+        primary: "rounded-full bg-blue-600 hover:bg-blue-700 text-white",
       },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 px-3 text-xs sm:h-9 sm:px-4",
-        lg: "h-10 rounded-md px-8",
+        lg: "h-10 px-8",
         icon: "h-9 w-9",
         "icon-sm": "h-10 w-10 sm:h-12 sm:w-12",
         "icon-close": "h-auto w-auto",

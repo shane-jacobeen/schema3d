@@ -216,10 +216,11 @@ export function SchemaSelector({
           <Button
             onClick={handleOk}
             disabled={!isValid || !scriptInput.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold py-2.5 sm:py-3 text-sm sm:text-base"
+            variant="primary"
+            className="w-full"
             size="lg"
           >
-            OK
+            Apply Changes
           </Button>
         </DialogFooter>
       </DialogContent>

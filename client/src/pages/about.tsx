@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/shared/ui-components/card";
 import { Button } from "@/shared/ui-components/button";
-import { Info, Eye, Network, Code2, ArrowLeft } from "lucide-react";
+import { Info, Eye, Code2, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";

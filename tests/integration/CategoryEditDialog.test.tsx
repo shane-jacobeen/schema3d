@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
-import { CategoryEditDialog } from "@/visualizer/ui/category-edit-dialog";
+import { CategoryEditDialog } from "@/visualizer/ui/layout/category-edit-dialog";
 import type { DatabaseSchema } from "@/shared/types/schema";
 
 describe("CategoryEditDialog", () => {
@@ -232,9 +232,9 @@ describe("CategoryEditDialog", () => {
 
       await user.click(productTable);
 
-      // Check if the table container has the selected styling
+      // Check if the table container has the selected styling (green for available tables)
       await waitFor(() => {
-        expect(clickableContainer).toHaveClass("bg-blue-600/30");
+        expect(clickableContainer).toHaveClass("bg-green-600/30");
       });
     });
 
@@ -251,7 +251,15 @@ describe("CategoryEditDialog", () => {
         />
       );
 
-      const addButton = screen.getByRole("button", { name: /Add to/i });
+      // Icon-only buttons - find the transfer buttons container and get the first button (Add to)
+      const buttons = screen.getAllByRole("button");
+      // Find the disabled ChevronRight button (Add to Category)
+      const addButton = buttons.find(
+        (btn) =>
+          btn.querySelector("svg.lucide-chevron-right") &&
+          btn.hasAttribute("disabled")
+      );
+      expect(addButton).toBeInTheDocument();
       expect(addButton).toBeDisabled();
 
       const productTable = screen.getByText("products");
@@ -385,8 +393,11 @@ describe("CategoryEditDialog", () => {
         />
       );
 
+      // Default color should be the first UNUSED color from the palette
+      // Mock schema already uses: #3b82f6 (Auth), #10b981 (Product), #f59e0b (Order), #ec4899 (Financial)
+      // So the first unused color is #8b5cf6 (Violet)
       const colorPicker = screen.getByLabelText("Color");
-      expect(colorPicker).toHaveValue("#3b82f6");
+      expect(colorPicker).toHaveValue("#8b5cf6");
     });
 
     it("should disable save button for new category with no tables", async () => {
@@ -432,9 +443,15 @@ describe("CategoryEditDialog", () => {
       const table = screen.getByText("users");
       await user.click(table);
 
-      // Add to category
-      const addButton = screen.getByRole("button", { name: /Add to/i });
-      await user.click(addButton);
+      // Icon-only buttons - find the enabled ChevronRight button (Add to Category)
+      const buttons = screen.getAllByRole("button");
+      const addButton = buttons.find(
+        (btn) =>
+          btn.querySelector("svg.lucide-chevron-right") &&
+          !btn.hasAttribute("disabled")
+      );
+      expect(addButton).toBeInTheDocument();
+      await user.click(addButton!);
 
       // Should be enabled now
       expect(saveButton).not.toBeDisabled();
