@@ -1,5 +1,5 @@
 import type { DatabaseSchema, Table, Column } from "@/shared/types/schema";
-import type { LayoutType } from "@/visualizer/3d/controls/view-controls";
+import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
 import {
   applyForceDirectedLayout,
   applyHierarchicalLayout,

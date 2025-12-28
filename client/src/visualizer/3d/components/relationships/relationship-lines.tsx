@@ -36,11 +36,17 @@ export function RelationshipLines({
   onHover,
   onLongPress,
   animatedPositions,
+  visibleTableNames,
 }: RelationshipLinesProps) {
   const relationships = useMemo<Relationship[]>(() => {
     const result: Relationship[] = [];
 
     schema.tables.forEach((table) => {
+      // Skip if table is not visible
+      if (visibleTableNames && !visibleTableNames.has(table.name)) {
+        return;
+      }
+
       table.columns.forEach((column) => {
         if (column.isForeignKey && column.references) {
           // Use case-insensitive matching to handle table name variations
@@ -49,7 +55,11 @@ export function RelationshipLines({
               t.name.toLowerCase() === column.references!.table.toLowerCase()
           );
 
-          if (referencedTable) {
+          // Only include relationship if both tables are visible
+          if (
+            referencedTable &&
+            (!visibleTableNames || visibleTableNames.has(referencedTable.name))
+          ) {
             // Use animated positions if available, otherwise use table positions
             const fromTablePos =
               animatedPositions?.get(table.name) || table.position;
@@ -114,7 +124,7 @@ export function RelationshipLines({
     });
 
     return result;
-  }, [schema, animatedPositions]);
+  }, [schema, animatedPositions, visibleTableNames]);
 
   return (
     <group>

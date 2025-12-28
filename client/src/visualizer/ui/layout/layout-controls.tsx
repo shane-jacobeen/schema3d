@@ -1,10 +1,4 @@
-import {
-  ChevronDown,
-  Globe,
-  Network,
-  GitBranch,
-  type LucideIcon,
-} from "lucide-react";
+import { Globe, Network, GitBranch, type LucideIcon } from "lucide-react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { Card } from "@/shared/ui-components/card";
 import {
@@ -12,23 +6,21 @@ import {
   ToggleGroupItem,
 } from "@/shared/ui-components/toggle-group";
 import { CustomToggleGroupItem } from "@/shared/ui-components/custom-toggle-group-item";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/shared/ui-components/collapsible";
-import { useMemo, useState, useCallback } from "react";
-import { applyLayoutToSchema } from "@/schemas/utils/schema-utils";
+import { useState } from "react";
+import { CategoryLegend } from "@/visualizer/ui/layout/category-legend";
 
 export type LayoutType = "force" | "hierarchical" | "circular";
 
-interface ViewControlsProps {
+interface LayoutControlsProps {
   schema: DatabaseSchema;
   onSchemaChange: (schema: DatabaseSchema) => void;
+  onCategoryUpdate?: (schema: DatabaseSchema) => void;
   currentLayout?: LayoutType;
   onLayoutChange?: (layout: LayoutType) => void;
   viewMode?: "2D" | "3D";
   onViewModeChange?: (mode: "2D" | "3D") => void;
+  selectedCategories?: Set<string>;
+  onCategoryToggle?: (category: string) => void;
 }
 
 interface LayoutButtonProps {
@@ -61,9 +53,9 @@ function LayoutButton({
       aria-label={ariaLabel}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className={`rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm !min-w-0 ${
+      className={`!min-w-0 ${
         isExpanded ? "!w-24 sm:!w-28" : "w-7 sm:w-9"
-      } text-xs sm:text-sm h-7 sm:h-9 justify-start items-center transition-all duration-200 data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400 data-[state=on]:border-blue-500 relative`}
+      } text-xs sm:text-sm h-7 sm:h-9 justify-start items-center transition-all duration-200 border-slate-600/50 data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-400 data-[state=on]:border-blue-500 relative`}
     >
       <div className="absolute left-0 flex items-center justify-center w-7 sm:w-9 h-full">
         <Icon size={12} className="sm:w-3.5 sm:h-3.5 flex-shrink-0" />
@@ -79,75 +71,30 @@ function LayoutButton({
   );
 }
 
-export function ViewControls({
+export function LayoutControls({
   schema,
   onSchemaChange,
+  onCategoryUpdate,
   currentLayout = "force",
   onLayoutChange,
   viewMode = "2D",
   onViewModeChange,
-}: ViewControlsProps) {
-  // Default to open on large screens, collapsed on mobile
-  // Initialize based on window width if available, otherwise default to false (mobile-first)
-  const [isLegendOpen, setIsLegendOpen] = useState(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth >= 768; // sm breakpoint
-    }
-    return false;
-  });
-
+  selectedCategories,
+  onCategoryToggle,
+}: LayoutControlsProps) {
   const [hoveredButton, setHoveredButton] = useState<LayoutType | null>(null);
-
-  const categories = useMemo(() => {
-    const categoryMap = new Map<string, string>();
-    schema.tables.forEach((table) => {
-      if (!categoryMap.has(table.category)) {
-        categoryMap.set(table.category, table.color);
-      }
-    });
-    return Array.from(categoryMap.entries());
-  }, [schema]);
-
-  const applyLayout = useCallback(
-    (type: LayoutType) => {
-      const updatedSchema = applyLayoutToSchema(schema, type, viewMode);
-
-      // Set the layout change flag before calling onSchemaChange
-      // This ensures handleSchemaChange knows the layout is already applied
-      onLayoutChange?.(type);
-      onSchemaChange(updatedSchema);
-    },
-    [schema, viewMode, onLayoutChange, onSchemaChange]
-  );
 
   return (
     <div className="absolute bottom-safe-bottom left-2 sm:bottom-safe-bottom-lg sm:left-4">
       <Card className="bg-slate-900/70 border-slate-700 text-white backdrop-blur-sm p-2 sm:p-4 min-w-[164px] sm:min-w-[200px]">
         {/* Legend section - collapsible */}
-        <Collapsible open={isLegendOpen} onOpenChange={setIsLegendOpen}>
-          <CollapsibleTrigger className="flex items-center justify-between w-full mb-2 sm:mb-3 hover:opacity-80 transition-opacity cursor-pointer">
-            <h3 className="text-xs sm:text-sm font-semibold">Legend</h3>
-            <ChevronDown
-              size={16}
-              className={`sm:w-5 sm:h-5 text-slate-400 transition-transform duration-200 ${
-                isLegendOpen ? "rotate-180" : ""
-              }`}
-            />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-1 sm:space-y-2 text-xs sm:text-sm mb-2 sm:mb-3">
-            {categories.map(([category, color]) => (
-              <div key={category} className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 sm:w-4 sm:h-4 rounded"
-                  style={{ backgroundColor: color }}
-                />
-                <span className="text-slate-300 capitalize truncate">
-                  {category === "view" ? "Views" : `${category} Tables`}
-                </span>
-              </div>
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
+        <CategoryLegend
+          schema={schema}
+          selectedCategories={selectedCategories}
+          onCategoryToggle={onCategoryToggle}
+          onSchemaChange={onSchemaChange}
+          onCategoryUpdate={onCategoryUpdate}
+        />
 
         {/* View Mode and Layout - always visible */}
         <div className="border-t border-slate-700 pt-2 sm:pt-3 mt-2 sm:mt-3">
@@ -178,8 +125,8 @@ export function ViewControls({
             type="single"
             value={currentLayout}
             onValueChange={(value: string | undefined) => {
-              if (value) {
-                applyLayout(value as LayoutType);
+              if (value && onLayoutChange) {
+                onLayoutChange(value as LayoutType);
               }
             }}
             className="flex gap-1.5 sm:gap-2 w-[164px] sm:w-[200px]"

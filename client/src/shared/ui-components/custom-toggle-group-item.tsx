@@ -32,7 +32,7 @@ export const CustomToggleGroupItem = React.forwardRef<
       className={cn(
         toggleGroupItemStyles,
         sizeClasses,
-        "flex-1 justify-center border-slate-700 !border-slate-700",
+        "flex-1 justify-center border-slate-700 !border-slate-700 data-[state=on]:!border-blue-500",
         className
       )}
       {...props}

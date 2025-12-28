@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { areSchemasEqual } from "@/schemas/utils/schema-utils";
+import { areSchemasEqual } from "@/visualizer/state/utils/schema-utils";
 import { schemaToFormat } from "@/schemas/utils/schema-converter";
 import { parseSchema } from "@/schemas/parsers";
 

@@ -25,7 +25,7 @@ export interface Table3DProps {
   isRelated?: boolean;
   isDimmed?: boolean;
   isRelationshipHighlighted?: boolean;
-  onSelect: (table: Table) => void;
+  onSelect: (table: Table | null) => void;
   onHover: (table: Table | null) => void;
   onLongPress?: (table: Table) => void;
   onPositionChange?: (
@@ -52,6 +52,7 @@ export interface RelationshipLinesProps {
   onHover?: (relationship: Relationship | null) => void;
   onLongPress?: (relationship: Relationship) => void;
   animatedPositions?: Map<string, [number, number, number]>;
+  visibleTableNames?: Set<string>;
 }
 
 export interface RelationshipLineProps {

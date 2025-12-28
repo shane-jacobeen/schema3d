@@ -78,7 +78,6 @@ export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
           size="sm"
           variant="outline"
           onClick={exportScreenshot}
-          className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm gap-1 sm:gap-2 flex-1 text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4 py-2 sm:py-2.5"
           title="Export as PNG screenshot"
         >
           <Image size={12} className="hidden sm:block sm:w-3.5 sm:h-3.5" />
@@ -88,7 +87,6 @@ export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
           size="sm"
           variant="outline"
           onClick={exportToCSV}
-          className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm gap-1 sm:gap-2 flex-1 text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4 py-2 sm:py-2.5"
           title="Export schema data as CSV"
         >
           <FileSpreadsheet

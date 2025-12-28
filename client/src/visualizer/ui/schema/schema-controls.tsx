@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, startTransition } from "react";
-import { Pencil, CheckCircle2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
+import { useToast, LocalToastContainer } from "@/shared/ui-components/toast";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +11,7 @@ import {
   DialogFooter,
 } from "@/shared/ui-components/dialog";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { areSchemasEqual } from "@/schemas/utils/schema-utils";
+import { areSchemasEqual } from "@/visualizer/state/utils/schema-utils";
 import { getSchemaText } from "@/schemas/utils/load-schemas";
 import { schemaToFormat } from "@/schemas/utils/schema-converter";
 import {
@@ -37,11 +38,10 @@ export function SchemaSelector({
 }: SchemaSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scriptInput, setScriptInput] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [currentFormat, setCurrentFormat] = useState<SchemaFormat>("sql");
   const initialSchemaRef = useRef<DatabaseSchema | null>(null);
+  const { toast } = useToast();
 
   // Update format when user explicitly selects format via FormatSelector
   const updateFormat = (newFormat: SchemaFormat) => {
@@ -73,8 +73,6 @@ export function SchemaSelector({
             persistedSchemaRef.current || currentSchema
           );
           setScriptInput(scriptToLoad);
-          setError("");
-          setSuccess("");
 
           // Set format from persisted schema or default
           const format = persistedSchemaRef.current?.format || "sql";
@@ -111,7 +109,16 @@ export function SchemaSelector({
       // Only update format state if it actually changed to avoid unnecessary re-renders
       if (result.schema) {
         const schema = result.schema;
-        persistedSchemaRef.current = schema;
+        // Preserve the existing name if it's not the parser's default
+        // This prevents losing meaningful names when validation re-parses
+        const preservedName = persistedSchemaRef.current?.name;
+        const shouldPreserveName =
+          preservedName && preservedName !== "Custom Database";
+
+        persistedSchemaRef.current = {
+          ...schema,
+          name: shouldPreserveName ? preservedName : schema.name,
+        };
         // Only update format if it's different from current to prevent re-render loops
         setCurrentFormat((prevFormat) => {
           return schema.format !== prevFormat ? schema.format : prevFormat;
@@ -126,30 +133,32 @@ export function SchemaSelector({
     persistedSchemaRef.current = schema;
     const text = getSchemaText(schema.name) || schemaToFormat(schema);
     setScriptInput(text);
-    setError("");
   };
 
   const handleOk = () => {
-    setError("");
-    setSuccess("");
-
     // Auto-detect format by trying both parsers
     const parsed = parseSchema(scriptInput);
 
     if (parsed && parsed.tables.length > 0) {
+      // Preserve the name from persistedSchemaRef if it exists (e.g., from sample schema selection)
+      const schemaWithName = {
+        ...parsed,
+        name: persistedSchemaRef.current?.name || parsed.name,
+      };
+
       // Check if schema changed
       if (
         !initialSchemaRef.current ||
-        !areSchemasEqual(parsed, initialSchemaRef.current)
+        !areSchemasEqual(schemaWithName, initialSchemaRef.current)
       ) {
         logSchemaAction("schema_change").catch(() => {});
       }
 
-      persistedSchemaRef.current = parsed;
-      onSchemaChange(parsed);
+      persistedSchemaRef.current = schemaWithName;
+      onSchemaChange(schemaWithName);
       setIsOpen(false);
     } else {
-      setError(
+      toast.error(
         `Failed to parse schema. Please ensure you're using valid SQL or Mermaid syntax.`
       );
     }
@@ -162,18 +171,13 @@ export function SchemaSelector({
     if (parsed) {
       persistedSchemaRef.current = parsed;
     }
-    setError("");
-    setSuccess("File loaded successfully");
+    toast.success("File loaded successfully");
     logSchemaAction("schema_upload").catch(() => {});
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      // When closing via clickaway or X button, don't apply changes - just reset error/success
-      // Keep the SQL input persisted in memory
-      setError("");
-      setSuccess("");
-    }
+    // When closing via clickaway or X button, don't apply changes
+    // Keep the SQL input persisted in memory
     setIsOpen(open);
   };
 
@@ -183,7 +187,7 @@ export function SchemaSelector({
         <Button
           variant="outline"
           size="icon"
-          className="rounded-full bg-slate-900/95 border-slate-700 text-white hover:bg-slate-800 hover:text-blue-400 backdrop-blur-sm w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0"
+          className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0"
           title="Change Schema"
         >
           <Pencil size={14} className="sm:w-4 sm:h-4" />
@@ -207,33 +211,18 @@ export function SchemaSelector({
             <div className="mb-2 sm:mb-3">
               <FormatSelector value={currentFormat} onChange={updateFormat} />
             </div>
-            <SchemaEditor
-              value={scriptInput}
-              format={currentFormat}
-              onChange={(newValue) => {
-                setScriptInput(newValue);
-                setError("");
-                setSuccess("");
-              }}
-              className="h-[150px] sm:h-[250px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 py-2 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-
-            {error && (
-              <p className="text-red-400 text-xs sm:text-sm mt-2">{error}</p>
-            )}
-
-            <div className="relative flex justify-center items-center mt-2 sm:mt-3">
-              <div className="relative flex items-center gap-2">
-                <FileUploadButton
-                  onFileLoad={handleFileLoad}
-                  onError={setError}
-                />
-                {success && (
-                  <p className="text-green-400 text-xs sm:text-sm flex items-center gap-1 whitespace-nowrap">
-                    <CheckCircle2 size={12} className="sm:w-3 sm:h-3" />
-                    {success}
-                  </p>
-                )}
+            <div className="relative">
+              <SchemaEditor
+                value={scriptInput}
+                format={currentFormat}
+                onChange={(newValue) => {
+                  setScriptInput(newValue);
+                }}
+                className="h-[150px] sm:h-[275px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 py-2 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <LocalToastContainer />
+              <div className="absolute bottom-2 right-2">
+                <FileUploadButton onFileLoad={handleFileLoad} />
               </div>
             </div>
           </div>
@@ -242,10 +231,11 @@ export function SchemaSelector({
           <Button
             onClick={handleOk}
             disabled={!isValid || !scriptInput.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-semibold py-2.5 sm:py-3 text-sm sm:text-base"
+            variant="primary"
+            className="w-full"
             size="lg"
           >
-            OK
+            Apply Changes
           </Button>
         </DialogFooter>
       </DialogContent>

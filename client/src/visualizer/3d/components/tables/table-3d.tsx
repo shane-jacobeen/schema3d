@@ -403,10 +403,13 @@ export function Table3D({
         onClick={(e) => {
           e.stopPropagation();
           // Only select if it wasn't a long press
-          if (!isLongPressRef.current) {
-            onSelect(table);
+          if (!isLongPressRef.current && onSelect) {
+            // Toggle selection: if already selected, deselect; otherwise select
+            const tableToSelect = isSelected ? null : table;
+            onSelect(tableToSelect);
           }
-          isLongPressRef.current = false;
+          // Don't reset the flag here - let onPointerUp handle it
+          // This prevents race conditions between onClick and onPointerUp
         }}
         onPointerDown={(e) => {
           e.stopPropagation();
@@ -560,6 +563,18 @@ export function Table3D({
           if (longPressTimerRef.current) {
             clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
+          }
+
+          // If it was a long press, keep the flag true for a bit longer
+          // to prevent the subsequent click from firing
+          if (isLongPressRef.current) {
+            // Keep flag true for a short time to prevent click handler from firing
+            setTimeout(() => {
+              isLongPressRef.current = false;
+            }, 200);
+          } else {
+            // Reset long press flag immediately if it wasn't a long press
+            isLongPressRef.current = false;
           }
 
           // End drag
