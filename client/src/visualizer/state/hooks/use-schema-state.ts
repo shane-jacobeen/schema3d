@@ -1,8 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { getRetailerSchema } from "@/schemas/utils/load-schemas";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
-import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
+import {
+  getInitialSchema,
+  DEFAULT_LAYOUT,
+  type LayoutType,
+} from "@/visualizer/state/initial-state";
 
 interface UseSchemaStateReturn {
   currentSchema: DatabaseSchema;
@@ -20,8 +23,8 @@ export function useSchemaState(
   getViewMode: () => "2D" | "3D"
 ): UseSchemaStateReturn {
   const [currentSchema, setCurrentSchema] =
-    useState<DatabaseSchema>(getRetailerSchema());
-  const persistedSchemaRef = useRef<DatabaseSchema>(getRetailerSchema());
+    useState<DatabaseSchema>(getInitialSchema);
+  const persistedSchemaRef = useRef<DatabaseSchema>(getInitialSchema());
 
   const applyLayout = useCallback(
     (
@@ -41,17 +44,17 @@ export function useSchemaState(
       newSchema: DatabaseSchema,
       onCategoriesReset?: (schema: DatabaseSchema) => void
     ) => {
-      // Apply force layout to the new schema with current view mode
-      const forceLayoutSchema = applyLayout(newSchema, "force");
+      // Apply default layout to the new schema with current view mode
+      const layoutSchema = applyLayout(newSchema, DEFAULT_LAYOUT);
 
       // Set the schema directly - no animation for schema selector changes
-      setCurrentSchema(forceLayoutSchema);
+      setCurrentSchema(layoutSchema);
 
       clearAllSelections();
 
       // Reset category filters when a new schema is loaded
       if (onCategoriesReset) {
-        onCategoriesReset(forceLayoutSchema);
+        onCategoriesReset(layoutSchema);
       }
 
       // Reset camera to default position when schema changes

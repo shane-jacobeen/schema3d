@@ -20,6 +20,8 @@ tests/
 │   ├── filtering/              # Category filtering tests
 │   │   ├── categoryFiltering.test.ts   # guessCategory function, color palette
 │   │   └── categoryManagement.test.ts  # Category assignment, filtering logic, management
+│   ├── layout/                 # Layout algorithm tests
+│   │   └── initialLayoutState.test.ts  # Initial layout/view mode consistency
 │   ├── parsers/                # Parser tests
 │   │   ├── sqlParser.test.ts
 │   │   └── mermaidParser.test.ts
@@ -140,6 +142,15 @@ These are intentionally low to start - increase them as test coverage improves.
   - Updating category colors
   - Category validation (name and color format)
   - Edge cases (empty schemas, single category, empty categories)
+
+#### Layout (`tests/unit/layout/`)
+
+- **initialLayoutState.test.ts** - Tests for initial layout state consistency:
+  - Verifies initial schema uses force layout in 3D mode (matching UI defaults)
+  - Tests 2D vs 3D mode produce different layouts
+  - Validates different layout algorithms produce different positions
+  - Confirms default layout type is "force" and default view mode is "3D"
+  - Ensures table properties are preserved after layout application
 
 #### Parsers (`tests/unit/parsers/`)
 

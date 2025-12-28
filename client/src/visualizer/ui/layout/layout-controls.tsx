@@ -8,8 +8,14 @@ import {
 import { CustomToggleGroupItem } from "@/shared/ui-components/custom-toggle-group-item";
 import { useState } from "react";
 import { CategoryLegend } from "@/visualizer/ui/layout/category-legend";
+import {
+  DEFAULT_LAYOUT,
+  DEFAULT_VIEW_MODE,
+  type LayoutType,
+} from "@/visualizer/state/initial-state";
 
-export type LayoutType = "force" | "hierarchical" | "circular";
+// Re-export LayoutType for consumers
+export type { LayoutType } from "@/visualizer/state/initial-state";
 
 interface LayoutControlsProps {
   schema: DatabaseSchema;
@@ -75,9 +81,9 @@ export function LayoutControls({
   schema,
   onSchemaChange,
   onCategoryUpdate,
-  currentLayout = "force",
+  currentLayout = DEFAULT_LAYOUT,
   onLayoutChange,
-  viewMode = "2D",
+  viewMode = DEFAULT_VIEW_MODE,
   onViewModeChange,
   selectedCategories,
   onCategoryToggle,
