@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
+import {
+  DEFAULT_LAYOUT,
+  DEFAULT_VIEW_MODE,
+  type LayoutType,
+} from "@/visualizer/state/initial-state";
 import { applyLayoutToFilteredSchema } from "../utils/layout-utils";
 
 interface UseLayoutManagementReturn {
@@ -18,8 +22,9 @@ export function useLayoutManagement(
   selectedCategories: Set<string>,
   startTableAnimation: (schema: DatabaseSchema) => void
 ): UseLayoutManagementReturn {
-  const [currentLayout, setCurrentLayout] = useState<LayoutType>("force");
-  const [viewMode, setViewMode] = useState<"2D" | "3D">("2D");
+  const [currentLayout, setCurrentLayout] =
+    useState<LayoutType>(DEFAULT_LAYOUT);
+  const [viewMode, setViewMode] = useState<"2D" | "3D">(DEFAULT_VIEW_MODE);
 
   // Track previous values to detect changes
   const prevLayoutRef = useRef<LayoutType>(currentLayout);

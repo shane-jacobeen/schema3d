@@ -104,7 +104,7 @@ export function SchemaScene({
       }}
       onPointerMissed={onPointerMissed}
     >
-      <PerspectiveCamera makeDefault position={[0, 8, 20]} fov={60} />
+      <PerspectiveCamera makeDefault position={[0, 12, 35]} fov={60} />
       <OrbitControls
         ref={(controls) => {
           if (controls) {

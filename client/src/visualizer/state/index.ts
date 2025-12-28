@@ -7,3 +7,12 @@ export { useSelectionState } from "./hooks/use-selection-state";
 export { useFilterState } from "./hooks/use-filter-state";
 
 export type { Relationship } from "./types";
+
+// Initial state configuration
+export {
+  DEFAULT_LAYOUT,
+  DEFAULT_VIEW_MODE,
+  getDefaultBaseSchema,
+  getInitialSchema,
+  type LayoutType,
+} from "./initial-state";
