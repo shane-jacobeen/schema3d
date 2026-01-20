@@ -59,6 +59,18 @@ export function easeInOutCubic(progress: number): number {
 }
 
 /**
+ * Calculate default camera position based on max camera distance
+ * @param maxDistance - Maximum camera distance (from calculateMaxCameraDistance)
+ * @returns Default camera position for schema viewing
+ */
+export function getDefaultCameraPosition(maxDistance: number): THREE.Vector3 {
+  // Use 50% of max distance for a good initial view
+  // Maintain the default viewing angle (similar to original 0, 8, 20)
+  const distance = Math.max(20, maxDistance * 0.5);
+  return new THREE.Vector3(0, distance * 0.4, distance);
+}
+
+/**
  * Calculate max camera distance based on schema extent
  * @param tables - Array of tables with positions
  * @returns Max camera distance (clamped between 50 and 200)

@@ -8,13 +8,14 @@ const POSITION_THRESHOLD = 0.1;
 const ROTATION_THRESHOLD = 0.01;
 const MOVE_SPEED = 0.05;
 const ROTATION_SPEED = 1.5; // radians per second
-const DEFAULT_POSITION = new THREE.Vector3(0, 8, 20);
+const FALLBACK_POSITION = new THREE.Vector3(0, 8, 20);
 const DEFAULT_LOOK_AT = new THREE.Vector3(0, 0, 0);
 
 interface CameraControllerProps {
   shouldRecenter?: boolean;
   recenterTarget?: THREE.Vector3 | null;
   recenterLookAt?: THREE.Vector3 | null;
+  defaultPosition?: THREE.Vector3; // Calculated default position based on schema
   translateOnly?: boolean; // If true, only translate camera, don't rotate
   onRecenterComplete?: () => void;
   onAnimatingChange?: (isAnimating: boolean) => void;
@@ -24,6 +25,7 @@ export function CameraController({
   shouldRecenter = false,
   recenterTarget = null,
   recenterLookAt = null,
+  defaultPosition,
   translateOnly = false,
   onRecenterComplete,
   onAnimatingChange,
@@ -39,7 +41,8 @@ export function CameraController({
         targetPosition.current.copy(recenterTarget);
         targetLookAt.current.copy(recenterLookAt || recenterTarget);
       } else {
-        targetPosition.current.copy(DEFAULT_POSITION);
+        // Use calculated default position or fallback
+        targetPosition.current.copy(defaultPosition || FALLBACK_POSITION);
         targetLookAt.current.copy(DEFAULT_LOOK_AT);
       }
       isAnimating.current = true;
@@ -48,7 +51,13 @@ export function CameraController({
       isAnimating.current = false;
       onAnimatingChange?.(false);
     }
-  }, [shouldRecenter, recenterTarget, recenterLookAt, onAnimatingChange]);
+  }, [
+    shouldRecenter,
+    recenterTarget,
+    recenterLookAt,
+    defaultPosition,
+    onAnimatingChange,
+  ]);
 
   // Helper function to sync OrbitControls with camera position
   const syncOrbitControls = () => {

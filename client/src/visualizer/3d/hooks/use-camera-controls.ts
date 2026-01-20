@@ -4,6 +4,7 @@ import {
   useRef,
   useCallback,
   startTransition,
+  useMemo,
   type ComponentRef,
 } from "react";
 import * as THREE from "three";
@@ -11,6 +12,7 @@ import { OrbitControls } from "@react-three/drei";
 import {
   calculateMaxCameraDistance,
   animateCameraZoom,
+  getDefaultCameraPosition,
 } from "../utils/camera-utils";
 import type { Table } from "@/shared/types/schema";
 
@@ -19,6 +21,7 @@ interface UseCameraControlsReturn {
   recenterTarget: THREE.Vector3 | null;
   recenterLookAt: THREE.Vector3 | null;
   recenterTranslateOnly: boolean;
+  defaultCameraPosition: THREE.Vector3;
   isCameraAnimating: boolean;
   maxCameraDistance: number;
   setShouldRecenter: React.Dispatch<React.SetStateAction<boolean>>;
@@ -46,6 +49,13 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
   // State for actual maxDistance (will be updated after animation)
   const [maxCameraDistance, setMaxCameraDistance] = useState(() =>
     calculateMaxCameraDistance(tables)
+  );
+
+  // Calculate default camera position based on max distance
+  // This reuses the same distance calculation for consistency
+  const defaultCameraPosition = useMemo(
+    () => getDefaultCameraPosition(desiredMaxCameraDistance),
+    [desiredMaxCameraDistance]
   );
 
   // Smoothly animate zoom when maxDistance needs to decrease
@@ -118,6 +128,7 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     recenterTarget,
     recenterLookAt,
     recenterTranslateOnly,
+    defaultCameraPosition,
     isCameraAnimating,
     maxCameraDistance,
     setShouldRecenter,

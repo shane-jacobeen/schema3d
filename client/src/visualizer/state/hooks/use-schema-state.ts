@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
 import {
@@ -6,6 +6,7 @@ import {
   DEFAULT_LAYOUT,
   type LayoutType,
 } from "@/visualizer/state/initial-state";
+import { removeSchemaFromUrl, hasSchemaInUrl } from "@/shared/utils/url-state";
 
 interface UseSchemaStateReturn {
   currentSchema: DatabaseSchema;
@@ -25,6 +26,14 @@ export function useSchemaState(
   const [currentSchema, setCurrentSchema] =
     useState<DatabaseSchema>(getInitialSchema);
   const persistedSchemaRef = useRef<DatabaseSchema>(getInitialSchema());
+
+  // Clean up URL hash after initial schema load to prevent state conflicts
+  useEffect(() => {
+    if (hasSchemaInUrl()) {
+      // Remove the hash after React has initialized with the schema
+      removeSchemaFromUrl();
+    }
+  }, []);
 
   const applyLayout = useCallback(
     (

@@ -7,6 +7,8 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { getRetailerSchema } from "@/schemas/utils/load-schemas";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
+import { parseSchema } from "@/schemas/parsers";
+import { getSchemaFromHash } from "@/shared/utils/url-state";
 
 // ============================================
 // Layout Algorithm Types
@@ -45,9 +47,40 @@ export const getDefaultBaseSchema = getRetailerSchema;
 
 /**
  * Get the initial schema with the default layout applied.
+ * Checks URL for encoded schema first, otherwise loads default.
  * This ensures the visualization matches the UI control defaults on first load.
  */
 export function getInitialSchema(): DatabaseSchema {
+  // Check if there's a schema encoded in the URL hash
+  try {
+    const urlData = getSchemaFromHash();
+
+    if (urlData) {
+      const { schemaText, format } = urlData;
+
+      // Attempt to parse the schema from URL
+      const parsedSchema = parseSchema(
+        schemaText,
+        format === "auto" ? undefined : format
+      );
+
+      if (parsedSchema) {
+        // Apply default layout to URL schema
+        return applyLayoutToSchema(
+          parsedSchema,
+          DEFAULT_LAYOUT,
+          DEFAULT_VIEW_MODE
+        );
+      }
+      // If parsing fails, fall through to default schema
+      console.warn("Failed to parse schema from URL, using default schema");
+    }
+  } catch (error) {
+    console.error("Error loading schema from URL:", error);
+    // Fall through to default schema
+  }
+
+  // Default: load retailer schema
   const baseSchema = getDefaultBaseSchema();
   return applyLayoutToSchema(baseSchema, DEFAULT_LAYOUT, DEFAULT_VIEW_MODE);
 }
