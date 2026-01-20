@@ -140,6 +140,11 @@ export function SchemaOverlay({
         <ShareButton
           schemaText={schemaToFormat(schema)}
           format={schema.format}
+          viewState={{
+            selectedCategories: Array.from(selectedCategories).sort(),
+            layoutAlgorithm: currentLayout,
+            viewMode,
+          }}
           variant="outline"
           size="sm"
         />

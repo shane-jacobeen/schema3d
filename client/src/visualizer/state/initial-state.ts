@@ -9,6 +9,7 @@ import { getRetailerSchema } from "@/schemas/utils/load-schemas";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
 import { parseSchema } from "@/schemas/parsers";
 import { getSchemaFromHash } from "@/shared/utils/url-state";
+import { setPendingViewState } from "./utils/view-state-store";
 
 // ============================================
 // Layout Algorithm Types
@@ -56,7 +57,12 @@ export function getInitialSchema(): DatabaseSchema {
     const urlData = getSchemaFromHash();
 
     if (urlData) {
-      const { schemaText, format } = urlData;
+      const { schemaText, format, viewState } = urlData;
+
+      // Store view state for hooks to consume during initialization
+      if (viewState) {
+        setPendingViewState(viewState);
+      }
 
       // Attempt to parse the schema from URL
       const parsedSchema = parseSchema(
@@ -65,12 +71,11 @@ export function getInitialSchema(): DatabaseSchema {
       );
 
       if (parsedSchema) {
-        // Apply default layout to URL schema
-        return applyLayoutToSchema(
-          parsedSchema,
-          DEFAULT_LAYOUT,
-          DEFAULT_VIEW_MODE
-        );
+        // Apply layout from view state, or use defaults
+        const layout = viewState?.layoutAlgorithm || DEFAULT_LAYOUT;
+        const viewMode = viewState?.viewMode || DEFAULT_VIEW_MODE;
+
+        return applyLayoutToSchema(parsedSchema, layout, viewMode);
       }
       // If parsing fails, fall through to default schema
       console.warn("Failed to parse schema from URL, using default schema");

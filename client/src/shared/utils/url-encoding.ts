@@ -5,6 +5,7 @@
  */
 
 import pako from "pako";
+import type { SharedViewState } from "@/shared/types/schema";
 
 /**
  * Convert base64 string to base64url (URL-safe variant)
@@ -132,4 +133,70 @@ export function estimateEncodedSize(schemaText: string): number {
 export function isValidEncodedString(encoded: string): boolean {
   // Base64url should only contain A-Z, a-z, 0-9, -, _
   return /^[A-Za-z0-9\-_]+$/.test(encoded);
+}
+
+/**
+ * Encode view state to URL-safe string.
+ * Uses JSON stringify followed by base64url encoding (no compression for small data).
+ *
+ * @param viewState - The view state object to encode
+ * @returns URL-safe encoded string
+ *
+ * @example
+ * ```typescript
+ * const encoded = encodeViewState({
+ *   selectedCategories: ["Core", "Auth"],
+ *   layoutAlgorithm: "force",
+ *   viewMode: "3D"
+ * });
+ * // Returns: "eyJzZWxlY3RlZENhdGVnb3JpZXMi..."
+ * ```
+ */
+export function encodeViewState(viewState: SharedViewState): string {
+  try {
+    // Serialize to JSON
+    const json = JSON.stringify(viewState);
+
+    // Convert to base64url (no compression - view state is small)
+    const base64 = btoa(json);
+    return toBase64url(base64);
+  } catch (error) {
+    console.error("Failed to encode view state:", error);
+    throw new Error("Failed to encode view state for URL");
+  }
+}
+
+/**
+ * Decode view state from URL-safe string.
+ *
+ * @param encoded - The URL-encoded view state string
+ * @returns Decoded view state object, or null if decoding fails
+ *
+ * @example
+ * ```typescript
+ * const viewState = decodeViewState("eyJzZWxlY3RlZENhdGVnb3JpZXMi...");
+ * // Returns: { selectedCategories: ["Core", "Auth"], ... } or null
+ * ```
+ */
+export function decodeViewState(encoded: string): SharedViewState | null {
+  // Handle empty string
+  if (!encoded || encoded.trim() === "") {
+    return null;
+  }
+
+  try {
+    // Convert from base64url to standard base64
+    const base64 = fromBase64url(encoded);
+
+    // Decode base64 to JSON string
+    const json = atob(base64);
+
+    // Parse JSON
+    const viewState = JSON.parse(json) as SharedViewState;
+
+    return viewState;
+  } catch (error) {
+    console.error("Failed to decode view state from URL:", error);
+    return null;
+  }
 }

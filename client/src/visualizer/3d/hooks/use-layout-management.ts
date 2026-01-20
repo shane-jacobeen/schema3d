@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import {
   DEFAULT_LAYOUT,
@@ -6,6 +6,7 @@ import {
   type LayoutType,
 } from "@/visualizer/state/initial-state";
 import { applyLayoutToFilteredSchema } from "../utils/layout-utils";
+import { getPendingViewState } from "@/visualizer/state/utils/view-state-store";
 
 interface UseLayoutManagementReturn {
   currentLayout: LayoutType;
@@ -22,9 +23,16 @@ export function useLayoutManagement(
   selectedCategories: Set<string>,
   startTableAnimation: (schema: DatabaseSchema) => void
 ): UseLayoutManagementReturn {
-  const [currentLayout, setCurrentLayout] =
-    useState<LayoutType>(DEFAULT_LAYOUT);
-  const [viewMode, setViewMode] = useState<"2D" | "3D">(DEFAULT_VIEW_MODE);
+  // Check for view state from URL on first render (before it's consumed)
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => {
+    const pendingViewState = getPendingViewState();
+    return pendingViewState?.layoutAlgorithm || DEFAULT_LAYOUT;
+  });
+
+  const [viewMode, setViewMode] = useState<"2D" | "3D">(() => {
+    const pendingViewState = getPendingViewState();
+    return pendingViewState?.viewMode || DEFAULT_VIEW_MODE;
+  });
 
   // Track previous values to detect changes
   const prevLayoutRef = useRef<LayoutType>(currentLayout);

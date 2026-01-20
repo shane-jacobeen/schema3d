@@ -3,13 +3,15 @@
  * Supports multiple URL formats for compatibility with different tools.
  */
 
-import { decodeSchemaFromUrl } from "./url-encoding";
+import { decodeSchemaFromUrl, decodeViewState } from "./url-encoding";
 import type { SchemaFormat } from "@/schemas/parsers";
+import type { SharedViewState } from "@/shared/types/schema";
 
 export interface SchemaFromUrl {
   schemaText: string;
   format: SchemaFormat | "auto";
   prefix: string; // The prefix used (pako, schema, sql, mermaid)
+  viewState?: SharedViewState | null; // Optional view state from URL
 }
 
 /**
@@ -55,7 +57,7 @@ export function getSchemaFromHash(): SchemaFromUrl | null {
     }
 
     const prefix = hash.slice(0, colonIndex).toLowerCase();
-    const encoded = hash.slice(colonIndex + 1);
+    const afterPrefix = hash.slice(colonIndex + 1);
 
     // Validate prefix
     const validPrefixes = Object.values(URL_PREFIXES);
@@ -64,11 +66,23 @@ export function getSchemaFromHash(): SchemaFromUrl | null {
       return null;
     }
 
+    // Split schema and optional view state (format: SCHEMA:VIEW)
+    const parts = afterPrefix.split(":");
+    const encodedSchema = parts[0];
+    const encodedViewState = parts[1]; // May be undefined
+
     // Decode the schema text
-    const schemaText = decodeSchemaFromUrl(encoded);
+    const schemaText = decodeSchemaFromUrl(encodedSchema);
     if (!schemaText) {
       console.error("Failed to decode schema from URL");
       return null;
+    }
+
+    // Decode view state if present
+    let viewState: SharedViewState | null = null;
+    if (encodedViewState) {
+      viewState = decodeViewState(encodedViewState);
+      // If decoding fails, continue anyway (graceful degradation)
     }
 
     // Determine format based on prefix
@@ -87,6 +101,7 @@ export function getSchemaFromHash(): SchemaFromUrl | null {
       schemaText,
       format,
       prefix,
+      viewState,
     };
   } catch (error) {
     console.error("Error parsing schema from URL:", error);
@@ -133,23 +148,34 @@ export function hasSchemaInUrl(): boolean {
 }
 
 /**
- * Generate a shareable URL with encoded schema.
+ * Generate a shareable URL with encoded schema and optional view state.
  *
  * @param encodedSchema - The encoded schema string
  * @param format - The schema format (determines prefix)
- * @returns Full URL with schema hash
+ * @param encodedViewState - Optional encoded view state string
+ * @returns Full URL with schema hash (and view state if provided)
  *
  * @example
  * ```typescript
  * const url = createShareableUrl(encoded, "sql");
  * // Returns: "https://schema3d.com/#sql:eNpVjc..."
+ *
+ * const urlWithView = createShareableUrl(encoded, "sql", viewEncoded);
+ * // Returns: "https://schema3d.com/#sql:eNpVjc...:eyJzZWxl..."
  * ```
  */
 export function createShareableUrl(
   encodedSchema: string,
-  format: SchemaFormat
+  format: SchemaFormat,
+  encodedViewState?: string
 ): string {
   const prefix = format === "sql" ? URL_PREFIXES.SQL : URL_PREFIXES.MERMAID;
   const baseUrl = window.location.origin + window.location.pathname;
-  return `${baseUrl}#${prefix}:${encodedSchema}`;
+
+  // Append view state as second colon segment if provided
+  const hash = encodedViewState
+    ? `${prefix}:${encodedSchema}:${encodedViewState}`
+    : `${prefix}:${encodedSchema}`;
+
+  return `${baseUrl}#${hash}`;
 }

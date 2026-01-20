@@ -29,3 +29,16 @@ export interface DatabaseSchema {
   name: string;
   tables: Table[];
 }
+
+/**
+ * View state that can be shared via URL.
+ * Captures user customizations like category filters, layout algorithm, and view mode.
+ */
+export interface SharedViewState {
+  /** Selected categories to display (as array for JSON serialization) */
+  selectedCategories?: string[];
+  /** Layout algorithm used for positioning tables */
+  layoutAlgorithm?: "force" | "hierarchical" | "circular";
+  /** View mode (2D or 3D) */
+  viewMode?: "2D" | "3D";
+}

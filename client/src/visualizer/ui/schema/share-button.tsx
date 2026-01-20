@@ -9,9 +9,11 @@ import { useToast } from "@/shared/ui-components/toast";
 import {
   encodeSchemaToUrl,
   estimateEncodedSize,
+  encodeViewState,
 } from "@/shared/utils/url-encoding";
 import { createShareableUrl } from "@/shared/utils/url-state";
 import type { SchemaFormat } from "@/schemas/parsers";
+import type { SharedViewState } from "@/shared/types/schema";
 
 interface ShareButtonProps {
   /**
@@ -23,6 +25,11 @@ interface ShareButtonProps {
    * The format of the schema (sql or mermaid)
    */
   format: SchemaFormat;
+
+  /**
+   * Optional view state to include in the shareable URL
+   */
+  viewState?: SharedViewState;
 
   /**
    * Optional className for styling
@@ -52,6 +59,7 @@ const MAX_SAFE_URL_LENGTH = 2000;
  * <ShareButton
  *   schemaText={sqlSchema}
  *   format="sql"
+ *   viewState={{ selectedCategories: ["Core"], layoutAlgorithm: "force", viewMode: "3D" }}
  *   variant="outline"
  *   size="sm"
  * />
@@ -60,6 +68,7 @@ const MAX_SAFE_URL_LENGTH = 2000;
 export function ShareButton({
   schemaText,
   format,
+  viewState,
   className = "",
   variant = "outline",
   size = "sm",
@@ -83,8 +92,17 @@ export function ShareButton({
       // Encode the schema
       const encoded = encodeSchemaToUrl(schemaText);
 
+      // Encode view state if provided
+      const encodedViewState = viewState
+        ? encodeViewState(viewState)
+        : undefined;
+
       // Create shareable URL
-      const shareableUrl = createShareableUrl(encoded, format);
+      const shareableUrl = createShareableUrl(
+        encoded,
+        format,
+        encodedViewState
+      );
 
       // Copy to clipboard
       await navigator.clipboard.writeText(shareableUrl);
