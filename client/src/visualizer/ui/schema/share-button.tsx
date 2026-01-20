@@ -91,7 +91,7 @@ export function ShareButton({
 
       // Show success feedback
       setIsCopied(true);
-      toast.success("Share URL copied to clipboard!");
+      toast.success("Shareable link copied to clipboard");
 
       // Reset icon after 2 seconds
       setTimeout(() => {
