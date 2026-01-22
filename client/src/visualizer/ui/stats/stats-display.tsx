@@ -42,6 +42,22 @@ export function StatsDisplay({ className = "" }: StatsDisplayProps) {
       // Storage not available
     }
 
+    // Fetch stats via HTTP (WebSocket not supported in Vercel serverless)
+    const fetchStatsData = async () => {
+      try {
+        const data = await fetchStats();
+        if (data) {
+          setStats(data);
+          setIsLoading(false); // Mark as loaded after first successful fetch
+        } else {
+          setIsLoading(false); // Mark as loaded even on error to stop showing loading state
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+        setIsLoading(false); // Mark as loaded even on error to stop showing loading state
+      }
+    };
+
     // Track user interaction - fires 10 seconds after last interaction (debounced)
     // Always tracks - server will handle session lifecycle (ending stale sessions, starting new ones)
     const trackInteraction = async () => {
@@ -65,6 +81,19 @@ export function StatsDisplay({ className = "" }: StatsDisplayProps) {
       }
     };
 
+    // Track initial page visit immediately if this is a new session
+    // This ensures the user shows up in "active users" right away
+    if (!hasTrackedOnceRef.current) {
+      hasTrackedOnceRef.current = true;
+      trackInteraction().then(() => {
+        // Fetch stats after initial tracking to show updated count
+        fetchStatsData();
+      });
+    } else {
+      // If already tracked (returning user), just fetch stats
+      fetchStatsData();
+    }
+
     // Schedule tracking 10 seconds after last interaction (debounced)
     const scheduleTrackInteraction = () => {
       // Clear any existing timeout
@@ -81,18 +110,9 @@ export function StatsDisplay({ className = "" }: StatsDisplayProps) {
 
     // Track user interaction events - only intentional interactions
     const handleUserInteraction = () => {
-      // If this is the first interaction (never tracked before), track it immediately
-      if (!hasTrackedOnceRef.current) {
-        hasTrackedOnceRef.current = true; // Set flag immediately to prevent multiple calls
-        trackInteraction().then(() => {
-          // Also fetch stats on initial interaction
-          fetchStatsData();
-        });
-      } else {
-        // For subsequent interactions, schedule tracking 10 seconds from now (debounced)
-        // Each interaction resets the timer
-        scheduleTrackInteraction();
-      }
+      // For any interaction after initial load, schedule tracking 10 seconds from now (debounced)
+      // Each interaction resets the timer
+      scheduleTrackInteraction();
     };
 
     // Track scroll events but only if significant scroll AND user-initiated
@@ -143,25 +163,6 @@ export function StatsDisplay({ className = "" }: StatsDisplayProps) {
     // Add scroll and wheel listeners with throttling and thresholds
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("wheel", handleWheel, { passive: true });
-
-    // Fetch stats via HTTP (WebSocket not supported in Vercel serverless)
-    const fetchStatsData = async () => {
-      try {
-        const data = await fetchStats();
-        if (data) {
-          setStats(data);
-          setIsLoading(false); // Mark as loaded after first successful fetch
-        } else {
-          setIsLoading(false); // Mark as loaded even on error to stop showing loading state
-        }
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
-        setIsLoading(false); // Mark as loaded even on error to stop showing loading state
-      }
-    };
-
-    // Initial fetch
-    fetchStatsData();
 
     // Poll for stats updates every 10 seconds
     // Pause polling when page is hidden to reduce unnecessary API calls
