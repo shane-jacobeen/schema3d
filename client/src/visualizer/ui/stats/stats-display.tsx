@@ -110,9 +110,26 @@ export function StatsDisplay({ className = "" }: StatsDisplayProps) {
 
     // Track user interaction events - only intentional interactions
     const handleUserInteraction = () => {
-      // For any interaction after initial load, schedule tracking 10 seconds from now (debounced)
-      // Each interaction resets the timer
-      scheduleTrackInteraction();
+      // If this is the first interaction (never tracked before), track it immediately
+      if (!hasTrackedOnceRef.current) {
+        hasTrackedOnceRef.current = true; // Set flag immediately to prevent multiple calls
+        trackInteraction().then(() => {
+          // Also fetch stats on initial interaction
+          fetchStatsData();
+        });
+      } else if (trackInteractionTimeoutRef.current === null) {
+        // No pending timeout means the debounced tracking already fired
+        // This indicates user returned after being idle (>10s since last interaction)
+        // Track immediately to re-register as active user
+        trackInteraction().then(() => {
+          // Fetch stats to update active count
+          fetchStatsData();
+        });
+      } else {
+        // There's a pending timeout, so user is actively interacting
+        // Just reset the debounced timer
+        scheduleTrackInteraction();
+      }
     };
 
     // Track scroll events but only if significant scroll AND user-initiated
