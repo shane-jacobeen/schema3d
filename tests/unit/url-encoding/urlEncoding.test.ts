@@ -135,7 +135,7 @@ describe("URL Encoding", () => {
 
     it("should handle invalid input gracefully", () => {
       // This shouldn't happen in practice, but test the error path
-      const size = estimateEncodedSize(null as any);
+      const size = estimateEncodedSize(null as unknown as string);
       expect(size).toBeGreaterThanOrEqual(0);
     });
   });

@@ -1,9 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { encodeViewState, decodeViewState } from "@/shared/utils/url-encoding";
-import {
-  createShareableUrl,
-  getSchemaFromHash,
-} from "@/shared/utils/url-state";
+import { createShareableUrl } from "@/shared/utils/url-state";
 import type { SharedViewState } from "@/shared/types/schema";
 import {
   encodeSchemaToUrl,

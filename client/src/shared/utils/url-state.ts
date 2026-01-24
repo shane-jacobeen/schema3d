@@ -61,7 +61,11 @@ export function getSchemaFromHash(): SchemaFromUrl | null {
 
     // Validate prefix
     const validPrefixes = Object.values(URL_PREFIXES);
-    if (!validPrefixes.includes(prefix as any)) {
+    if (
+      !validPrefixes.includes(
+        prefix as (typeof URL_PREFIXES)[keyof typeof URL_PREFIXES]
+      )
+    ) {
       console.warn(`Unknown URL prefix: ${prefix}`);
       return null;
     }
@@ -144,7 +148,9 @@ export function hasSchemaInUrl(): boolean {
 
   const prefix = hash.slice(0, hash.indexOf(":")).toLowerCase();
   const validPrefixes = Object.values(URL_PREFIXES);
-  return validPrefixes.includes(prefix as any);
+  return validPrefixes.includes(
+    prefix as (typeof URL_PREFIXES)[keyof typeof URL_PREFIXES]
+  );
 }
 
 /**

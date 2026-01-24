@@ -2,7 +2,15 @@
  * Unit tests for URL state management utilities
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  type Mock,
+} from "vitest";
 import {
   getSchemaFromHash,
   removeSchemaFromUrl,
@@ -18,8 +26,17 @@ describe("URL State Management", () => {
 
   beforeEach(() => {
     // Mock window.location
-    delete (window as any).location;
-    (window as any).location = {
+    delete (window as { location?: unknown }).location;
+    (
+      window as {
+        location: {
+          hash: string;
+          href: string;
+          origin: string;
+          pathname: string;
+        };
+      }
+    ).location = {
       hash: "",
       href: "https://schema3d.com/",
       origin: "https://schema3d.com",
@@ -27,14 +44,14 @@ describe("URL State Management", () => {
     };
 
     // Mock history API
-    (window as any).history = {
+    (window as unknown as { history: { replaceState: Mock } }).history = {
       replaceState: vi.fn(),
     };
   });
 
   afterEach(() => {
-    (window as any).location = originalLocation;
-    (window as any).history = originalHistory;
+    (window as { location: Location }).location = originalLocation;
+    (window as { history: History }).history = originalHistory;
     vi.restoreAllMocks();
   });
 
@@ -137,7 +154,7 @@ describe("URL State Management", () => {
       removeSchemaFromUrl();
 
       expect(window.history.replaceState).toHaveBeenCalled();
-      const call = (window.history.replaceState as any).mock.calls[0];
+      const call = (window.history.replaceState as Mock).mock.calls[0];
       expect(call[2]).toBe("https://schema3d.com/");
     });
 
@@ -202,8 +219,26 @@ describe("URL State Management", () => {
     });
 
     it("should use current origin", () => {
-      (window as any).location.origin = "https://localhost:3000";
-      (window as any).location.pathname = "/";
+      (
+        window as {
+          location: {
+            hash: string;
+            href: string;
+            origin: string;
+            pathname: string;
+          };
+        }
+      ).location.origin = "https://localhost:3000";
+      (
+        window as {
+          location: {
+            hash: string;
+            href: string;
+            origin: string;
+            pathname: string;
+          };
+        }
+      ).location.pathname = "/";
 
       const encoded = "abc123";
       const url = createShareableUrl(encoded, "sql");
@@ -212,7 +247,16 @@ describe("URL State Management", () => {
     });
 
     it("should preserve pathname", () => {
-      (window as any).location.pathname = "/test/path";
+      (
+        window as {
+          location: {
+            hash: string;
+            href: string;
+            origin: string;
+            pathname: string;
+          };
+        }
+      ).location.pathname = "/test/path";
 
       const encoded = "abc123";
       const url = createShareableUrl(encoded, "sql");

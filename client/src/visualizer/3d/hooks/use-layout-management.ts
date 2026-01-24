@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import {
   DEFAULT_LAYOUT,

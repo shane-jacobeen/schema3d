@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   getSampleSchemas,
   getSchemaText,
@@ -12,14 +12,16 @@ import {
 import { parseSqlSchema } from "@/schemas/parsers/sql-parser";
 import { parseMermaidSchema } from "@/schemas/parsers/mermaid-parser";
 import { schemaToSql, schemaToMermaid } from "@/schemas/utils/schema-converter";
-import type { DatabaseSchema } from "@/shared/types/schema";
 
 /**
  * Helper to mock window.location.hash in tests
  */
 function mockWindowHash(hash: string) {
-  delete (window as any).location;
-  (window as any).location = { hash, origin: "http://localhost:3000" };
+  delete (window as { location?: unknown }).location;
+  (window as { location: { hash: string; origin: string } }).location = {
+    hash,
+    origin: "http://localhost:3000",
+  };
 }
 
 /**
