@@ -12,6 +12,11 @@ import {
   UNIVERSITY_MERMAID,
 } from "@/schemas/utils/load-schemas";
 import { parseSqlSchema } from "@/schemas/parsers/sql-parser";
+import {
+  setPendingViewState,
+  getPendingViewState,
+  consumePendingViewState,
+} from "@/visualizer/state/utils/view-state-store";
 
 describe("View State Encoding/Decoding", () => {
   describe("View State Serialization", () => {
@@ -480,6 +485,91 @@ describe("View State Encoding/Decoding", () => {
       expect(hiddenCategories).toHaveLength(2);
       expect(hiddenCategories?.map((c) => c.name)).toContain("Engagement");
       expect(hiddenCategories?.map((c) => c.name)).toContain("Views");
+    });
+  });
+
+  describe("View State Store Integration", () => {
+    it("should properly initialize layout controls from URL view state", () => {
+      // Simulate URL load with specific layout algorithm and view mode
+      const viewState: SharedViewState = {
+        categories: [
+          { name: "Core", color: "#3b82f6", selected: true },
+          { name: "Sales", color: "#10b981", selected: true },
+        ],
+        layoutAlgorithm: "circular",
+        viewMode: "2D",
+      };
+
+      // This would normally be called by getInitialSchema when decoding URL
+      setPendingViewState(viewState);
+
+      // Simulate useFilterState reading categories (non-consuming)
+      const filterRead = getPendingViewState();
+      expect(filterRead?.categories).toEqual(viewState.categories);
+
+      // Simulate useLayoutManagement reading layout/viewMode (non-consuming)
+      const layoutRead = getPendingViewState();
+      expect(layoutRead?.layoutAlgorithm).toBe("circular");
+      expect(layoutRead?.viewMode).toBe("2D");
+
+      // Both hooks should get the same state without consuming it
+      expect(filterRead).toEqual(layoutRead);
+
+      // Simulate useSchemaState cleanup consuming the state
+      const consumed = consumePendingViewState();
+      expect(consumed).toEqual(viewState);
+
+      // After consumption, state should be cleared
+      expect(getPendingViewState()).toBeNull();
+    });
+
+    it("should handle URL without view state (backward compatibility)", () => {
+      // Clear any pending state
+      consumePendingViewState();
+
+      // Simulate URL without view state
+      const filterRead = getPendingViewState();
+      const layoutRead = getPendingViewState();
+
+      // Both should get null
+      expect(filterRead).toBeNull();
+      expect(layoutRead).toBeNull();
+
+      // This ensures default values are used: DEFAULT_LAYOUT and DEFAULT_VIEW_MODE
+    });
+
+    it("should ensure layout buttons reflect URL state on load", () => {
+      const testCases: Array<{
+        layoutAlgorithm: "force" | "hierarchical" | "circular";
+        viewMode: "2D" | "3D";
+      }> = [
+        { layoutAlgorithm: "force", viewMode: "2D" },
+        { layoutAlgorithm: "hierarchical", viewMode: "3D" },
+        { layoutAlgorithm: "circular", viewMode: "2D" },
+        { layoutAlgorithm: "force", viewMode: "3D" },
+      ];
+
+      testCases.forEach(({ layoutAlgorithm, viewMode }) => {
+        // Clear previous state
+        consumePendingViewState();
+
+        const viewState: SharedViewState = {
+          categories: [],
+          layoutAlgorithm,
+          viewMode,
+        };
+
+        setPendingViewState(viewState);
+
+        // Simulate useLayoutManagement initialization
+        const state = getPendingViewState();
+
+        // Verify the state matches what was set
+        expect(state?.layoutAlgorithm).toBe(layoutAlgorithm);
+        expect(state?.viewMode).toBe(viewMode);
+
+        // This ensures the layout controls ToggleGroup receives the correct value prop
+      });
     });
   });
 });

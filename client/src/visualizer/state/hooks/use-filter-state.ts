@@ -12,7 +12,7 @@ import {
   updateCategoriesForSchema,
   initializeCategories,
 } from "../utils/schema-state-utils";
-import { consumePendingViewState } from "../utils/view-state-store";
+import { getPendingViewState } from "../utils/view-state-store";
 
 interface UseFilterStateReturn {
   filteredTables: Set<string>;
@@ -32,10 +32,10 @@ export function useFilterState(
   const [relatedTables, setRelatedTables] = useState<Set<string>>(new Set());
 
   // Check for view state from URL on first render
-  // Use lazy initializer to avoid calling consumePendingViewState multiple times
+  // Use lazy initializer and getPendingViewState (non-consuming) to allow other hooks to also read it
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
     () => {
-      const pendingViewState = consumePendingViewState();
+      const pendingViewState = getPendingViewState();
       if (pendingViewState?.categories) {
         // Extract selected categories from the categories array
         const selected = pendingViewState.categories

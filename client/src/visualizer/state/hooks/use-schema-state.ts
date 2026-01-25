@@ -7,6 +7,7 @@ import {
   type LayoutType,
 } from "@/visualizer/state/initial-state";
 import { removeSchemaFromUrl, hasSchemaInUrl } from "@/shared/utils/url-state";
+import { consumePendingViewState } from "@/visualizer/state/utils/view-state-store";
 
 interface UseSchemaStateReturn {
   currentSchema: DatabaseSchema;
@@ -27,12 +28,14 @@ export function useSchemaState(
     useState<DatabaseSchema>(getInitialSchema);
   const persistedSchemaRef = useRef<DatabaseSchema>(getInitialSchema());
 
-  // Clean up URL hash after initial schema load to prevent state conflicts
+  // Clean up URL hash and pending view state after initial schema load
   useEffect(() => {
     if (hasSchemaInUrl()) {
       // Remove the hash after React has initialized with the schema
       removeSchemaFromUrl();
     }
+    // Consume/clear the pending view state after all hooks have initialized
+    consumePendingViewState();
   }, []);
 
   const applyLayout = useCallback(
