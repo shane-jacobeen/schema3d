@@ -12,7 +12,7 @@ export function SchemaMetadata() {
       </title>
       <meta
         name="description"
-        content="Visualize your database schemas in stunning 3D. Interactive schema visualizer tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation. Perfect for database design and documentation."
+        content="Free open-source database schema visualizer in stunning 3D. Share schemas via URL for seamless collaboration. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation. Perfect for database design and documentation."
       />
       <link rel="canonical" href="https://schema3d.com" />
     </Helmet>
@@ -28,7 +28,7 @@ export function AboutPageMetadata() {
       <title>About Schema3D - Database Visualization Tool | Schema3D</title>
       <meta
         name="description"
-        content="Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Features SQL/T-SQL & Mermaid Markdown support, and database relationship mapping."
+        content="Learn about Schema3D, a free open-source database visualization tool for 3D schema exploration. Share schemas via URL for team collaboration. Features SQL/T-SQL & Mermaid Markdown support, and database relationship mapping."
       />
       <link rel="canonical" href="https://schema3d.com/about" />
       <meta
@@ -37,7 +37,7 @@ export function AboutPageMetadata() {
       />
       <meta
         property="og:description"
-        content="Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping."
+        content="Learn about Schema3D, a free open-source database visualization tool for 3D schema exploration. Share schemas via URL for team collaboration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping."
       />
       <meta property="og:url" content="https://schema3d.com/about" />
       <meta
@@ -46,7 +46,7 @@ export function AboutPageMetadata() {
       />
       <meta
         name="twitter:description"
-        content="Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown."
+        content="Learn about Schema3D, a free open-source database visualization tool for 3D schema exploration. Share schemas via URL for team collaboration. Supports SQL/T-SQL & Mermaid Markdown."
       />
       <script type="application/ld+json">
         {JSON.stringify({
@@ -54,7 +54,7 @@ export function AboutPageMetadata() {
           "@type": "AboutPage",
           name: "About Schema3D",
           description:
-            "Learn about Schema3D, a free interactive database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping",
+            "Learn about Schema3D, a free open-source database visualization tool for 3D schema exploration. Share schemas via URL for team collaboration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping",
           url: "https://schema3d.com/about",
           mainEntity: {
             "@type": "WebApplication",

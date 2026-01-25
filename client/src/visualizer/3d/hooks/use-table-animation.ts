@@ -74,10 +74,15 @@ export function useTableAnimation(
           return prevSchema;
         }
 
-        // Initialize animatedPositions with current table positions
+        // Initialize animatedPositions with CURRENT positions
+        // If there's an ongoing animation, use the current animated positions
+        // Otherwise, use table.position from the schema
         const initialPositions = new Map<string, [number, number, number]>();
         prevSchema.tables.forEach((table) => {
-          initialPositions.set(table.name, table.position);
+          // Use current animated position if available, otherwise use table.position
+          const currentPosition =
+            animatedPositionsRef.current.get(table.name) || table.position;
+          initialPositions.set(table.name, currentPosition);
         });
 
         animatedPositionsRef.current = initialPositions;
