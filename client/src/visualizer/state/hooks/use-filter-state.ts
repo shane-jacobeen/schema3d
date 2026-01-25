@@ -36,9 +36,12 @@ export function useFilterState(
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
     () => {
       const pendingViewState = consumePendingViewState();
-      if (pendingViewState?.selectedCategories) {
-        // Use categories from URL if provided
-        return new Set(pendingViewState.selectedCategories);
+      if (pendingViewState?.categories) {
+        // Extract selected categories from the categories array
+        const selected = pendingViewState.categories
+          .filter((cat) => cat.selected !== false) // Include if selected is true or undefined
+          .map((cat) => cat.name);
+        return new Set(selected);
       }
       // Otherwise use default categories
       return getInitialCategories();

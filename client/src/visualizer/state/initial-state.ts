@@ -71,11 +71,45 @@ export function getInitialSchema(): DatabaseSchema {
       );
 
       if (parsedSchema) {
+        // Debug: Log table count and view count
+        const viewCount = parsedSchema.tables.filter((t) => t.isView).length;
+        console.log(
+          `[Schema Load] Parsed ${parsedSchema.tables.length} tables (${viewCount} views) from URL`
+        );
+
+        // Apply custom categories from view state if present
+        let schemaWithCategories = parsedSchema;
+        if (viewState?.categories && viewState.categories.length > 0) {
+          // Create a map of category names to colors
+          const categoryColorMap = new Map(
+            viewState.categories.map((cat) => [cat.name, cat.color])
+          );
+
+          // Apply custom category assignments and colors
+          schemaWithCategories = {
+            ...parsedSchema,
+            tables: parsedSchema.tables.map((table) => {
+              // Check if there's a custom category assignment for this table
+              const customCategory = viewState.tableCategoryMap?.[table.name];
+              const category = customCategory || table.category;
+
+              // Get the color for this category
+              const customColor = categoryColorMap.get(category);
+
+              return {
+                ...table,
+                category,
+                color: customColor || table.color,
+              };
+            }),
+          };
+        }
+
         // Apply layout from view state, or use defaults
         const layout = viewState?.layoutAlgorithm || DEFAULT_LAYOUT;
         const viewMode = viewState?.viewMode || DEFAULT_VIEW_MODE;
 
-        return applyLayoutToSchema(parsedSchema, layout, viewMode);
+        return applyLayoutToSchema(schemaWithCategories, layout, viewMode);
       }
       // If parsing fails, fall through to default schema
       console.warn("Failed to parse schema from URL, using default schema");

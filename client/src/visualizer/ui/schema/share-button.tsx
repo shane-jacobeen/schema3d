@@ -92,6 +92,12 @@ export function ShareButton({
       // Encode the schema
       const encoded = encodeSchemaToUrl(schemaText);
 
+      // Debug: Check if schemaText contains views
+      const viewCount = (schemaText.match(/CREATE VIEW/gi) || []).length;
+      console.log(
+        `[Share] Encoding schema with ${viewCount} CREATE VIEW statements`
+      );
+
       // Encode view state if provided
       const encodedViewState = viewState
         ? encodeViewState(viewState)

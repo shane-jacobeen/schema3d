@@ -1478,11 +1478,48 @@ export function schemaToSql(schema: DatabaseSchema): string {
   // Convert views to SQL (views are now tables with isView flag)
   if (views.length > 0) {
     for (const view of views) {
-      // Generate a placeholder CREATE VIEW statement
-      // Since we don't store the full view definition, we'll use a simple placeholder
-      const createView = `CREATE VIEW ${view.name} AS\nSELECT * FROM ${
-        regularTables[0]?.name || "table"
-      };`;
+      // Collect all referenced tables from sourceTable in columns
+      const referencedTables = new Set<string>();
+      view.columns.forEach((col) => {
+        if (col.sourceTable && !col.name.startsWith("_ref_")) {
+          // Skip virtual reference columns
+          referencedTables.add(col.sourceTable);
+        }
+      });
+
+      // Filter out virtual reference columns when generating SELECT
+      const realColumns = view.columns.filter(
+        (c) => !c.name.startsWith("_ref_")
+      );
+
+      // Create SELECT statement with proper table references
+      const selectColumns = realColumns
+        .map((c) => {
+          if (c.sourceTable && c.sourceColumn) {
+            return `${c.sourceTable}.${c.sourceColumn} AS ${c.name}`;
+          }
+          return c.name;
+        })
+        .join(",\n  ");
+
+      // Build FROM clause with all referenced tables
+      let fromClause: string;
+      const tablesArray = Array.from(referencedTables);
+      if (tablesArray.length === 0) {
+        // No source tables, use first regular table as fallback
+        fromClause = regularTables[0]?.name || "table";
+      } else if (tablesArray.length === 1) {
+        // Single table
+        fromClause = tablesArray[0];
+      } else {
+        // Multiple tables - use JOINs
+        fromClause = tablesArray[0];
+        for (let i = 1; i < tablesArray.length; i++) {
+          fromClause += `\nJOIN ${tablesArray[i]}`;
+        }
+      }
+
+      const createView = `CREATE VIEW ${view.name} AS\nSELECT\n  ${selectColumns}\nFROM ${fromClause};`;
       sqlStatements.push(createView);
     }
   }

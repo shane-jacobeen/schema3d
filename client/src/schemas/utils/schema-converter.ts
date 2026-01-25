@@ -9,8 +9,8 @@ import { parseCardinality } from "@/visualizer/3d/components/relationships/relat
 export function schemaToMermaid(schema: DatabaseSchema): string {
   const lines: string[] = ["erDiagram"];
 
-  // Separate tables and views (views are not typically shown in ER diagrams)
-  const regularTables = schema.tables.filter((table) => !table.isView);
+  // Include all tables (including views) for complete schema sharing
+  const regularTables = schema.tables;
 
   // First, collect all relationships
   const relationships: Array<{
