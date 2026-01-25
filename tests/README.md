@@ -1,6 +1,6 @@
 # Testing Documentation
 
-This directory contains all test files for the Schema3D project.
+This directory contains all test files for the Schema3D project: **176 tests** across **13 test files**, providing comprehensive coverage of core functionality.
 
 ## Test Framework
 
@@ -16,23 +16,27 @@ We use [Vitest](https://vitest.dev/) as our test framework, which is optimized f
 ```
 tests/
 ├── setup.ts                    # Test setup and global configuration
-├── unit/                        # Unit tests for individual functions
-│   ├── filtering/              # Category filtering tests
-│   │   ├── categoryFiltering.test.ts   # guessCategory function, color palette
-│   │   └── categoryManagement.test.ts  # Category assignment, filtering logic, management
-│   ├── layout/                 # Layout algorithm tests
-│   │   └── initialLayoutState.test.ts  # Initial layout/view mode consistency
-│   ├── parsers/                # Parser tests
-│   │   ├── sqlParser.test.ts
-│   │   └── mermaidParser.test.ts
-│   ├── schema/                 # Schema utility tests
-│   │   └── schemaUtils.test.ts
-│   └── visualization/          # Visualization utility tests
-│       └── relationshipUtils.test.ts
-├── integration/                 # Integration/component tests
-│   ├── CategoryEditDialog.test.tsx  # Category edit dialog interactions
-│   ├── SchemaControls.test.tsx
-│   └── SchemaEditor.test.tsx
+├── unit/                       # Unit tests for individual functions (125 tests)
+│   ├── filtering/              # Category filtering (36 tests)
+│   │   ├── categoryFiltering.test.ts   # 18 tests - guessCategory, color palette
+│   │   └── categoryManagement.test.ts  # 18 tests - Category operations, validation
+│   ├── layout/                 # Layout algorithms (8 tests)
+│   │   └── initialLayoutState.test.ts  # Layout/view mode consistency
+│   ├── parsers/                # Schema parsers (26 tests)
+│   │   ├── sqlParser.test.ts           # 14 tests - SQL parsing, FKs, views
+│   │   └── mermaidParser.test.ts       # 12 tests - ER diagrams, cardinality
+│   ├── schema/                 # Schema utilities (9 tests)
+│   │   └── schemaUtils.test.ts         # Schema comparison, conversion
+│   ├── url-encoding/           # URL management (15 tests)
+│   │   └── urlState.test.ts            # Hash parsing, shareable URLs
+│   └── visualization/          # Visualization (17 tests)
+│       └── relationshipUtils.test.ts   # Cardinality, FK/PK analysis
+├── integration/                # Integration/component tests (51 tests)
+│   ├── CategoryEditDialog.test.tsx  # 21 tests - Category UI interactions
+│   ├── SchemaControls.test.tsx      # 4 tests - Schema selection, format switching
+│   ├── SchemaEditor.test.tsx        # 5 tests - Text editor, syntax highlighting
+│   ├── urlSchemaRoundTrip.test.ts   # 16 tests - Schema encoding/decoding
+│   └── viewStateRoundTrip.test.ts   # 19 tests - View state preservation, sharing
 ├── examples/                   # Example/test schema files
 │   └── test-missing-table-fk.sql
 ├── MANUAL_TEST_CHECKLIST.md    # Manual testing guide
@@ -122,65 +126,160 @@ Coverage reports are generated in the `coverage/` directory. Open `coverage/inde
 
 These are intentionally low to start - increase them as test coverage improves.
 
+## What's Tested
+
+The test suite provides comprehensive coverage across all core domains:
+
+- ✅ **SQL & Mermaid Parsing** - CREATE TABLE, foreign keys, views, ER diagrams, cardinality, T-SQL syntax
+- ✅ **Schema Conversion** - SQL ↔ Mermaid format conversion with full fidelity, relationship preservation
+- ✅ **Category Management** - Auto-assignment, filtering, custom categories, color management, validation
+- ✅ **Layout Algorithms** - Force-directed, hierarchical, circular layouts with 2D/3D modes
+- ✅ **URL Sharing** - Schema and view state encoding, compression, backward compatibility, prefix handling
+- ✅ **Relationship Analysis** - Cardinality calculation (1:1, 1:N, 0..1:1, etc.), FK detection, constraint handling
+- ✅ **UI Components** - Schema editor, category dialog, controls, validation feedback, user interactions
+- ✅ **Round-Trip Integrity** - Schema encoding/decoding, view state preservation, data integrity through share cycle
+- ✅ **Error Handling** - Invalid SQL/Mermaid, corrupted URLs, empty inputs, edge cases
+
 ## Test Suites
 
-### Unit Tests
+### Unit Tests (125 tests)
 
-#### Filtering (`tests/unit/filtering/`)
+#### Filtering (`tests/unit/filtering/`) - 36 tests
 
-- **categoryFiltering.test.ts** - Tests for the `guessCategory` function and color palette:
+- **categoryFiltering.test.ts** (18 tests) - Tests for the `guessCategory` function and color palette:
   - Table name categorization (Auth, Product, Order, Customer, Content, Financial, Notification, Log, System, General)
   - Case-insensitivity and prefix/suffix handling
-  - Color palette validation (15 unique hex colors)
+  - Priority matching for overlapping keywords
+  - Color palette validation (15 unique hex colors, all valid hex format, starts with blue)
 
-- **categoryManagement.test.ts** - Tests for category management logic:
+- **categoryManagement.test.ts** (18 tests) - Tests for category management logic:
   - Category assignment based on table names
-  - Color assignment per category
-  - Category filtering and toggling
+  - Unique color assignment per category
+  - Category filtering and toggling (selected/unselected states)
   - Category renaming across all tables
   - Moving tables between categories
-  - Updating category colors
-  - Category validation (name and color format)
-  - Edge cases (empty schemas, single category, empty categories)
+  - Updating category colors globally
+  - Category validation (non-empty names, capitalization, color format)
+  - Edge cases (empty schemas, single category, all tables in one category)
 
-#### Layout (`tests/unit/layout/`)
+#### Layout (`tests/unit/layout/`) - 8 tests
 
-- **initialLayoutState.test.ts** - Tests for initial layout state consistency:
-  - Verifies initial schema uses force layout in 3D mode (matching UI defaults)
-  - Tests 2D vs 3D mode produce different layouts
-  - Validates different layout algorithms produce different positions
-  - Confirms default layout type is "force" and default view mode is "3D"
-  - Ensures table properties are preserved after layout application
+- **initialLayoutState.test.ts** (8 tests) - Tests for initial layout state consistency:
+  - Default layout (force) in default view mode (3D)
+  - 2D vs 3D mode produce different table positions
+  - Different layout algorithms (force, hierarchical, circular) produce different positions
+  - Verifies default layout type is "force" and default view mode is "3D"
+  - Ensures initial schema matches manually applied default layout
+  - Confirms table properties (color, category) are preserved after layout application
 
-#### Parsers (`tests/unit/parsers/`)
+#### Parsers (`tests/unit/parsers/`) - 26 tests
 
-- **sqlParser.test.ts** - SQL schema parsing tests
-- **mermaidParser.test.ts** - Mermaid ER diagram parsing tests
+- **sqlParser.test.ts** (14 tests) - SQL schema parsing tests:
+  - Simple CREATE TABLE statements with columns and types
+  - Table-level and column-level FOREIGN KEY constraints
+  - T-SQL bracketed identifiers and schema prefixes
+  - ALTER TABLE ADD statements
+  - UNIQUE and NOT NULL constraints
+  - Cardinality calculation from NULL/NOT NULL and UNIQUE constraints
+  - Multiple tables with relationships
+  - CREATE VIEW statement parsing and SQL generation
+  - Error handling for invalid SQL
+  - SQL block validation (identifyValidSqlBlocks)
 
-#### Schema (`tests/unit/schema/`)
+- **mermaidParser.test.ts** (12 tests) - Mermaid ER diagram parsing tests:
+  - Simple entity definitions with columns
+  - Relationship parsing with cardinality notation (||, o, {, |{, o{)
+  - All cardinality types (1:1, 1:N, N:N, 0..1:1, etc.)
+  - Cardinality normalization when FK is on left or right side
+  - Multiple constraints per column (PK, FK, UK)
+  - Tables defined only by relationships (implicit entities)
+  - Complex relationships with all cardinality symbols
+  - Error handling for invalid Mermaid syntax
+  - Mermaid block validation (identifyValidMermaidBlocks)
 
-- **schemaUtils.test.ts** - Schema utility function tests
+#### Schema (`tests/unit/schema/`) - 9 tests
 
-#### Visualization (`tests/unit/visualization/`)
+- **schemaUtils.test.ts** (9 tests) - Schema utility function tests:
+  - `areSchemasEqual` - Schema comparison ignoring visual properties (position, color)
+  - Detects differences in table count, column types, foreign key relationships
+  - Case-insensitive table and column name comparison
+  - `schemaToFormat` - Conversion between SQL and Mermaid formats
+  - Preserves relationships through format conversion
 
-- **relationshipUtils.test.ts** - Foreign key relationship utility tests
+#### URL Encoding (`tests/unit/url-encoding/`) - 15 tests
 
-### Integration Tests
+- **urlState.test.ts** (15 tests) - URL state management tests:
+  - `getSchemaFromHash` - Parses hash with different prefixes (pako, sql, mermaid, schema)
+  - Handles uppercase prefixes and auto-detection
+  - Error handling for invalid/corrupted encoded data
+  - `removeSchemaFromUrl` - Removes hash from URL
+  - `hasSchemaInUrl` - Validates schema presence in URL
+  - `createShareableUrl` - Generates shareable URLs with proper format
+  - Preserves origin and pathname in generated URLs
+
+#### Visualization (`tests/unit/visualization/`) - 17 tests
+
+- **relationshipUtils.test.ts** (17 tests) - Foreign key relationship utility tests:
+  - `calculateCardinality` - Determines relationship cardinality from constraints:
+    - 1:1 (unique FK, NOT NULL)
+    - 0..1:1 (unique FK, nullable)
+    - 1:1..N (non-unique FK, NOT NULL)
+    - 0..1:0..N (non-unique FK, nullable)
+    - Handles undefined isNullable conservatively
+    - Treats primary keys as unique
+  - `parseCardinality` - Parses cardinality strings (1:N, 1:1, N:N, 0..1:1, etc.)
+
+### Integration Tests (51 tests)
 
 #### Component Tests (`tests/integration/`)
 
-- **CategoryEditDialog.test.tsx** - Category edit dialog component tests:
-  - Dialog rendering (open/closed states)
-  - Category name and color display
-  - Table lists (tables in category, available tables)
-  - User interactions (name change, color change, table selection)
-  - Transfer buttons (add/remove tables with icon-only buttons)
-  - Save functionality (validation, callbacks)
-  - New category creation workflow
-  - Placeholder and styling validation
+- **CategoryEditDialog.test.tsx** (21 tests) - Category edit dialog component tests:
+  - Dialog rendering (open/closed states, proper UI elements)
+  - Category name and color input fields display correct values
+  - Table lists (tables in category vs available tables, sorted alphabetically)
+  - Category labels display with correct category name
+  - User interactions (name change, color picker, table selection via checkboxes)
+  - Transfer functionality (add/remove tables between category and available lists)
+  - Save functionality (validates non-empty name, calls onSave with correct data, closes dialog)
+  - New category creation (empty name, all tables available, default color, validation)
+  - Placeholder text styling (muted appearance for empty states)
 
-- **SchemaControls.test.tsx** - Schema controls component tests
-- **SchemaEditor.test.tsx** - Schema editor component tests
+- **SchemaControls.test.tsx** (4 tests) - Schema controls component tests:
+  - Schema selector dialog rendering
+  - Sample schema selection functionality
+  - Format switching (SQL ↔ Mermaid)
+  - Schema validation feedback display
+
+- **SchemaEditor.test.tsx** (5 tests) - Schema editor component tests:
+  - Editor rendering as textbox
+  - onChange callback on user typing
+  - Newline character handling
+  - Syntax highlighting based on format (SQL vs Mermaid)
+  - Paste event handling
+
+#### Round-Trip Tests (`tests/integration/`)
+
+- **urlSchemaRoundTrip.test.ts** (16 tests) - Schema encoding/decoding integration tests:
+  - Round-trip all sample schemas (Retailer, Blog Platform, University)
+  - Schema conversion round-trips (SQL and Mermaid)
+  - Cross-format compatibility (pako:, sql:, mermaid:, schema: prefixes)
+  - Data integrity (preserves column details, handles large schemas efficiently)
+  - Error handling (corrupted data, empty hash, missing prefix)
+  - URL length and compression validation
+  - Creates valid shareable URLs with proper format
+
+- **viewStateRoundTrip.test.ts** (19 tests) - View state preservation and sharing tests:
+  - View state serialization (all fields, special characters in names)
+  - Error handling (invalid encoded data, empty strings)
+  - URL integration (schema + view state, without view state, Mermaid format)
+  - Full round-trip with sample schemas (Retailer, Blog Platform, University)
+  - Backward compatibility (handles missing view state gracefully)
+  - Corrupted view state handling
+  - Layout algorithms and view modes preservation
+  - Category customization (table mappings, complex reorganization scenarios)
+  - URL length validation (reasonable size, minimal overhead)
+  - Category visibility preservation (selected: true/false in shared URLs)
+  - View (CREATE VIEW) statement preservation through share cycle
 
 ## Test Best Practices
 

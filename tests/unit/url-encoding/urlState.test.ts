@@ -167,58 +167,44 @@ describe("URL State Management", () => {
   });
 
   describe("hasSchemaInUrl", () => {
-    it("should return false when no hash", () => {
+    it("should return false for invalid or missing hashes", () => {
       window.location.hash = "";
       expect(hasSchemaInUrl()).toBe(false);
-    });
 
-    it("should return false when hash has no colon", () => {
       window.location.hash = "#test";
       expect(hasSchemaInUrl()).toBe(false);
-    });
 
-    it("should return false for invalid prefix", () => {
       window.location.hash = "#invalid:data";
       expect(hasSchemaInUrl()).toBe(false);
     });
 
-    it("should return true for pako prefix", () => {
+    it("should return true for valid schema prefixes", () => {
       window.location.hash = "#pako:eNpVjc1ugzAQhF";
       expect(hasSchemaInUrl()).toBe(true);
-    });
 
-    it("should return true for sql prefix", () => {
       window.location.hash = "#sql:eNpVjc1ugzAQhF";
       expect(hasSchemaInUrl()).toBe(true);
-    });
 
-    it("should return true for mermaid prefix", () => {
       window.location.hash = "#mermaid:eNpVjc1ugzAQhF";
       expect(hasSchemaInUrl()).toBe(true);
-    });
 
-    it("should return true for schema prefix", () => {
       window.location.hash = "#schema:eNpVjc1ugzAQhF";
       expect(hasSchemaInUrl()).toBe(true);
     });
   });
 
   describe("createShareableUrl", () => {
-    it("should create SQL shareable URL", () => {
+    it("should create shareable URLs with different formats", () => {
       const encoded = "eNpVjc1ugzAQhF";
-      const url = createShareableUrl(encoded, "sql");
 
-      expect(url).toBe("https://schema3d.com/#sql:eNpVjc1ugzAQhF");
+      const sqlUrl = createShareableUrl(encoded, "sql");
+      expect(sqlUrl).toBe("https://schema3d.com/#sql:eNpVjc1ugzAQhF");
+
+      const mermaidUrl = createShareableUrl(encoded, "mermaid");
+      expect(mermaidUrl).toBe("https://schema3d.com/#mermaid:eNpVjc1ugzAQhF");
     });
 
-    it("should create Mermaid shareable URL", () => {
-      const encoded = "eNpVjc1ugzAQhF";
-      const url = createShareableUrl(encoded, "mermaid");
-
-      expect(url).toBe("https://schema3d.com/#mermaid:eNpVjc1ugzAQhF");
-    });
-
-    it("should use current origin", () => {
+    it("should preserve origin and pathname", () => {
       (
         window as {
           location: {
@@ -238,29 +224,12 @@ describe("URL State Management", () => {
             pathname: string;
           };
         }
-      ).location.pathname = "/";
-
-      const encoded = "abc123";
-      const url = createShareableUrl(encoded, "sql");
-
-      expect(url).toContain("https://localhost:3000");
-    });
-
-    it("should preserve pathname", () => {
-      (
-        window as {
-          location: {
-            hash: string;
-            href: string;
-            origin: string;
-            pathname: string;
-          };
-        }
       ).location.pathname = "/test/path";
 
       const encoded = "abc123";
       const url = createShareableUrl(encoded, "sql");
 
+      expect(url).toContain("https://localhost:3000");
       expect(url).toContain("/test/path");
     });
   });
