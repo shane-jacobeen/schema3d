@@ -71,12 +71,6 @@ export function getInitialSchema(): DatabaseSchema {
       );
 
       if (parsedSchema) {
-        // Debug: Log table count and view count
-        const viewCount = parsedSchema.tables.filter((t) => t.isView).length;
-        console.log(
-          `[Schema Load] Parsed ${parsedSchema.tables.length} tables (${viewCount} views) from URL`
-        );
-
         // Apply custom categories from view state if present
         let schemaWithCategories = parsedSchema;
         if (viewState?.categories && viewState.categories.length > 0) {
