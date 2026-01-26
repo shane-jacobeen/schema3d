@@ -49,7 +49,15 @@ A 3D database schema visualization tool that renders database tables as interact
 - **PNG Screenshots**: Export your visualization as a high-quality image
 - **GLTF Export**: Export the entire 3D scene for use in other applications
 
-### 💡 Additional Features
+### � Sharing & Collaboration
+
+- **Shareable URLs**: Generate compressed URLs that encode both your schema and view state
+- **View State Preservation**: Shared links preserve selected categories, layout algorithm, and view mode
+- **One-Click Sharing**: Copy shareable links to clipboard with a single click
+- **Format Support**: Compatible with SQL and Mermaid schema formats
+- **Backward Compatible**: New URLs work in older versions, gracefully degrading if view state isn't supported
+
+### �💡 Additional Features
 
 - **Table Details Panel**: Click tables to view detailed column information
 - **Relationship Details Panel**: Click relationship lines to view FK/PK details
@@ -185,9 +193,12 @@ Schema3D/
 │   │   │   │   │   ├── use-schema-state.ts
 │   │   │   │   │   ├── use-selection-state.ts
 │   │   │   │   │   ├── use-filter-state.ts
-│   │   │   │   │   └── ...
+│   │   │   │   │   ├── use-url-schema.ts          # URL schema loading
+│   │   │   │   │   └── use-collect-view-state.ts  # View state collection
 │   │   │   │   ├── utils/      # State utilities
 │   │   │   │   │   ├── schema-utils.ts      # Layout, selections, comparisons
+│   │   │   │   │   ├── schema-state-utils.ts
+│   │   │   │   │   └── view-state-store.ts  # View state temporary storage
 │   │   │   │   │   └── schema-state-utils.ts # Category management
 │   │   │   │   └── types.ts
 │   │   │   ├── 3d/             # 3D visualization components
@@ -226,7 +237,8 @@ Schema3D/
 │   │   │       │   ├── schema-editor.tsx
 │   │   │       │   ├── format-selector.tsx
 │   │   │       │   ├── file-upload-button.tsx
-│   │   │       │   └── sample-schema-selector.tsx
+│   │   │       │   ├── sample-schema-selector.tsx
+│   │   │       │   └── share-button.tsx       # Shareable URL generation
 │   │   │       ├── panels/     # Information panels
 │   │   │       │   ├── panel.tsx
 │   │   │       │   ├── table-info.tsx
@@ -255,9 +267,11 @@ Schema3D/
 │   │   │   │   ├── api.ts
 │   │   │   │   ├── browser-info.ts
 │   │   │   │   ├── button-styles.ts
+│   │   │   │   ├── url-encoding.ts    # Schema and view state encoding/decoding
+│   │   │   │   ├── url-state.ts       # URL hash management
 │   │   │   │   └── utils.ts
 │   │   │   ├── types/          # Shared TypeScript types
-│   │   │   │   └── schema.ts
+│   │   │   │   └── schema.ts          # Includes SharedViewState interface
 │   │   │   └── metadata.tsx   # SEO metadata components
 │   │   │
 │   │   └── pages/              # Route pages
@@ -466,7 +480,7 @@ erDiagram
 
 ## Testing
 
-The project uses [Vitest](https://vitest.dev/) for unit and integration testing.
+The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **176 tests** across **13 test files**.
 
 ### Running Tests
 
@@ -484,31 +498,12 @@ npm run test:ui
 npm run test:coverage
 ```
 
-### Test Structure
+### Test Coverage
 
-- **Unit Tests** (`tests/unit/`): Test individual functions and utilities
-  - `parsers/` - SQL and Mermaid parser tests
-  - `schema/` - Schema utility tests
-  - `visualization/` - Relationship and visualization utility tests
+- **Unit Tests**: 125 tests covering parsers, schema utilities, filtering, layout, visualization, and URL encoding
+- **Integration Tests**: 51 tests covering component interactions and end-to-end workflows
 
-- **Integration Tests** (`tests/integration/`): Test component interactions
-  - `SchemaControls.test.tsx` - Schema selection and format switching
-  - `SchemaEditor.test.tsx` - Text editor and syntax highlighting
-
-### Coverage
-
-Coverage thresholds are set at:
-
-- Lines: 50%
-- Functions: 50%
-- Branches: 40%
-- Statements: 50%
-
-Coverage reports are generated in the `coverage/` directory when running `npm run test:coverage`.
-
-### Manual Testing
-
-See [tests/MANUAL_TEST_CHECKLIST.md](tests/MANUAL_TEST_CHECKLIST.md) for a comprehensive manual testing checklist.
+For detailed documentation including test structure, what's tested, and how to write tests, see **[tests/README.md](tests/README.md)**.
 
 ## Contributing
 

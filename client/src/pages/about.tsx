@@ -6,7 +6,14 @@ import {
   CardTitle,
 } from "@/shared/ui-components/card";
 import { Button } from "@/shared/ui-components/button";
-import { Info, Eye, Code2, ArrowLeft } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/ui-components/tabs";
+import { Separator } from "@/shared/ui-components/separator";
+import { Info, Eye, Code2, Mail, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
@@ -49,8 +56,8 @@ export default function About() {
                 </CardTitle>
               </div>
               <p className="text-slate-300 text-lg">
-                Free online database visualization tool for 3D schema
-                exploration and SQL relationship mapping
+                Experimental database visualization tool for 3D schema
+                exploration and relationship mapping
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -68,14 +75,17 @@ export default function About() {
                   spatial environment.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
-                  From importing SQL scripts to organizing tables with custom
-                  categories, Schema3D provides everything you need to
-                  understand and document complex database structures. Explore
-                  the features below to see how Schema3D can enhance your
-                  database workflow, learn about the technology that powers it,
-                  and discover how to get involved with the project.
+                  Import schemas from SQL scripts or Mermaid ER diagrams,
+                  organize tables with custom categories, and share
+                  visualizations with your team. Schema3D provides everything
+                  you need to understand and document complex database
+                  structures. Explore the features below to see how Schema3D can
+                  enhance your workflow, learn about the technology that powers
+                  it, and discover how to get involved with the project.
                 </p>
               </div>
+
+              <Separator className="bg-slate-700" />
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -83,143 +93,177 @@ export default function About() {
                   Features
                 </h2>
 
-                {/* Visualization Features */}
-                <div className="space-y-3 mb-5">
-                  <h3 className="text-lg font-semibold text-blue-300">
-                    Visualization & Layout
-                  </h3>
-                  <ul className="space-y-2 text-slate-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          3D Database Schema Visualization:
-                        </strong>{" "}
-                        View your database schema in immersive 3D space with
-                        multiple layout algorithms. Perfect for visualizing
-                        complex database structures and ER diagrams.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          Multiple Layout Algorithms:
-                        </strong>{" "}
-                        Choose from force-directed graph layouts, hierarchical
-                        tree layouts, or circular/spherical layouts optimized
-                        for both 2D and 3D database visualization
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          Database Relationship Mapping:
-                        </strong>{" "}
-                        Visualize foreign key relationships, primary keys, and
-                        view dependencies with interactive connection lines.
-                        Essential for database design and schema documentation.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+                <Tabs defaultValue="visualization" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
+                    <TabsTrigger value="visualization">
+                      Visualization
+                    </TabsTrigger>
+                    <TabsTrigger value="import">Import</TabsTrigger>
+                    <TabsTrigger value="sharing">Sharing</TabsTrigger>
+                    <TabsTrigger value="organization">Organization</TabsTrigger>
+                  </TabsList>
 
-                {/* Schema Import Features */}
-                <div className="space-y-3 mb-5">
-                  <h3 className="text-lg font-semibold text-blue-300">
-                    Schema Import & Parsing
-                  </h3>
-                  <ul className="space-y-2 text-slate-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          SQL Parser & Schema Import:
-                        </strong>{" "}
-                        Upload SQL files or paste SQL scripts to automatically
-                        parse CREATE TABLE, CREATE VIEW, and ALTER TABLE
-                        statements. Supports standard SQL and database schema
-                        visualization.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          Mermaid ER Diagram Support:
-                        </strong>{" "}
-                        Import schemas using Mermaid ER diagram syntax with full
-                        support for entity definitions, relationships, and
-                        cardinality notation. Perfect for teams already using
-                        Mermaid for documentation. Features automatic format
-                        detection and live syntax validation.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          T-SQL & SQL Server Support:
-                        </strong>{" "}
-                        Full support for T-SQL syntax including bracketed
-                        identifiers, schema-qualified names, and ALTER TABLE
-                        FOREIGN KEY constraints. Ideal for Microsoft SQL Server
-                        database visualization.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+                  <TabsContent value="visualization" className="space-y-2">
+                    <ul className="space-y-2 text-slate-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            3D Database Schema Visualization:
+                          </strong>{" "}
+                          View your database schema in immersive 3D space with
+                          multiple layout algorithms. Perfect for visualizing
+                          complex database structures and ER diagrams.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Multiple Layout Algorithms:
+                          </strong>{" "}
+                          Choose from force-directed graph layouts, hierarchical
+                          tree layouts, or circular/spherical layouts optimized
+                          for both 2D and 3D database visualization
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Database Relationship Mapping:
+                          </strong>{" "}
+                          Visualize foreign key relationships, primary keys, and
+                          view dependencies with interactive connection lines.
+                          Essential for database design and schema
+                          documentation.
+                        </span>
+                      </li>
+                    </ul>
+                  </TabsContent>
 
-                {/* Organization & Filtering Features */}
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-blue-300">
-                    Organization & Filtering
-                  </h3>
-                  <ul className="space-y-2 text-slate-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          Dynamic Category Filtering:
-                        </strong>{" "}
-                        Organize and filter your database tables by custom
-                        categories. Click legend items to show or hide specific
-                        categories, making it easy to focus on relevant parts of
-                        complex schemas. Categories are automatically assigned
-                        based on table naming patterns and can be fully
-                        customized to match your database architecture.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          Category Management:
-                        </strong>{" "}
-                        Create, edit, and customize categories with a powerful
-                        category editor. Assign custom colors to each category,
-                        rename categories, move tables between categories, and
-                        organize your schema exactly how you need it. Changes
-                        are instantly reflected in both the 3D visualization and
-                        the legend.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">•</span>
-                      <span>
-                        <strong className="text-white">
-                          Interactive Database Explorer:
-                        </strong>{" "}
-                        Click tables to view column details, search and filter
-                        database objects, and export your schema visualizations.
-                        Perfect for database documentation and team
-                        collaboration.
-                      </span>
-                    </li>
-                  </ul>
-                </div>
+                  <TabsContent value="import" className="space-y-2">
+                    <ul className="space-y-2 text-slate-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            SQL Parser & Schema Import:
+                          </strong>{" "}
+                          Upload SQL files or paste SQL scripts to automatically
+                          parse CREATE TABLE, CREATE VIEW, and ALTER TABLE
+                          statements. Supports standard SQL and database schema
+                          visualization.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Mermaid ER Diagram Support:
+                          </strong>{" "}
+                          Import schemas using Mermaid ER diagram syntax with
+                          full support for entity definitions, relationships,
+                          and cardinality notation. Perfect for teams already
+                          using Mermaid for documentation. Features automatic
+                          format detection and live syntax validation.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            T-SQL & SQL Server Support:
+                          </strong>{" "}
+                          Full support for T-SQL syntax including bracketed
+                          identifiers, schema-qualified names, and ALTER TABLE
+                          FOREIGN KEY constraints. Ideal for Microsoft SQL
+                          Server database visualization.
+                        </span>
+                      </li>
+                    </ul>
+                  </TabsContent>
+
+                  <TabsContent value="sharing" className="space-y-2">
+                    <ul className="space-y-2 text-slate-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Shareable URLs with View State:
+                          </strong>{" "}
+                          Generate shareable links that preserve your entire
+                          visualization state including selected categories,
+                          layout algorithm, and view mode. URLs use efficient
+                          compression to encode both schema and view state,
+                          making it easy to collaborate with your team or save
+                          different views of the same schema.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            One-Click Schema Sharing:
+                          </strong>{" "}
+                          Share your database visualizations instantly with a
+                          single click. The share button copies a compressed URL
+                          to your clipboard that anyone can use to view the
+                          exact same schema with your customizations applied.
+                        </span>
+                      </li>
+                    </ul>
+                  </TabsContent>
+
+                  <TabsContent value="organization" className="space-y-2">
+                    <ul className="space-y-2 text-slate-300">
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Dynamic Category Filtering:
+                          </strong>{" "}
+                          Organize and filter your database tables by custom
+                          categories. Click legend items to show or hide
+                          specific categories, making it easy to focus on
+                          relevant parts of complex schemas. Categories are
+                          automatically assigned based on table naming patterns
+                          and can be fully customized to match your database
+                          architecture.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Category Management:
+                          </strong>{" "}
+                          Create, edit, and customize categories with a powerful
+                          category editor. Assign custom colors to each
+                          category, rename categories, move tables between
+                          categories, and organize your schema exactly how you
+                          need it. Changes are instantly reflected in both the
+                          3D visualization and the legend.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            Interactive Database Explorer:
+                          </strong>{" "}
+                          Click tables to view column details, search and filter
+                          database objects, and export your schema
+                          visualizations. Perfect for database documentation and
+                          team collaboration.
+                        </span>
+                      </li>
+                    </ul>
+                  </TabsContent>
+                </Tabs>
               </div>
+
+              <Separator className="bg-slate-700" />
 
               <div>
                 <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
@@ -245,8 +289,11 @@ export default function About() {
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-slate-700">
-                <h2 className="text-xl font-semibold text-white mb-3">
+              <Separator className="bg-slate-700" />
+
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-blue-400" />
                   Get In Touch
                 </h2>
                 <div className="space-y-3 text-slate-300 leading-relaxed">

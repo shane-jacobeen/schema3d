@@ -149,6 +149,7 @@ export function SchemaVisualizer() {
           isCameraAnimating={cameraState.isCameraAnimating}
           isDraggingTable={interactionHandlers.isDraggingTable}
           shouldRecenter={cameraState.shouldRecenter}
+          defaultCameraPosition={cameraState.defaultCameraPosition}
           recenterTarget={cameraState.recenterTarget}
           recenterLookAt={cameraState.recenterLookAt}
           recenterTranslateOnly={cameraState.recenterTranslateOnly}

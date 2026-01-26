@@ -60,12 +60,10 @@ export function RelationshipLines({
             referencedTable &&
             (!visibleTableNames || visibleTableNames.has(referencedTable.name))
           ) {
-            // Use animated positions if available, otherwise use table positions
-            const fromTablePos =
-              animatedPositions?.get(table.name) || table.position;
-            const toTablePos =
-              animatedPositions?.get(referencedTable.name) ||
-              referencedTable.position;
+            // Always use table.position for the initial relationship structure
+            // The individual RelationshipLine component will handle animated positions in useFrame
+            const fromTablePos = table.position;
+            const toTablePos = referencedTable.position;
             const fromCenter = new THREE.Vector3(...fromTablePos);
             const toCenter = new THREE.Vector3(...toTablePos);
 
@@ -124,7 +122,7 @@ export function RelationshipLines({
     });
 
     return result;
-  }, [schema, animatedPositions, visibleTableNames]);
+  }, [schema, visibleTableNames]);
 
   return (
     <group>

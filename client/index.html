@@ -1,13 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-  <script>
-    !function(t,e){var o,n,p,r;e.__SV||(window.posthog && window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init rs ls yi ns us ts ss capture Hi calculateEventProperties vs register register_once register_for_session unregister unregister_for_session gs getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty fs ds createPersonProfile ps Qr opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing hs debug O cs getPageViewId captureTraceFeedback captureTraceMetric Kr".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-    posthog.init('phc_pUqlpYakkV5kjviTSVdz1HUHwb1AIT6ubJVwNEaZDPC', {
-        api_host: 'https://us.i.posthog.com',
-        defaults: '2025-11-30',
-        person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
-    })
-  </script>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
@@ -18,10 +10,20 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
     
+    <!-- PostHog Analytics -->
+    <script>
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog && window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init rs ls yi ns us ts ss capture Hi calculateEventProperties vs register register_once register_for_session unregister unregister_for_session gs getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty fs ds createPersonProfile ps Qr opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing hs debug O cs getPageViewId captureTraceFeedback captureTraceMetric Kr".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      posthog.init('phc_pUqlpYakkV5kjviTSVdz1HUHwb1AIT6ubJVwNEaZDPC', {
+          api_host: 'https://us.i.posthog.com',
+          defaults: '2025-11-30',
+          person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+      })
+    </script>
+    
     <!-- SEO Meta Tags -->
     <title>Schema3D: Interactive SQL Database Schema Visualization Tool</title>
-    <meta name="description" content="Visualize your database schemas in stunning 3D. Interactive schema visualizer tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation. Perfect for database design and documentation." />
-    <meta name="keywords" content="schema visualization, 3d schema visualization, sql schema visualization, mermaid er diagram, mermaid mardown, database schema viewer, interactive schema tool, database visualization, sql schema explorer, 3d database viewer, schema diagram tool, database relationship viewer, schema visualizer, database schema visualizer, sql visualizer, er diagram tool, database design tool, sql parser, t-sql visualization, mermaid visualization" />
+    <meta name="description" content="Free open-source database schema visualizer in stunning 3D. Share and collaborate with URL-based schema sharing. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation. Perfect for database design and documentation." />
+    <meta name="keywords" content="schema visualization, 3d schema visualization, sql schema visualization, mermaid er diagram, mermaid mardown, database schema viewer, interactive schema tool, database visualization, sql schema explorer, 3d database viewer, schema diagram tool, database relationship viewer, schema visualizer, database schema visualizer, sql visualizer, er diagram tool, database design tool, sql parser, t-sql visualization, mermaid visualization, share database schema, schema collaboration, open source schema tool, url schema sharing" />
     <meta name="author" content="Shane Jacobeen" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://schema3d.com" />
@@ -30,7 +32,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://schema3d.com" />
     <meta property="og:title" content="Schema3D: Interactive SQL Database Schema Visualization Tool" />
-    <meta property="og:description" content="View and explore your database schemas in stunning 3D. Interactive schema visualizer supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation." />
+    <meta property="og:description" content="Free open-source database schema visualizer in 3D. Share schemas via URL for seamless collaboration. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation." />
     <meta property="og:site_name" content="Schema3D" />
     <meta property="og:image" content="https://schema3d.com/images/Schema3D%20Logo.png" />
     <meta property="og:image:width" content="1200" />
@@ -40,7 +42,7 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Schema3D: 3D SQL Schema Visualization Tool" />
-    <meta name="twitter:description" content="View and explore your database schemas in stunning 3D. Interactive schema visualizer supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships with full cardinality notation." />
+    <meta name="twitter:description" content="Free open-source database schema visualizer in 3D. Share schemas via URL for team collaboration. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships with full cardinality notation." />
     <meta name="twitter:image" content="https://schema3d.com/images/Schema3D%20Logo.png" />
     
     <!-- Additional SEO -->
@@ -54,7 +56,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Schema3D",
-      "description": "Free online database visualization tool for 3D schema exploration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping",
+      "description": "Free open-source database visualization tool for 3D schema exploration. Share schemas via URL for seamless collaboration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping",
       "url": "https://schema3d.com",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web Browser",
@@ -75,11 +77,13 @@
       },
       "featureList": [
         "3D Database Schema Visualization",
+        "URL-Based Schema Sharing & Collaboration",
         "SQL Parser & Schema Import",
         "Mermaid Markdown Support",
         "Database Relationship Mapping",
         "Multiple Layout Algorithms",
-        "Interactive Database Explorer"
+        "Interactive Database Explorer",
+        "Open Source & Free Forever"
       ]
     }
     </script>

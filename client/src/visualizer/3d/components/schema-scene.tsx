@@ -32,6 +32,7 @@ interface SchemaSceneProps {
   isCameraAnimating: boolean;
   isDraggingTable: boolean;
   shouldRecenter: boolean;
+  defaultCameraPosition: THREE.Vector3;
   recenterTarget: THREE.Vector3 | null;
   recenterLookAt: THREE.Vector3 | null;
   recenterTranslateOnly: boolean;
@@ -78,6 +79,7 @@ export function SchemaScene({
   isCameraAnimating,
   isDraggingTable,
   shouldRecenter,
+  defaultCameraPosition,
   recenterTarget,
   recenterLookAt,
   recenterTranslateOnly,
@@ -139,6 +141,7 @@ export function SchemaScene({
 
       <CameraController
         shouldRecenter={shouldRecenter}
+        defaultPosition={defaultCameraPosition}
         recenterTarget={recenterTarget}
         recenterLookAt={recenterLookAt}
         translateOnly={recenterTranslateOnly}

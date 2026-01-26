@@ -29,3 +29,28 @@ export interface DatabaseSchema {
   name: string;
   tables: Table[];
 }
+
+/**
+ * Category definition for custom category colors and names.
+ */
+export interface CategoryDefinition {
+  name: string;
+  color: string;
+  /** Whether this category is selected/visible (true if visible, false if hidden) */
+  selected?: boolean;
+}
+
+/**
+ * View state that can be shared via URL.
+ * Captures user customizations like category filters, layout algorithm, view mode, and custom categories.
+ */
+export interface SharedViewState {
+  /** Layout algorithm used for positioning tables */
+  layoutAlgorithm?: "force" | "hierarchical" | "circular";
+  /** View mode (2D or 3D) */
+  viewMode?: "2D" | "3D";
+  /** Custom category definitions (names, colors, and visibility) */
+  categories?: CategoryDefinition[];
+  /** Table-to-category assignments (table name -> category name) for custom organization */
+  tableCategoryMap?: Record<string, string>;
+}

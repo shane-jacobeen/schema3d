@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { ToastProvider } from "@/shared/ui-components/toast";
 
 // Lazy load components
 const SchemaVisualizer = lazy(() =>
@@ -50,6 +51,7 @@ function App() {
         </Suspense>
         <Analytics />
         <SpeedInsights />
+        <ToastProvider />
       </div>
     </BrowserRouter>
   );

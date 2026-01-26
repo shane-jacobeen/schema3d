@@ -12,6 +12,7 @@ import {
   updateCategoriesForSchema,
   initializeCategories,
 } from "../utils/schema-state-utils";
+import { getPendingViewState } from "../utils/view-state-store";
 
 interface UseFilterStateReturn {
   filteredTables: Set<string>;
@@ -29,8 +30,23 @@ export function useFilterState(
 ): UseFilterStateReturn {
   const [filteredTables, setFilteredTables] = useState<Set<string>>(new Set());
   const [relatedTables, setRelatedTables] = useState<Set<string>>(new Set());
-  const [selectedCategories, setSelectedCategories] =
-    useState<Set<string>>(getInitialCategories);
+
+  // Check for view state from URL on first render
+  // Use lazy initializer and getPendingViewState (non-consuming) to allow other hooks to also read it
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
+    () => {
+      const pendingViewState = getPendingViewState();
+      if (pendingViewState?.categories) {
+        // Extract selected categories from the categories array
+        const selected = pendingViewState.categories
+          .filter((cat) => cat.selected !== false) // Include if selected is true or undefined
+          .map((cat) => cat.name);
+        return new Set(selected);
+      }
+      // Otherwise use default categories
+      return getInitialCategories();
+    }
+  );
 
   const handleFilter = useCallback(
     (matched: Set<string>, related: Set<string>) => {

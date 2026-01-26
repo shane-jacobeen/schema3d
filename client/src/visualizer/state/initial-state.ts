@@ -7,6 +7,9 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { getRetailerSchema } from "@/schemas/utils/load-schemas";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
+import { parseSchema } from "@/schemas/parsers";
+import { getSchemaFromHash } from "@/shared/utils/url-state";
+import { setPendingViewState } from "./utils/view-state-store";
 
 // ============================================
 // Layout Algorithm Types
@@ -45,9 +48,72 @@ export const getDefaultBaseSchema = getRetailerSchema;
 
 /**
  * Get the initial schema with the default layout applied.
+ * Checks URL for encoded schema first, otherwise loads default.
  * This ensures the visualization matches the UI control defaults on first load.
  */
 export function getInitialSchema(): DatabaseSchema {
+  // Check if there's a schema encoded in the URL hash
+  try {
+    const urlData = getSchemaFromHash();
+
+    if (urlData) {
+      const { schemaText, format, viewState } = urlData;
+
+      // Store view state for hooks to consume during initialization
+      if (viewState) {
+        setPendingViewState(viewState);
+      }
+
+      // Attempt to parse the schema from URL
+      const parsedSchema = parseSchema(
+        schemaText,
+        format === "auto" ? undefined : format
+      );
+
+      if (parsedSchema) {
+        // Apply custom categories from view state if present
+        let schemaWithCategories = parsedSchema;
+        if (viewState?.categories && viewState.categories.length > 0) {
+          // Create a map of category names to colors
+          const categoryColorMap = new Map(
+            viewState.categories.map((cat) => [cat.name, cat.color])
+          );
+
+          // Apply custom category assignments and colors
+          schemaWithCategories = {
+            ...parsedSchema,
+            tables: parsedSchema.tables.map((table) => {
+              // Check if there's a custom category assignment for this table
+              const customCategory = viewState.tableCategoryMap?.[table.name];
+              const category = customCategory || table.category;
+
+              // Get the color for this category
+              const customColor = categoryColorMap.get(category);
+
+              return {
+                ...table,
+                category,
+                color: customColor || table.color,
+              };
+            }),
+          };
+        }
+
+        // Apply layout from view state, or use defaults
+        const layout = viewState?.layoutAlgorithm || DEFAULT_LAYOUT;
+        const viewMode = viewState?.viewMode || DEFAULT_VIEW_MODE;
+
+        return applyLayoutToSchema(schemaWithCategories, layout, viewMode);
+      }
+      // If parsing fails, fall through to default schema
+      console.warn("Failed to parse schema from URL, using default schema");
+    }
+  } catch (error) {
+    console.error("Error loading schema from URL:", error);
+    // Fall through to default schema
+  }
+
+  // Default: load retailer schema
   const baseSchema = getDefaultBaseSchema();
   return applyLayoutToSchema(baseSchema, DEFAULT_LAYOUT, DEFAULT_VIEW_MODE);
 }
