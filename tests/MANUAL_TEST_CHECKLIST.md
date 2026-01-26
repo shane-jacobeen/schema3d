@@ -14,98 +14,50 @@ This document outlines key flows that should be manually verified before release
 
 ### ✅ Load Sample Schemas
 
-#### SQL Schemas
-
-- [ ] **Retailer Schema**
+- [ ] **Test All Sample Schemas**
   - Click "Change Schema" button
-  - Select "Retailer" from sample schemas
-  - Verify:
+  - Test each schema (Retailer, Blog Platform, University)
+  - Verify for each:
     - Schema loads without errors
-    - All tables are visible in 3D view
-    - Relationship lines are drawn correctly
-    - Table colors are assigned by category
-
-- [ ] **Blog Platform Schema**
-  - Select "Blog Platform" from sample schemas
-  - Verify:
-    - Schema loads correctly
-    - All relationships are displayed
+    - All tables visible with correct colors
+    - Relationship lines drawn correctly
+    - Mermaid format auto-detected for University
+    - Cardinality notation displays correctly
     - No console errors
-
-#### Mermaid Schema
-
-- [ ] **University Schema**
-  - Select "University" from sample schemas
-  - Verify:
-    - Mermaid format is detected/selected
-    - Schema parses correctly
-    - All tables and relationships render
-    - Cardinality notation displays correctly (||, o{, |{, etc.)
 
 ---
 
 ## Schema Input Tests
 
-### ✅ Paste Large Schemas
+### ✅ Large Schema Handling
 
-- [ ] **Large SQL Schema**
-  - Open schema editor
-  - Paste a large SQL schema (50+ tables)
+- [ ] **Large Schemas (50+ tables)**
+  - Test with both SQL and Mermaid formats
   - Verify:
     - Schema parses without errors
-    - All tables render in 3D view
+    - All tables and relationships render correctly
     - Performance is acceptable (no lag)
-    - Relationship lines are all visible
-    - Camera can navigate smoothly
-
-- [ ] **Large Mermaid Schema**
-  - Switch format to Mermaid
-  - Paste a large Mermaid ER diagram
-  - Verify:
-    - Parsing completes successfully
-    - All entities and relationships are captured
-    - Rendering is correct
+    - Camera navigation is smooth
 
 ### ✅ Format Switching
 
-- [ ] **SQL to Mermaid**
-  - Load a SQL schema
-  - Switch format selector to "Mermaid"
+- [ ] **Bidirectional Format Conversion**
+  - Test both SQL ↔ Mermaid conversions
   - Verify:
-    - Editor content converts to Mermaid format
+    - Editor content converts correctly
     - Schema structure is preserved
-    - Relationships maintain cardinality
-
-- [ ] **Mermaid to SQL**
-  - Load a Mermaid schema
-  - Switch format selector to "SQL"
-  - Verify:
-    - Editor content converts to SQL format
-    - All tables and columns are present
-    - Foreign key relationships are correct
+    - All tables, columns, and relationships maintained
+    - Cardinality information retained
 
 ### ✅ Validation Feedback
 
-- [ ] **Invalid SQL**
-  - Type invalid SQL in editor
+- [ ] **Input Validation**
+  - Test with both valid and invalid SQL/Mermaid syntax
   - Verify:
     - Invalid syntax is grayed out
-    - Error message appears (if applicable)
-    - Valid parts remain highlighted
-
-- [ ] **Invalid Mermaid**
-  - Type invalid Mermaid syntax
-  - Verify:
-    - Invalid blocks are grayed out
-    - Error feedback is shown
-    - Valid syntax remains visible
-
-- [ ] **Valid Input**
-  - Type valid schema syntax
-  - Verify:
-    - Syntax highlighting works correctly
-    - No error messages appear
-    - "OK" button is enabled
+    - Valid syntax has proper highlighting
+    - Error feedback shown for invalid input
+    - "OK" button enabled only for valid schemas
 
 ---
 
@@ -138,19 +90,13 @@ This document outlines key flows that should be manually verified before release
     - Lines are visible and properly colored
 
 - [ ] **Cardinality Notation**
-  - Inspect relationship lines
-  - Verify:
+  - Test with both SQL and Mermaid schemas
+  - Verify all cardinality types render correctly:
     - One-to-one (||--||) shows donuts on both ends
     - One-to-many (||--o{) shows donut + crow's-foot
     - Many-to-many (o{--o{) shows crow's-foot on both ends
     - Zero-or-one (o--||) shows sphere + donut
     - One-or-many (|{--||) shows donut + crow's-foot at offset
-
-- [ ] **Cardinality from Mermaid**
-  - Load University schema (Mermaid)
-  - Verify:
-    - All cardinality types from Mermaid are rendered correctly
-    - Symbols match the Mermaid notation (||, o, {, |{, })
 
 ### ✅ Table-Level Foreign Keys
 
@@ -165,29 +111,21 @@ This document outlines key flows that should be manually verified before release
 
 ## Responsive Design Tests
 
-### ✅ Mobile/Small Viewport
+### ✅ Viewport Responsiveness
 
-- [ ] **Small Screen (Mobile)**
-  - Resize browser to mobile width (< 768px)
+- [ ] **Small Screens** (< 1024px)
+  - Test mobile and tablet widths
   - Verify:
-    - UI elements are accessible
-    - Panels don't overlap
-    - Controls are usable
-    - 3D view is still interactive
+    - UI elements accessible and don't overlap
+    - Controls remain usable
+    - 3D view is interactive
+    - Layout adapts appropriately
 
-- [ ] **Tablet Viewport**
-  - Resize to tablet width (768px - 1024px)
+- [ ] **Desktop** (> 1024px)
   - Verify:
-    - Layout adapts correctly
-    - All features remain accessible
-    - Touch interactions work (if applicable)
-
-- [ ] **Large Screen**
-  - Use full desktop width (> 1024px)
-  - Verify:
-    - All panels are visible
-    - No unnecessary scrolling
+    - All panels visible
     - Optimal use of screen space
+    - No unnecessary scrolling
 
 ---
 
@@ -233,11 +171,52 @@ This document outlines key flows that should be manually verified before release
 
 ### ✅ Animation Performance
 
-- [ ] Switch between layouts multiple times
+- [ ] **Layout Animation Smoothness**
+  - Switch between layouts multiple times (Force → Hierarchical → Circular)
   - Verify:
     - Animations are smooth (60fps)
     - No stuttering or lag
     - Camera movements are fluid
+
+- [ ] **Interrupted Animations**
+  - Trigger a layout change (e.g., switch to Hierarchical)
+  - Immediately trigger another action (e.g., switch to Circular)
+  - Verify:
+    - **No flash of connector lines** at incorrect positions
+    - Smooth transition from current positions to new layout
+    - Tables and relationships animate continuously without jumps
+
+---
+
+## URL Sharing & State Persistence
+
+### ✅ Share URL with View State
+
+- [ ] **Create Shareable URL**
+  - Load a schema (e.g., Retailer)
+  - Customize view: change layout to Hierarchical, switch to 2D mode
+  - Toggle some category visibility (hide/show categories)
+  - Click "Share" button
+  - Verify:
+    - URL is copied to clipboard
+    - URL contains encoded schema and view state
+
+- [ ] **Load from Shared URL**
+  - Open a shared URL in new tab/incognito window
+  - Verify:
+    - Schema loads correctly
+    - **Layout buttons show correct selection** (e.g., Hierarchical is selected)
+    - **View mode buttons show correct selection** (2D or 3D)
+    - Category visibility matches shared state
+    - Categories have correct colors
+
+- [ ] **Backward Compatibility**
+  - Open an old URL without view state (schema only)
+  - Verify:
+    - Schema loads correctly
+    - Default layout (Force) is selected
+    - Default view mode (3D) is selected
+    - All categories visible by default
 
 ---
 
