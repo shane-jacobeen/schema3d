@@ -32,6 +32,11 @@ interface TrackInteractionResponse {
   sessionId?: string;
 }
 
+const cachedIds = {
+  userId: null as string | null,
+  sessionId: null as string | null,
+};
+
 /**
  * Track user interaction
  * Gets userId and sessionId internally from cookies/storage
@@ -42,7 +47,10 @@ export async function trackInteraction(
 ): Promise<TrackInteractionResponse | null> {
   try {
     // Get userId from cookies/storage
-    const { userId } = getUserIdAndSessionId();
+    const { userId: currentUserId } = getUserIdAndSessionId();
+
+    // Use memory cache if local/cookie failed
+    const effectiveUserId = currentUserId || cachedIds.userId;
 
     const response = await fetch("/api/track-interaction", {
       method: "POST",
@@ -51,7 +59,7 @@ export async function trackInteraction(
       },
       credentials: "include", // Include cookies
       body: JSON.stringify({
-        userId,
+        userId: effectiveUserId,
         browserInfo,
         hasInteraction,
       }),
@@ -62,11 +70,13 @@ export async function trackInteraction(
 
       // Update localStorage with server response
       if (data.userId) {
+        cachedIds.userId = data.userId; // App-level storage
         localStorage.setItem("schema3d_userId", data.userId);
       }
 
       // Update sessionId from server response (server validates it's active)
       if (data.sessionId) {
+        cachedIds.sessionId = data.sessionId; // App-level storage
         try {
           sessionStorage.setItem("schema3d_sessionId", data.sessionId);
           localStorage.setItem("schema3d_sessionId", data.sessionId);
