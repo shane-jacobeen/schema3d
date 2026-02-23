@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool } from "@neondatabase/serverless";
 import { and, eq, isNull } from "drizzle-orm";
 import { userSessions } from "../shared/schema.js";
+import { setCorsHeaders } from "./utils.js";
 
 // Initialize database connection
 function getDb() {
@@ -18,9 +19,7 @@ function getDb() {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  setCorsHeaders(req, res, "POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();

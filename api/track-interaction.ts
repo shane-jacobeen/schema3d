@@ -9,6 +9,7 @@ import {
   type UserSession,
 } from "../shared/schema.js";
 import { botPatterns } from "./constants.js";
+import { setCorsHeaders } from "./utils.js";
 
 /**
  * Check if the request is from a bot, crawler, or automated system
@@ -155,10 +156,7 @@ function getDb() {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+  setCorsHeaders(req, res, "POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
