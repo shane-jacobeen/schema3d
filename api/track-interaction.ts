@@ -380,11 +380,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     if (existingSession.length === 0) {
-      // New session - create session record
-      await db.insert(userSessions).values({
-        ...sessionData,
-        sessionStart: now,
-      });
+      // New session - create session record.
+      // ON CONFLICT on session_id: if a concurrent request already inserted this session
+      // (race condition within milliseconds), treat it as an update instead of a duplicate.
+      await db
+        .insert(userSessions)
+        .values({
+          ...sessionData,
+          sessionStart: now,
+        })
+        .onConflictDoUpdate({
+          target: userSessions.sessionId,
+          set: { lastActivity: now },
+        });
     } else {
       // Check if existing session is stale (inactive for 5+ minutes)
       const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
@@ -412,13 +420,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             )
           );
 
-        // Create a new session
+        // Create a new session (stale session was closed above).
+        // ON CONFLICT on session_id: same concurrent-request guard as above.
         sessionId = generateSessionId();
-        await db.insert(userSessions).values({
-          ...sessionData,
-          sessionId,
-          sessionStart: now,
-        });
+        await db
+          .insert(userSessions)
+          .values({
+            ...sessionData,
+            sessionId,
+            sessionStart: now,
+          })
+          .onConflictDoUpdate({
+            target: userSessions.sessionId,
+            set: { lastActivity: now },
+          });
       } else {
         // Session is still active - update last activity (resets the 5-minute timer)
         await db
