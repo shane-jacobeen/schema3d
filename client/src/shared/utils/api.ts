@@ -46,11 +46,11 @@ export async function trackInteraction(
   hasInteraction: boolean = true
 ): Promise<TrackInteractionResponse | null> {
   try {
-    // Get userId from cookies/storage
+    // Priority: in-memory cache (most reliable within a tab) → cookie → localStorage
+    // Memory cache is set after first successful server response and survives cookie-read
+    // failures that can occur in privacy-focused browsers mid-session.
     const { userId: currentUserId } = getUserIdAndSessionId();
-
-    // Use memory cache if local/cookie failed
-    const effectiveUserId = currentUserId || cachedIds.userId;
+    const effectiveUserId = cachedIds.userId || currentUserId;
 
     const response = await fetch("/api/track-interaction", {
       method: "POST",

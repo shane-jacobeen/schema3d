@@ -49,10 +49,9 @@ function isBotOrAutomated(userAgent: string, req: VercelRequest): boolean {
     req.headers["x-vercel-monitoring"],
     req.headers["x-vercel-debug"],
     req.headers["x-health-check"],
-    req.headers["x-vercel-id"],
+    // Note: x-vercel-id, x-vercel-ip, x-vercel-deployment-url are injected by Vercel
+    // on ALL real user requests through the edge network — NOT monitoring indicators.
     req.headers["x-vercel-signature"],
-    req.headers["x-vercel-deployment-url"],
-    req.headers["x-vercel-ip"],
   ];
 
   if (monitoringHeaders.some((h) => h !== undefined)) {
@@ -233,21 +232,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Cookie takes precedence to prevent desync between client and server
     let id = cookieUserId || body?.userId || null;
 
-    // If no userId, check for recent sessions to prevent duplicate users from concurrent requests
+    // If no userId, check for recent sessions to prevent duplicate users from concurrent requests.
+    // Use a 30-second window (vs old 5s) and order by most recent — this handles parallel
+    // serverless invocations that all arrive before any prior response has been committed.
     if (!id) {
       try {
-        const fiveSecondsAgo = new Date(Date.now() - 5000);
-        const recent = await db
+        const thirtySecondsAgo = new Date(Date.now() - 30000);
+
+        const recentCandidates = await db
           .select({ userId: userSessions.userId })
           .from(userSessions)
           .where(
             and(
-              gt(userSessions.sessionStart, fiveSecondsAgo),
+              gt(userSessions.sessionStart, thirtySecondsAgo),
               eq(userSessions.userAgent, userAgent)
             )
           )
+          .orderBy(desc(userSessions.sessionStart))
           .limit(1);
-        id = recent[0]?.userId || randomUUID();
+
+        id = recentCandidates[0]?.userId || randomUUID();
       } catch {
         id = randomUUID();
       }
@@ -376,11 +380,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     if (existingSession.length === 0) {
-      // New session - create session record
-      await db.insert(userSessions).values({
-        ...sessionData,
-        sessionStart: now,
-      });
+      // New session - create session record.
+      // ON CONFLICT on session_id: if a concurrent request already inserted this session
+      // (race condition within milliseconds), treat it as an update instead of a duplicate.
+      await db
+        .insert(userSessions)
+        .values({
+          ...sessionData,
+          sessionStart: now,
+        })
+        .onConflictDoUpdate({
+          target: userSessions.sessionId,
+          set: { lastActivity: now },
+        });
     } else {
       // Check if existing session is stale (inactive for 5+ minutes)
       const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
@@ -408,13 +420,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             )
           );
 
-        // Create a new session
+        // Create a new session (stale session was closed above).
+        // ON CONFLICT on session_id: same concurrent-request guard as above.
         sessionId = generateSessionId();
-        await db.insert(userSessions).values({
-          ...sessionData,
-          sessionId,
-          sessionStart: now,
-        });
+        await db
+          .insert(userSessions)
+          .values({
+            ...sessionData,
+            sessionId,
+            sessionStart: now,
+          })
+          .onConflictDoUpdate({
+            target: userSessions.sessionId,
+            set: { lastActivity: now },
+          });
       } else {
         // Session is still active - update last activity (resets the 5-minute timer)
         await db
