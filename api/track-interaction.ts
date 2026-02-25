@@ -228,6 +228,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userAgent = req.headers["user-agent"] || browserInfo.userAgent || "";
     const db = getDb();
 
+    // Post-body headless browser check: screen dimensions of 800x600 are the default
+    // headless Chrome/Chromium viewport and are not used by any real device in practice.
+    // This catches bots that spoof a realistic user-agent but forget to mock screen size.
+
+    const screenWidth = browserInfo.screenWidth ?? null;
+    const screenHeight = browserInfo.screenHeight ?? null;
+    if (
+      screenWidth !== null &&
+      screenHeight !== null &&
+      screenWidth === 800 &&
+      screenHeight === 600
+    ) {
+      console.warn(
+        "Ignoring headless browser request (suspicious screen dimensions):",
+        {
+          screenWidth,
+          screenHeight,
+          userAgent: userAgent || "(empty)",
+        }
+      );
+      return res.status(200).json({ userId: null, ignored: true });
+    }
+
     // Determine userId: cookie (authoritative) > body userId > generate new
     // Cookie takes precedence to prevent desync between client and server
     let id = cookieUserId || body?.userId || null;
