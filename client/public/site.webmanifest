@@ -1,7 +1,13 @@
 {
   "name": "Schema3D: Interactive SQL Database Schema Visualization Tool",
   "short_name": "Schema3D",
+  "description": "Free open-source database schema visualizer in stunning 3D. Interactive tool supporting SQL/T-SQL & Mermaid Markdown.",
   "icons": [
+    {
+      "src": "/favicon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
     {
       "src": "/favicon-32.png",
       "sizes": "32x32",
@@ -10,11 +16,20 @@
     {
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
     }
   ],
   "start_url": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0f172a",
-  "theme_color": "#0f172a"
+  "theme_color": "#0f172a",
+  "categories": ["developer tools", "productivity", "utilities"],
+  "screenshots": []
 }

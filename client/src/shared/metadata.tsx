@@ -64,6 +64,26 @@ export function AboutPageMetadata() {
           },
         })}
       </script>
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Home",
+              item: "https://schema3d.com",
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "About",
+              item: "https://schema3d.com/about",
+            },
+          ],
+        })}
+      </script>
     </Helmet>
   );
 }
