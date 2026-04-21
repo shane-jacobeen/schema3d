@@ -4,7 +4,6 @@ import {
   useMemo,
   useEffect,
   useCallback,
-  useState,
   type ComponentRef,
 } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
@@ -38,6 +37,7 @@ export function RelationshipLines({
   animatedPositions,
   visibleTableNames,
 }: RelationshipLinesProps) {
+  const isLargeSchema = schema.tables.length > 50;
   const relationships = useMemo<Relationship[]>(() => {
     const result: Relationship[] = [];
 
@@ -155,6 +155,12 @@ export function RelationshipLines({
             onLongPress={onLongPress}
             animatedPositions={animatedPositions}
             schema={schema}
+            showLabel={
+              !isLargeSchema ||
+              isSelected ||
+              isHovered ||
+              isConnectedToSelectedTable
+            }
           />
         );
       })}
@@ -174,6 +180,7 @@ function RelationshipLine({
   onLongPress,
   animatedPositions,
   schema,
+  showLabel = true,
 }: RelationshipLineProps) {
   const tubeRef = useRef<THREE.Mesh>(null);
   const textRef = useRef<THREE.Group>(null);
@@ -181,11 +188,14 @@ function RelationshipLine({
   const labelOffsetRef = useRef(0.3);
   const { camera } = useThree();
 
-  // Store current animated line points - use state to trigger re-renders
-  const [currentPoints, setCurrentPoints] = useState<THREE.Vector3[]>([
-    relationship.points[0].clone(),
-    relationship.points[1].clone(),
-  ]);
+  // Initial points for DreiLine (only computed once per relationship)
+  const initialPoints = useMemo(
+    () => [relationship.points[0].clone(), relationship.points[1].clone()],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [relationship.id]
+  );
+  // Mutable ref for tracking current positions in useFrame without re-renders
+  const currentPointsRef = useRef<THREE.Vector3[]>(initialPoints);
 
   // Create table lookup map once (memoized)
   const tableLookupRef = useRef<Map<string, (typeof schema.tables)[0]>>(
@@ -297,15 +307,46 @@ function RelationshipLine({
         toPosRef.current
       );
 
-      // Update currentPoints state to trigger DreiLine re-render
-      // Only update if position changed significantly to avoid excessive re-renders
-      const newPoints = [fromPosRef.current.clone(), toPosRef.current.clone()];
+      // Directly update line geometry via ref (no state update, no re-render)
       const hasChanged =
-        currentPoints[0].distanceTo(newPoints[0]) > 0.001 ||
-        currentPoints[1].distanceTo(newPoints[1]) > 0.001;
+        currentPointsRef.current[0].distanceTo(fromPosRef.current) > 0.001 ||
+        currentPointsRef.current[1].distanceTo(toPosRef.current) > 0.001;
 
       if (hasChanged) {
-        setCurrentPoints(newPoints);
+        currentPointsRef.current[0].copy(fromPosRef.current);
+        currentPointsRef.current[1].copy(toPosRef.current);
+
+        // Directly update the Line2 geometry if available
+        if (lineRef.current) {
+          const geom = (
+            lineRef.current as unknown as { geometry?: THREE.BufferGeometry }
+          ).geometry;
+          if (geom) {
+            const posAttr = geom.getAttribute("instanceStart") as
+              | THREE.BufferAttribute
+              | undefined;
+            const endAttr = geom.getAttribute("instanceEnd") as
+              | THREE.BufferAttribute
+              | undefined;
+            if (posAttr && endAttr) {
+              posAttr.setXYZ(
+                0,
+                fromPosRef.current.x,
+                fromPosRef.current.y,
+                fromPosRef.current.z
+              );
+              endAttr.setXYZ(
+                0,
+                toPosRef.current.x,
+                toPosRef.current.y,
+                toPosRef.current.z
+              );
+              posAttr.needsUpdate = true;
+              endAttr.needsUpdate = true;
+              geom.computeBoundingSphere();
+            }
+          }
+        }
       }
 
       // Update midpoint for label positioning
@@ -314,7 +355,7 @@ function RelationshipLine({
         .multiplyScalar(0.5);
 
       // Position label above or below based on camera perspective
-      if (textRef.current) {
+      if (showLabel && textRef.current) {
         // Check if camera is above or below the relationship midpoint
         const cameraIsAbove = camera.position.y > midpointRef.current.y;
         const targetOffset = cameraIsAbove ? 0.3 : -0.3;
@@ -405,27 +446,29 @@ function RelationshipLine({
       {/* Visible line */}
       <DreiLine
         ref={lineRef}
-        points={currentPoints}
+        points={initialPoints}
         color={lineColor}
         lineWidth={lineWidth}
         transparent
         opacity={lineOpacity}
       />
 
-      {/* Label */}
-      <group ref={textRef}>
-        <Text
-          position={[0, 0, 0]}
-          fontSize={isHovered ? 0.25 : isSelected ? 0.18 : 0.15}
-          color={isSelected ? "#ffffff" : isHovered ? "#ffffff" : "#94a3b8"}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={isHovered ? 0.02 : isSelected ? 0.015 : 0.01}
-          outlineColor="#000000"
-        >
-          {relationship.fkColumn} → {relationship.pkColumn}
-        </Text>
-      </group>
+      {/* Label - hidden for large schemas unless selected/hovered */}
+      {showLabel && (
+        <group ref={textRef}>
+          <Text
+            position={[0, 0, 0]}
+            fontSize={isHovered ? 0.25 : isSelected ? 0.18 : 0.15}
+            color={isSelected ? "#ffffff" : isHovered ? "#ffffff" : "#94a3b8"}
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={isHovered ? 0.02 : isSelected ? 0.015 : 0.01}
+            outlineColor="#000000"
+          >
+            {relationship.fkColumn} → {relationship.pkColumn}
+          </Text>
+        </group>
+      )}
 
       {/* ERD-style cardinality notation (only for selected relationships) */}
       {isSelected && (

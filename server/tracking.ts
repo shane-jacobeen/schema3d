@@ -20,6 +20,10 @@ class UserTracker {
 
     try {
       const db = getDb();
+      if (!db) {
+        this.initialized = true;
+        return;
+      }
       const result = await db
         .select({ count: trackedUsers.id })
         .from(trackedUsers);
@@ -43,6 +47,8 @@ class UserTracker {
 
     try {
       const db = getDb();
+      if (!db) return id;
+
       const existing = await db
         .select()
         .from(trackedUsers)
@@ -81,10 +87,12 @@ class UserTracker {
     // Refresh count from database periodically (every call for accuracy)
     try {
       const db = getDb();
-      const result = await db
-        .select({ count: trackedUsers.id })
-        .from(trackedUsers);
-      this.uniqueUsersCount = result.length;
+      if (db) {
+        const result = await db
+          .select({ count: trackedUsers.id })
+          .from(trackedUsers);
+        this.uniqueUsersCount = result.length;
+      }
     } catch (error) {
       // Use cached count if DB query fails
       console.error("Failed to refresh user count:", error);

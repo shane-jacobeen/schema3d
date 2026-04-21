@@ -132,7 +132,7 @@ export function SchemaScene({
       <Stars
         radius={100}
         depth={50}
-        count={5000}
+        count={visibleTables.length > 100 ? 1000 : 5000}
         factor={4}
         saturation={0}
         fade
@@ -190,6 +190,7 @@ export function SchemaScene({
               isRelated={isRelated}
               isDimmed={isDimmed}
               isRelationshipHighlighted={isRelationshipHighlighted}
+              simplifiedRendering={visibleTables.length > 100}
               onSelect={onTableSelect}
               onHover={onTableHover}
               onLongPress={onTableLongPress}

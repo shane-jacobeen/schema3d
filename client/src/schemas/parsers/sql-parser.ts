@@ -131,7 +131,7 @@ export function parseSqlSchema(sql: string): DatabaseSchema | null {
 const REGEX = {
   // Base identifier pattern: optional schema.table or just table
   // Group 1: optional schema, Group 2: table name
-  SCHEMA_TABLE: /(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?/i,
+  SCHEMA_TABLE: /(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?/i,
 
   // Bracketed identifier with optional schema: [schema].[table] or [table]
   BRACKETED_IDENTIFIER: /\[?(\w+)\]?\.\[?([\w]+)\]?/i,
@@ -146,32 +146,33 @@ const REGEX = {
   SQL_STATEMENT_START:
     /^\s*(?:CREATE|ALTER|DROP|INSERT|UPDATE|DELETE|SELECT)\s+/i,
 
-  // CREATE TABLE: CREATE TABLE [schema].[table] (
+  // CREATE TABLE: CREATE TABLE [schema].[table] ( or CREATE TABLE "schema"."table" (
   CREATE_TABLE:
-    /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?[`"]?\s*\(/gi,
+    /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?\s*\(/gi,
 
   // ALTER TABLE ADD: ALTER TABLE [schema].[table] ADD [COLUMN] ...
   ALTER_TABLE_ADD:
-    /ALTER\s+TABLE\s+(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?[`"]?\s+ADD\s+(?:COLUMN\s+)?/gi,
+    /ALTER\s+TABLE\s+(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?\s+ADD\s+(?:COLUMN\s+)?/gi,
 
   // ALTER TABLE ADD CONSTRAINT UNIQUE
   ALTER_TABLE_UNIQUE:
-    /ALTER\s+TABLE\s+(?:(\[[^\]]+\]|[\w]+)\.)?(\[[^\]]+\]|[\w]+)\s+ADD\s+CONSTRAINT\s+(\[[^\]]+\]|[\w]+)\s+UNIQUE\s*\((\[[^\]]+\]|[\w]+)\)/gi,
+    /ALTER\s+TABLE\s+(?:(\[[^\]]+\]|"[^"]+"|[\w]+)\s*\.\s*)?(\[[^\]]+\]|"[^"]+"|[\w]+)\s+ADD\s+CONSTRAINT\s+(\[[^\]]+\]|"[^"]+"|[\w]+)\s+UNIQUE\s*\((\[[^\]]+\]|"[^"]+"|[\w]+)\)/gi,
 
   // ALTER TABLE ADD CONSTRAINT FOREIGN KEY
   ALTER_TABLE_FK:
-    /ALTER\s+TABLE\s+(?:(\[[^\]]+\]|[\w]+)\.)?(\[[^\]]+\]|[\w]+)\s+(?:WITH\s+(?:NO)?CHECK\s+)?ADD\s+CONSTRAINT\s+(\[[^\]]+\]|[\w]+)\s+FOREIGN\s+KEY\s*\((\[[^\]]+\]|[\w]+)\)\s+REFERENCES\s+(?:(\[[^\]]+\]|[\w]+)\.)?(\[[^\]]+\]|[\w]+)\s*\((\[[^\]]+\]|[\w]+)\)/gi,
+    /ALTER\s+TABLE\s+(?:(\[[^\]]+\]|"[^"]+"|[\w]+)\s*\.\s*)?(\[[^\]]+\]|"[^"]+"|[\w]+)\s+(?:WITH\s+(?:NO)?CHECK\s+)?ADD\s+CONSTRAINT\s+(\[[^\]]+\]|"[^"]+"|[\w~]+)\s+FOREIGN\s+KEY\s*\((\[[^\]]+\]|"[^"]+"|[\w]+)\)\s+REFERENCES\s+(?:(\[[^\]]+\]|"[^"]+"|[\w]+)\s*\.\s*)?(\[[^\]]+\]|"[^"]+"|[\w]+)\s*\((\[[^\]]+\]|"[^"]+"|[\w]+)\)/gi,
 
   // CREATE VIEW: CREATE [OR REPLACE] VIEW [schema].[view] [AS] ...
   CREATE_VIEW:
-    /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?[`"]?\s*(?:AS\s+)?/gi,
+    /CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?\s*(?:AS\s+)?/gi,
 
   // SELECT ... FROM ... (with optional WHERE/ORDER BY)
   SELECT_FROM:
     /SELECT\s+([\s\S]*?)\s+FROM\s+([\s\S]*?)(?:\s+WHERE|\s+ORDER\s+BY|;|$)/i,
 
   // FROM/JOIN table extraction
-  FROM_JOIN_TABLE: /\b(?:FROM|JOIN)\s+(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?/gi,
+  FROM_JOIN_TABLE:
+    /\b(?:FROM|JOIN)\s+(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?/gi,
 
   // First table in FROM clause (with optional alias)
   FIRST_TABLE_WITH_ALIAS:
@@ -192,9 +193,9 @@ const REGEX = {
   // Column reference: table.column or schema.table.column
   COLUMN_REF: /(?:\[?(\w+)\]?\.)?\[?(\w+)\]?\.\[?(\w+)\]?/i,
 
-  // Column definition: [column] TYPE or column TYPE
+  // Column definition: [column] TYPE or column TYPE (supports int8, timestamptz, etc.)
   COLUMN_DEF:
-    /^[`"[\]]?(\w+)[`"[\]]?\s+(\[[^\]]+\]|[A-Z]+)(?:\s*\(([^)]+)\))?/i,
+    /^[`"[\]]?(\w+)[`"[\]]?\s+(\[[^\]]+\]|[A-Za-z]\w*)(?:\s*\(([^)]+)\))?/i,
 
   // AS alias: ... AS alias
   AS_ALIAS: /\bAS\s+(\w+)$/i,
@@ -206,13 +207,13 @@ const REGEX = {
   FOREIGN_KEY: /FOREIGN\s+KEY/i,
   NOT_NULL: /\bNOT\s+NULL\b/i,
 
-  // REFERENCES: REFERENCES [schema].[table]([column])
+  // REFERENCES: REFERENCES [schema].[table]([column]) or "schema"."table"("column")
   REFERENCES:
-    /REFERENCES\s+(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?\s*\(\[?([\w]+)\]?\)/i,
+    /REFERENCES\s+(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?\s*\(["[`]?([\w]+)["\]`]?\)/i,
 
   // Table-level FOREIGN KEY: FOREIGN KEY (column) REFERENCES table(column)
   TABLE_FK:
-    /FOREIGN\s+KEY\s*\(\[?([\w]+)\]?\)\s+REFERENCES\s+(?:\[?(\w+)\]?\.)?\[?([\w]+)\]?\s*\(\[?([\w]+)\]?\)/gi,
+    /FOREIGN\s+KEY\s*\(["[`]?([\w]+)["\]`]?\)\s+REFERENCES\s+(?:["[`]?(\w+)["\]`]?\s*\.\s*)?["[`]?([\w]+)["\]`]?\s*\(["[`]?([\w]+)["\]`]?\)/gi,
 
   // Data type inference patterns
   AGGREGATE_FUNCTIONS: /COUNT|SUM|AVG|MAX|MIN/i,
