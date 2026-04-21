@@ -1,4 +1,11 @@
-import { useRef, useMemo, useState, useEffect, type ComponentRef } from "react";
+import {
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+  memo,
+  type ComponentRef,
+} from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Text, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,7 +20,7 @@ import {
 } from "../../constants";
 import { easeInOutCubic } from "../../utils/camera-utils";
 
-export function Table3D({
+export const Table3D = memo(function Table3D({
   table,
   isSelected,
   isHovered,
@@ -21,6 +28,7 @@ export function Table3D({
   isRelated = false,
   isDimmed = false,
   isRelationshipHighlighted = false,
+  simplifiedRendering = false,
   onSelect,
   onHover,
   onLongPress,
@@ -36,7 +44,8 @@ export function Table3D({
   const groupRef = useRef<THREE.Group>(null);
   const textRef = useRef<THREE.Group>(null);
   const hoverScaleRef = useRef(1);
-  const [labelY, setLabelY] = useState(TABLE_HEIGHT / 2 + LABEL_BASE_OFFSET);
+  const initialLabelY = TABLE_HEIGHT / 2 + LABEL_BASE_OFFSET;
+  const labelYRef = useRef(initialLabelY);
   const { camera, gl } = useThree();
   const startPositionRef = useRef<[number, number, number]>(table.position);
   const currentAnimatedPositionRef = useRef<[number, number, number]>(
@@ -76,68 +85,86 @@ export function Table3D({
         .__orbitControls ?? null;
   }, []);
 
-  // Global pointer handlers for dragging (handles movement outside the table)
+  // Store callbacks in refs so global listeners always see latest values
+  const onPositionChangeRef = useRef(onPositionChange);
+  const onDragEndRef = useRef(onDragEnd);
+  const tableRef = useRef(table);
   useEffect(() => {
+    onPositionChangeRef.current = onPositionChange;
+    onDragEndRef.current = onDragEnd;
+    tableRef.current = table;
+  });
+
+  // Global pointer handlers for dragging — only attached while dragging
+  const globalMoveRef = useRef<((e: PointerEvent) => void) | null>(null);
+  const globalUpRef = useRef<(() => void) | null>(null);
+
+  const detachGlobalDragListeners = useCallback(() => {
+    if (globalMoveRef.current) {
+      window.removeEventListener("pointermove", globalMoveRef.current);
+      globalMoveRef.current = null;
+    }
+    if (globalUpRef.current) {
+      window.removeEventListener("pointerup", globalUpRef.current);
+      globalUpRef.current = null;
+    }
+  }, []);
+
+  const attachGlobalDragListeners = useCallback(() => {
+    if (globalMoveRef.current) return; // already attached
+
     const handleGlobalPointerMove = (e: PointerEvent) => {
       if (
         !isDraggingRef.current ||
-        !onPositionChange ||
+        !onPositionChangeRef.current ||
         !dragStartPositionRef.current ||
         !dragStartPointerRef.current
       ) {
         return;
       }
 
-      // Only process drag if button is still pressed
       if (e.buttons === 0) {
-        // Button released, end drag
-        if (isDraggingRef.current) {
-          isDraggingRef.current = false;
-          dragStartPositionRef.current = null;
-          dragStartPointerRef.current = null;
-          if (orbitControlsRef.current) {
-            orbitControlsRef.current.enabled = true;
-          }
-          onDragEnd?.();
-          document.body.style.cursor = "default";
+        isDraggingRef.current = false;
+        dragStartPositionRef.current = null;
+        dragStartPointerRef.current = null;
+        if (orbitControlsRef.current) {
+          orbitControlsRef.current.enabled = true;
         }
+        onDragEndRef.current?.();
+        document.body.style.cursor = "default";
+        detachGlobalDragListeners();
         return;
       }
 
-      // Calculate pointer movement in normalized device coordinates
       const rect = gl.domElement.getBoundingClientRect();
       const currentPointer = new THREE.Vector2(
         ((e.clientX - rect.left) / rect.width) * 2 - 1,
         -((e.clientY - rect.top) / rect.height) * 2 + 1
       );
 
-      // Calculate movement delta
       const deltaX = currentPointer.x - dragStartPointerRef.current.x;
       const deltaY = currentPointer.y - dragStartPointerRef.current.y;
 
-      // Project movement onto a plane perpendicular to camera view
       const cameraDirection = new THREE.Vector3();
       camera.getWorldDirection(cameraDirection);
 
-      // Create right and up vectors relative to camera
       const cameraRight = new THREE.Vector3();
       cameraRight.crossVectors(cameraDirection, camera.up).normalize();
       const cameraUp = camera.up.clone().normalize();
 
-      // Calculate movement in world space
-      // Scale factor based on distance from camera
       const distance = camera.position.distanceTo(dragStartPositionRef.current);
-      const scale = distance * 0.5; // Adjust sensitivity
+      const scale = distance * 0.5;
 
       const movement = new THREE.Vector3()
         .addScaledVector(cameraRight, deltaX * scale)
         .addScaledVector(cameraUp, deltaY * scale);
 
-      // Calculate new position
       const newPosition = dragStartPositionRef.current.clone().add(movement);
-
-      // Update table position
-      onPositionChange(table, [newPosition.x, newPosition.y, newPosition.z]);
+      onPositionChangeRef.current(tableRef.current, [
+        newPosition.x,
+        newPosition.y,
+        newPosition.z,
+      ]);
     };
 
     const handleGlobalPointerUp = () => {
@@ -148,20 +175,24 @@ export function Table3D({
         if (orbitControlsRef.current) {
           orbitControlsRef.current.enabled = true;
         }
-        onDragEnd?.();
+        onDragEndRef.current?.();
         document.body.style.cursor = "default";
       }
+      detachGlobalDragListeners();
     };
 
-    // Always add listeners - they check isDraggingRef internally
+    globalMoveRef.current = handleGlobalPointerMove;
+    globalUpRef.current = handleGlobalPointerUp;
     window.addEventListener("pointermove", handleGlobalPointerMove);
     window.addEventListener("pointerup", handleGlobalPointerUp);
+  }, [camera, gl, detachGlobalDragListeners]);
 
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      window.removeEventListener("pointermove", handleGlobalPointerMove);
-      window.removeEventListener("pointerup", handleGlobalPointerUp);
+      detachGlobalDragListeners();
     };
-  }, [onPositionChange, onDragEnd, table, camera, gl]);
+  }, [detachGlobalDragListeners]);
 
   // Long-press detection
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -230,11 +261,13 @@ export function Table3D({
         ? TABLE_HEIGHT / 2 + dynamicOffset // Above the top
         : -TABLE_HEIGHT / 2 - dynamicOffset; // Below the bottom
 
-      // Smoothly transition the label position
-      const smoothedY = THREE.MathUtils.lerp(labelY, newLabelY, 0.1);
-      if (Math.abs(smoothedY - labelY) > 0.01) {
-        setLabelY(smoothedY);
-      }
+      // Smoothly transition the label position using ref (no state update)
+      labelYRef.current = THREE.MathUtils.lerp(
+        labelYRef.current,
+        newLabelY,
+        0.1
+      );
+      textRef.current.position.y = labelYRef.current;
 
       // Make text always face the camera
       textRef.current.lookAt(camera.position);
@@ -513,6 +546,9 @@ export function Table3D({
               orbitControlsRef.current.enabled = false;
             }
 
+            // Attach global listeners only when drag starts
+            attachGlobalDragListeners();
+
             // Notify parent that dragging has started
             onDragStart?.();
 
@@ -655,34 +691,19 @@ export function Table3D({
           side={THREE.DoubleSide}
         />
       </mesh>
-      ;{/* Edge outline rendered as tubes for both tables and views */}
-      {edgeTubes.map((edge, index) => (
-        <mesh key={index}>
-          <tubeGeometry
-            args={[
-              edge.curve,
-              Math.max(2, Math.floor(edge.length * 10)),
-              EDGE_TUBE_RADIUS,
-              8,
-              false,
-            ]}
-          />
-          <meshBasicMaterial
+      {/* Edge outline: use lightweight lineSegments for large schemas, tubes for small ones */}
+      {simplifiedRendering ? (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial
             color={edgeColor}
             transparent={opacity < 1}
             opacity={opacity}
           />
-        </mesh>
-      ))}
-      {/* Additional edge tubes for selected table/view visualization */}
-      {isSelected &&
-        edgeTubes.map((edge, index) => {
-          const selectedEdgeColor = new THREE.Color(table.color).multiplyScalar(
-            0.5
-          );
-
-          return (
-            <mesh key={`selected-${index}`} renderOrder={1}>
+        </lineSegments>
+      ) : (
+        <>
+          {edgeTubes.map((edge, index) => (
+            <mesh key={index}>
               <tubeGeometry
                 args={[
                   edge.curve,
@@ -693,18 +714,45 @@ export function Table3D({
                 ]}
               />
               <meshBasicMaterial
-                color={selectedEdgeColor}
-                transparent={false}
-                opacity={1}
-                depthTest={false}
-                depthWrite={false}
+                color={edgeColor}
+                transparent={opacity < 1}
+                opacity={opacity}
               />
             </mesh>
-          );
-        })}
+          ))}
+          {/* Additional edge tubes for selected table/view visualization */}
+          {isSelected &&
+            edgeTubes.map((edge, index) => {
+              const selectedEdgeColor = new THREE.Color(
+                table.color
+              ).multiplyScalar(0.5);
+
+              return (
+                <mesh key={`selected-${index}`} renderOrder={1}>
+                  <tubeGeometry
+                    args={[
+                      edge.curve,
+                      Math.max(2, Math.floor(edge.length * 10)),
+                      EDGE_TUBE_RADIUS,
+                      8,
+                      false,
+                    ]}
+                  />
+                  <meshBasicMaterial
+                    color={selectedEdgeColor}
+                    transparent={false}
+                    opacity={1}
+                    depthTest={false}
+                    depthWrite={false}
+                  />
+                </mesh>
+              );
+            })}
+        </>
+      )}
       <group ref={textRef}>
         <Text
-          position={[0, labelY, 0]}
+          position={[0, initialLabelY, 0]}
           fontSize={0.3}
           color="white"
           anchorX="center"
@@ -718,4 +766,4 @@ export function Table3D({
       </group>
     </group>
   );
-}
+});

@@ -95,9 +95,9 @@ export function calculateMaxCameraDistance(
     }
   });
 
-  // Set maxDistance to 2x the furthest distance, with minimum of 50 and maximum of 200
+  // Set maxDistance to 2x the furthest distance, with minimum of 50 and maximum of 400
   // This allows zooming out enough to see the entire schema plus some extra space
-  return Math.max(50, Math.min(200, maxDistance * 2));
+  return Math.max(50, Math.min(400, maxDistance * 2));
 }
 
 /**

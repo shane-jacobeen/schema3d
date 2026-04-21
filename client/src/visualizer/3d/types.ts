@@ -25,6 +25,7 @@ export interface Table3DProps {
   isRelated?: boolean;
   isDimmed?: boolean;
   isRelationshipHighlighted?: boolean;
+  simplifiedRendering?: boolean;
   onSelect: (table: Table | null) => void;
   onHover: (table: Table | null) => void;
   onLongPress?: (table: Table) => void;
@@ -67,6 +68,7 @@ export interface RelationshipLineProps {
   onLongPress?: (relationship: Relationship) => void;
   animatedPositions?: Map<string, [number, number, number]>;
   schema: DatabaseSchema;
+  showLabel?: boolean;
 }
 
 export interface CardinalityNotationProps {

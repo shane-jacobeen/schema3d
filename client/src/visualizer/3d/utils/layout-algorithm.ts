@@ -117,7 +117,8 @@ export function applyForceDirectedLayout(
   });
 
   // Adjust parameters for better 3D behavior
-  const iterations = 150; // More iterations for better convergence
+  // Scale iterations down for large schemas to avoid blocking the main thread
+  const iterations = totalItems > 200 ? 50 : totalItems > 100 ? 80 : 150;
   const springLength = viewMode === "3D" ? 4 : 3; // Longer springs in 3D
   const springStrength = 0.08;
   const repulsionStrength = viewMode === "3D" ? 15 : 12; // Stronger repulsion in 3D
