@@ -118,6 +118,7 @@
   },
   "overrides": {
     "vite": "^7.2.4",
+    "three-mesh-bvh": "^0.8.3",
     "picomatch": "^4.0.3",
     "micromatch": {
       "picomatch": "^4.0.3"
