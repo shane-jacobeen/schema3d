@@ -1,5 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Bash(node:*)", "Bash(npx tsc:*)", "Bash(npx vitest:*)"]
-  }
-}
