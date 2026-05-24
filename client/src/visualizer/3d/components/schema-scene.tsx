@@ -133,7 +133,7 @@ export function SchemaScene({
         radius={100}
         depth={50}
         count={visibleTables.length > 100 ? 1000 : 5000}
-        factor={4}
+        factor={2}
         saturation={0}
         fade
         speed={1}
