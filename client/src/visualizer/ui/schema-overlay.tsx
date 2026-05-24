@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { Info, Compass } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
 import { Card } from "@/shared/ui-components/card";
-import { StatsDisplay } from "@/visualizer/ui/stats/stats-display";
 import { SearchFilter } from "@/visualizer/ui/search/search-filter";
 import { SchemaSelector } from "@/visualizer/ui/schema/schema-controls";
 import { LayoutControls } from "@/visualizer/ui/layout/layout-controls";
@@ -72,10 +71,6 @@ export function SchemaOverlay({
 
   return (
     <>
-      <div className="absolute right-2 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 top-16 lg:top-2 z-10">
-        <StatsDisplay />
-      </div>
-
       {/* About button */}
       <div className="absolute right-2 sm:top-4 sm:right-4 top-2 z-10">
         <Link to="/about">
