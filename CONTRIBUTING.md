@@ -30,14 +30,18 @@ Thank you for your interest in contributing! This guide will help you get starte
 1. **Create a branch** from `main`
 2. **Make your changes** following the code style below
 3. **Add tests** for new functionality
-4. **Run checks** (optional - pre-commit hook will auto-format):
-   - `npm run lint` - Check code quality
-   - `npm run format` - Format code (runs automatically on commit)
-   - `npm run test` - Run tests
-   - `npm run check` - Type check
+4. **Run checks**:
+
+- `npm run lint` - Check code quality
+- `npm run format` - Format code (runs automatically on commit)
+- `npm run test` - Run tests
+- `npm run check` - Type check
+
 5. **Submit a pull request** with a clear description
 
 **Note**: Code formatting happens automatically when you commit thanks to our pre-commit hook. You can still run `npm run format` manually if needed.
+
+Use [tests/MANUAL_TEST_CHECKLIST.md](tests/MANUAL_TEST_CHECKLIST.md) before releases and for larger UI or workflow changes. It is not required for every small PR.
 
 ## Code Style
 

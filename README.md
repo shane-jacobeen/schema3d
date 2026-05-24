@@ -497,10 +497,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Before Submitting
 
-1. Run tests: `npm run test`
-2. Check linting: `npm run lint`
-3. Format code: `npm run format`
-4. Verify manual test checklist items
+CI runs lint, formatting, type checks, tests, and the production build. For contributor workflow and local checks, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
