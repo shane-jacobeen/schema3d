@@ -15,31 +15,13 @@ import {
 import { Separator } from "@/shared/ui-components/separator";
 import { Info, Eye, Code2, Mail, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Canvas } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
-import { Suspense } from "react";
 
 export default function About() {
   return (
     <>
       <AboutPageMetadata />
       <div className="h-screen w-full overflow-y-auto relative">
-        {/* Starry sky background */}
-        <div className="fixed inset-0 z-0">
-          <Canvas>
-            <Suspense fallback={null}>
-              <color attach="background" args={["#0f172a"]} />
-              <Stars
-                radius={100}
-                depth={50}
-                count={5000}
-                factor={2}
-                saturation={0}
-                fade
-              />
-            </Suspense>
-          </Canvas>
-        </div>
+        <div className="about-page-background fixed inset-0 z-0" aria-hidden />
 
         {/* Content */}
         <div className="relative z-10 min-h-full w-full flex items-start justify-center p-4 py-8">

@@ -49,15 +49,16 @@ A 3D database schema visualization tool that renders database tables as interact
 - **PNG Screenshots**: Export your visualization as a high-quality image
 - **GLTF Export**: Export the entire 3D scene for use in other applications
 
-### � Sharing & Collaboration
+### Sharing & Collaboration
 
 - **Shareable URLs**: Generate compressed URLs that encode both your schema and view state
+- **URL size limits**: Very large schemas may exceed browser URL length limits; sharing works best with moderately sized schemas
 - **View State Preservation**: Shared links preserve selected categories, layout algorithm, and view mode
 - **One-Click Sharing**: Copy shareable links to clipboard with a single click
 - **Format Support**: Compatible with SQL and Mermaid schema formats
 - **Backward Compatible**: New URLs work in older versions, gracefully degrading if view state isn't supported
 
-### �💡 Additional Features
+### Additional Features
 
 - **Table Details Panel**: Click tables to view detailed column information
 - **Relationship Details Panel**: Click relationship lines to view FK/PK details
@@ -465,7 +466,7 @@ erDiagram
 
 ## Testing
 
-The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **176 tests** across **13 test files**.
+The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **190 tests** across **14 test files**.
 
 ### Running Tests
 
@@ -485,8 +486,8 @@ npm run test:coverage
 
 ### Test Coverage
 
-- **Unit Tests**: 125 tests covering parsers, schema utilities, filtering, layout, visualization, and URL encoding
-- **Integration Tests**: 51 tests covering component interactions and end-to-end workflows
+- **Unit Tests**: Parsers, schema utilities, filtering, layout, visualization, and URL encoding
+- **Integration Tests**: Component interactions, dialogs, and URL round-trips
 
 For detailed documentation including test structure, what's tested, and how to write tests, see **[tests/README.md](tests/README.md)**.
 
@@ -496,10 +497,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Before Submitting
 
-1. Run tests: `npm run test`
-2. Check linting: `npm run lint`
-3. Format code: `npm run format`
-4. Verify manual test checklist items
+CI runs lint, formatting, type checks, tests, and the production build. For contributor workflow and local checks, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
