@@ -1,11 +1,5 @@
 {
-  "include": [
-    "client/src/**/*",
-    "shared/**/*",
-    "server/**/*",
-    "api/constants.ts",
-    "tests/**/*"
-  ],
+  "include": ["client/src/**/*", "server/**/*", "tests/**/*"],
   "exclude": ["node_modules", "build", "dist"],
   "compilerOptions": {
     "incremental": true,
@@ -22,8 +16,7 @@
     "baseUrl": ".",
     "types": ["node", "vitest/globals", "vitest"],
     "paths": {
-      "@/*": ["./client/src/*"],
-      "@shared/*": ["./shared/*"]
+      "@/*": ["./client/src/*"]
     }
   }
 }

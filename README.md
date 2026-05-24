@@ -248,8 +248,6 @@ Schema3D/
 │   │   │       │   └── export-utils.ts
 │   │   │       ├── search/     # Search/filter functionality
 │   │   │       │   └── search-filter.tsx
-│   │   │       ├── stats/      # Statistics display
-│   │   │       │   └── stats-display.tsx
 │   │   │       └── schema-overlay.tsx # Main UI overlay component
 │   │   │
 │   │   ├── shared/             # Shared across domains
@@ -264,8 +262,6 @@ Schema3D/
 │   │   │   ├── hooks/          # Shared React hooks
 │   │   │   │   └── use-is-mobile.tsx
 │   │   │   ├── utils/          # Shared utilities
-│   │   │   │   ├── api.ts
-│   │   │   │   ├── browser-info.ts
 │   │   │   │   ├── button-styles.ts
 │   │   │   │   ├── url-encoding.ts    # Schema and view state encoding/decoding
 │   │   │   │   ├── url-state.ts       # URL hash management
@@ -282,18 +278,8 @@ Schema3D/
 │
 ├── server/                     # Express backend
 │   ├── index.ts               # Server entry point
-│   ├── routes.ts              # API route definitions
-│   ├── db.ts                  # Database connection
-│   ├── tracking.ts            # User tracking utilities
+│   ├── routes.ts              # HTTP server setup
 │   └── vite.ts                # Vite dev server integration
-│
-├── api/                        # API route handlers
-│   ├── track-interaction.ts   # User interaction tracking
-│   ├── stats.ts               # Statistics endpoint
-│   └── ...                    # Other API endpoints
-│
-├── shared/                     # Shared code between client and server
-│   └── schema.ts              # Shared schema type definitions
 │
 └── dist/                      # Production build output
 ```
@@ -467,7 +453,6 @@ erDiagram
 - `npm run test:coverage` - Run tests with coverage report
 - `npm run lint` - Run ESLint to check code quality
 - `npm run format` - Format code with Prettier
-- `npm run db:push` - Push database schema changes (Drizzle)
 
 ### Code Style
 

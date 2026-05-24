@@ -38,12 +38,6 @@
       ]
     }
   ],
-  "crons": [
-    {
-      "path": "/api/cleanup-sessions",
-      "schedule": "0 0 * * *"
-    }
-  ],
   "redirects": [
     {
       "source": "/:path*",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, startTransition } from "react";
+import { useState, useEffect, startTransition } from "react";
 import { Pencil } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
 import { useToast, LocalToastContainer } from "@/shared/ui-components/toast";
@@ -11,7 +11,6 @@ import {
   DialogFooter,
 } from "@/shared/ui-components/dialog";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { areSchemasEqual } from "@/visualizer/state/utils/schema-utils";
 import { getSchemaText } from "@/schemas/utils/load-schemas";
 import { schemaToFormat } from "@/schemas/utils/schema-converter";
 import {
@@ -19,7 +18,6 @@ import {
   validateAndParse,
   type SchemaFormat,
 } from "@/schemas/parsers";
-import { logSchemaAction } from "@/shared/utils/api";
 import { SchemaEditor } from "./schema-editor";
 import { FormatSelector } from "./format-selector";
 import { SampleSchemaSelector } from "./sample-schema-selector";
@@ -40,7 +38,6 @@ export function SchemaSelector({
   const [scriptInput, setScriptInput] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [currentFormat, setCurrentFormat] = useState<SchemaFormat>("sql");
-  const initialSchemaRef = useRef<DatabaseSchema | null>(null);
   const { toast } = useToast();
 
   // Update format when user explicitly selects format via FormatSelector
@@ -64,10 +61,6 @@ export function SchemaSelector({
     if (isOpen) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // Store initial schema for comparison
-          initialSchemaRef.current =
-            persistedSchemaRef.current || currentSchema;
-
           // Convert persisted schema to selected format for display
           const scriptToLoad = schemaToFormat(
             persistedSchemaRef.current || currentSchema
@@ -146,14 +139,6 @@ export function SchemaSelector({
         name: persistedSchemaRef.current?.name || parsed.name,
       };
 
-      // Check if schema changed
-      if (
-        !initialSchemaRef.current ||
-        !areSchemasEqual(schemaWithName, initialSchemaRef.current)
-      ) {
-        logSchemaAction("schema_change").catch(() => {});
-      }
-
       persistedSchemaRef.current = schemaWithName;
       onSchemaChange(schemaWithName);
       setIsOpen(false);
@@ -172,7 +157,6 @@ export function SchemaSelector({
       persistedSchemaRef.current = parsed;
     }
     toast.success("File loaded successfully");
-    logSchemaAction("schema_upload").catch(() => {});
   };
 
   const handleOpenChange = (open: boolean) => {
