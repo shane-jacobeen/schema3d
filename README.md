@@ -4,13 +4,13 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 
 ![Schema3D](https://img.shields.io/badge/React-18.3.1-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue) ![Three.js](https://img.shields.io/badge/Three.js-0.170.0-green)
 
-**🌐 [Live Demo](https://schema3d.com)** | [Documentation](#getting-started) | [Contributing](CONTRIBUTING.md)
+**[Live Demo](https://schema3d.com)** | [Documentation](#getting-started) | [Contributing](CONTRIBUTING.md)
 
 ![Schema3D 3D database schema visualizer preview](client/public/images/preview.png)
 
 ## Features
 
-### 🎨 Interactive 3D Visualization
+### Interactive 3D Visualization
 
 - **3D Table Rendering**: Tables displayed as color-coded 3D boxes by category
 - **Relationship Lines**: Visual connections showing foreign key relationships with PK/FK notation
@@ -18,7 +18,7 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 - **Hover & Selection**: Hover effects and click-to-select tables and relationships
 - **Visual Feedback**: Highlighted tables and relationships with smooth animations
 
-### 📊 Schema Management
+### Schema Management
 
 - **Multiple Sample Schemas**: Pre-configured schemas (Retailer Database, Blog Platform, University)
 - **Dual Format Support**: Import schemas via SQL CREATE TABLE statements or Mermaid ER diagrams
@@ -26,19 +26,19 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 - **Live Syntax Validation**: Real-time validation of SQL and Mermaid input with error feedback
 - **Schema Switching**: Easily switch between different database schemas
 
-### 🎯 Layout Algorithms
+### Layout Algorithms
 
 - **Circular Layout**: Distributes tables evenly around a circle
 - **Force-Directed Layout**: Physics-based positioning based on relationship strength
 - **Hierarchical Layout**: Organizes tables in layers based on dependencies
 
-### 🔍 Search & Filter
+### Search & Filter
 
 - **Real-time Search**: Search across table and column names
 - **Smart Highlighting**: Highlights matched tables and related connections
 - **Focus Mode**: Dims non-matched tables for better focus
 
-### 🏷️ Category Management
+### Category Management
 
 - **Dynamic Filtering**: Toggle visibility of specific table categories via the interactive legend
 - **Custom Categories**: Create, rename, and delete categories to organize your schema
@@ -46,7 +46,7 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 - **Table Organization**: Easily move tables between categories using the category editor
 - **Auto-Assignment**: New categories are automatically assigned distinct colors
 
-### 📤 Export Functionality
+### Export Functionality
 
 - **PNG Screenshots**: Export your visualization as a high-quality image
 - **GLTF Export**: Export the entire 3D scene for use in other applications
@@ -317,26 +317,26 @@ Schema3D/
 
 ### Frontend
 
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **React Three Fiber** - 3D rendering
-- **Three.js** - 3D graphics library
-- **@react-three/drei** - Three.js helpers
-- **Radix UI** - Accessible UI components
-- **Tailwind CSS** - Styling
+- **React 18**: UI framework
+- **TypeScript**: Type safety
+- **Vite**: Build tool and dev server
+- **React Three Fiber**: 3D rendering
+- **Three.js**: 3D graphics library
+- **@react-three/drei**: Three.js helpers
+- **Radix UI**: Accessible UI components
+- **Tailwind CSS**: Styling
 
 ### Backend
 
-- **Express** - Web server
-- **TypeScript** - Type safety
-- **esbuild** - Server bundling
+- **Express**: Web server
+- **TypeScript**: Type safety
+- **esbuild**: Server bundling
 
 ### Development Tools
 
-- **tsx** - TypeScript execution
-- **PostCSS** - CSS processing
-- **Autoprefixer** - CSS vendor prefixes
+- **tsx**: TypeScript execution
+- **PostCSS**: CSS processing
+- **Autoprefixer**: CSS vendor prefixes
 
 ## Usage
 
