@@ -23,26 +23,12 @@ function App() {
           height: "100vh",
           position: "relative",
           overflow: "hidden",
+          background: "#0f172a",
           /* Use full viewport including safe areas - app extends to edges */
           minHeight: "-webkit-fill-available",
         }}
       >
-        <Suspense
-          fallback={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100vh",
-                background: "#0f172a",
-                color: "#fff",
-              }}
-            >
-              Loading...
-            </div>
-          }
-        >
+        <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<SchemaVisualizer />} />
             <Route path="/about" element={<About />} />

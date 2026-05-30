@@ -14,7 +14,10 @@ import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
-const appRoutes = new Set(["/", "/about"]);
+
+function shouldServeSpa(pathname: string) {
+  return path.extname(pathname) === "";
+}
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -55,7 +58,7 @@ export async function setupVite(app: Express, server: Server) {
     const url = req.originalUrl;
     const pathname = new URL(req.originalUrl, "http://localhost").pathname;
 
-    if (!appRoutes.has(pathname)) {
+    if (!shouldServeSpa(pathname)) {
       res.status(404).send("Not found");
       return;
     }
@@ -95,7 +98,7 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   app.use("*", (req, res) => {
-    if (appRoutes.has(req.path)) {
+    if (shouldServeSpa(req.path)) {
       res.sendFile(path.resolve(distPath, "index.html"));
       return;
     }
