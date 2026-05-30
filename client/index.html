@@ -107,27 +107,17 @@
     </script>
   </head>
   <body>
-    <div id="root">
-      <main
-        aria-labelledby="static-welcome-title"
-        style="align-items: center; background: #0f172a; color: #fff; display: flex; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; justify-content: center; padding: 24px;"
-      >
-        <section style="max-width: 640px;">
-          <p style="color: #93c5fd; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; margin: 0 0 12px; text-transform: uppercase;">
-            Open-source database visualization
-          </p>
-          <h1 id="static-welcome-title" style="font-size: clamp(32px, 7vw, 56px); line-height: 1; margin: 0 0 16px;">
-            Schema3D
-          </h1>
-          <p style="color: #cbd5e1; font-size: 18px; line-height: 1.6; margin: 0;">
-            Schema3D is a free open-source 3D database schema visualizer for
-            SQL, T-SQL, and Mermaid ER diagrams. Explore tables, columns,
-            primary keys, foreign keys, and shareable schema views directly in
-            your browser.
-          </p>
-        </section>
-      </main>
-    </div>
+    <style>
+      html,
+      body,
+      #root {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #0f172a;
+      }
+    </style>
+    <div id="root"></div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>
