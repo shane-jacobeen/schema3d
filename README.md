@@ -1,10 +1,12 @@
 # Schema3D
 
-A 3D database schema visualization tool that renders database tables as interactive 3D objects, connected by relationship lines showing foreign key constraints. Built with React, Three.js, and TypeScript.
+An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diagrams. Schema3D renders database tables as interactive 3D objects connected by relationship lines showing foreign key constraints. Built with React, Three.js, and TypeScript.
 
 ![Schema3D](https://img.shields.io/badge/React-18.3.1-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.6.3-blue) ![Three.js](https://img.shields.io/badge/Three.js-0.170.0-green)
 
 **🌐 [Live Demo](https://schema3d.com)** | [Documentation](#getting-started) | [Contributing](CONTRIBUTING.md)
+
+![Schema3D 3D database schema visualizer preview](client/public/images/preview.png)
 
 ## Features
 
@@ -68,8 +70,10 @@ A 3D database schema visualization tool that renders database tables as interact
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - npm or yarn
+
+Schema3D's CI and test tooling are validated on Node.js 22.
 
 ### Installation
 

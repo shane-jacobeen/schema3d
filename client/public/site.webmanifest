@@ -31,5 +31,13 @@
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "categories": ["developer tools", "productivity", "utilities"],
-  "screenshots": []
+  "screenshots": [
+    {
+      "src": "/images/preview.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Schema3D visualizing a database schema in 3D"
+    }
+  ]
 }

@@ -1,10 +1,5 @@
 import { AboutPageMetadata } from "@/shared/metadata";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui-components/card";
+import { Card, CardContent, CardHeader } from "@/shared/ui-components/card";
 import { Button } from "@/shared/ui-components/button";
 import {
   Tabs,
@@ -33,9 +28,7 @@ export default function About() {
                   alt="Schema3D Logo"
                   className="h-12 w-12 object-contain"
                 />
-                <CardTitle className="text-3xl font-bold text-white">
-                  Schema3D
-                </CardTitle>
+                <h1 className="text-3xl font-bold text-white">Schema3D</h1>
               </div>
               <p className="text-slate-300 text-lg">
                 Experimental database visualization tool for 3D schema
@@ -266,9 +259,66 @@ export default function About() {
                   database dependencies are visualized as interactive connecting
                   lines with cardinality notation. Schema3D is a modern
                   web-based tool that runs entirely in your browser, requiring
-                  no installation or database connections—works seamlessly with
-                  MySQL, PostgreSQL, SQL Server, and Mermaid ER diagrams.
+                  no installation or database connections. It works with MySQL,
+                  PostgreSQL, SQL Server, and Mermaid ER diagrams.
                 </p>
+              </div>
+
+              <Separator className="bg-slate-700" />
+
+              <div>
+                <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                  <Info className="h-5 w-5 text-blue-400" />
+                  Common Questions
+                </h2>
+                <div className="space-y-4 text-slate-300 leading-relaxed">
+                  <section id="sql-schema-visualizer">
+                    <h3 className="text-base font-semibold text-white mb-1">
+                      Can Schema3D visualize SQL database schemas?
+                    </h3>
+                    <p>
+                      Yes. Schema3D parses SQL and T-SQL schema definitions,
+                      including CREATE TABLE statements and foreign key
+                      relationships, then renders tables, columns, primary keys,
+                      and foreign keys as an interactive 3D schema view.
+                    </p>
+                  </section>
+
+                  <section id="mermaid-er-diagrams">
+                    <h3 className="text-base font-semibold text-white mb-1">
+                      Does Schema3D support Mermaid ER diagrams?
+                    </h3>
+                    <p>
+                      Yes. You can import Mermaid ER diagram syntax and inspect
+                      the resulting entities and relationships in the same 3D
+                      database visualization workspace.
+                    </p>
+                  </section>
+
+                  <section id="privacy">
+                    <h3 className="text-base font-semibold text-white mb-1">
+                      Does schema data leave the browser?
+                    </h3>
+                    <p>
+                      Schema3D runs as a browser-based visualizer. Schema text
+                      is parsed locally in the web app and does not require a
+                      database connection. Shared links encode schema data in
+                      the URL so collaborators can open the same view.
+                    </p>
+                  </section>
+
+                  <section id="sharing">
+                    <h3 className="text-base font-semibold text-white mb-1">
+                      How do shareable schema URLs work?
+                    </h3>
+                    <p>
+                      The share button creates a compressed URL that preserves
+                      the schema format and view state, including layout, 2D or
+                      3D mode, and selected categories. Very large schemas may
+                      exceed browser URL length limits.
+                    </p>
+                  </section>
+                </div>
               </div>
 
               <Separator className="bg-slate-700" />

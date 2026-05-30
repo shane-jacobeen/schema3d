@@ -14,6 +14,7 @@ import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
+const appRoutes = new Set(["/", "/about"]);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -52,6 +53,12 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+    const pathname = new URL(req.originalUrl, "http://localhost").pathname;
+
+    if (!appRoutes.has(pathname)) {
+      res.status(404).send("Not found");
+      return;
+    }
 
     try {
       const clientTemplate = path.resolve(
@@ -64,8 +71,8 @@ export async function setupVite(app: Express, server: Server) {
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`
+        `src="/src/app/main.tsx"`,
+        `src="/src/app/main.tsx?v=${nanoid()}"`
       );
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
@@ -87,8 +94,12 @@ export function serveStatic(app: Express) {
 
   app.use(express.static(distPath));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  app.use("*", (req, res) => {
+    if (appRoutes.has(req.path)) {
+      res.sendFile(path.resolve(distPath, "index.html"));
+      return;
+    }
+
+    res.status(404).send("Not found");
   });
 }

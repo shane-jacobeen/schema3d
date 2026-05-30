@@ -5,10 +5,11 @@ Thank you for your interest in contributing! This guide will help you get starte
 ## Quick Start
 
 1. **Fork and clone** the repository
-2. **Install dependencies**: `npm install`
-3. **Set up environment**: Copy `.env.example` to `.env` and configure
-4. **Start development**: `npm run dev`
-5. **Run tests**: `npm run test`
+2. **Use Node.js 22+**
+3. **Install dependencies**: `npm install`
+4. **Set up environment**: Copy `.env.example` to `.env` and configure
+5. **Start development**: `npm run dev`
+6. **Run tests**: `npm run test`
 
 ## How to Contribute
 
