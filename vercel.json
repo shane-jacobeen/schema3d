@@ -52,7 +52,7 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/about",
       "destination": "/index.html"
     }
   ]

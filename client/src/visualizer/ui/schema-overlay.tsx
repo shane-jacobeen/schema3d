@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useCallback, useState } from "react";
 import { Info, Compass } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
 import { Card } from "@/shared/ui-components/card";
@@ -11,6 +12,8 @@ import { schemaToFormat } from "@/schemas/utils/schema-converter";
 import { TableInfo } from "@/visualizer/ui/panels/table-info";
 import { RelationshipInfo } from "@/visualizer/ui/panels/relationship-info";
 import { useCollectViewState } from "@/visualizer/state/hooks/use-collect-view-state";
+import { WelcomeOverlay } from "@/visualizer/ui/welcome-overlay";
+import { hasSchemaInUrl } from "@/shared/utils/url-state";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
 import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
@@ -40,6 +43,26 @@ interface SchemaOverlayProps {
   onRelationshipClose: () => void;
 }
 
+const WELCOME_DISMISSED_STORAGE_KEY = "schema3d-welcome-dismissed";
+
+function shouldShowWelcomeOverlay(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (hasSchemaInUrl()) {
+    return false;
+  }
+
+  try {
+    return (
+      window.localStorage.getItem(WELCOME_DISMISSED_STORAGE_KEY) !== "true"
+    );
+  } catch {
+    return true;
+  }
+}
+
 export function SchemaOverlay({
   schema,
   selectedTable,
@@ -61,6 +84,10 @@ export function SchemaOverlay({
   onTableClose,
   onRelationshipClose,
 }: SchemaOverlayProps) {
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(
+    shouldShowWelcomeOverlay
+  );
+
   // Collect view state including custom categories
   const viewState = useCollectViewState(
     selectedCategories,
@@ -69,8 +96,22 @@ export function SchemaOverlay({
     schema
   );
 
+  const dismissWelcomeOverlay = useCallback(() => {
+    setShowWelcomeOverlay(false);
+
+    try {
+      window.localStorage.setItem(WELCOME_DISMISSED_STORAGE_KEY, "true");
+    } catch {
+      // Some browser modes block storage; dismissal still works for this visit.
+    }
+  }, []);
+
   return (
     <>
+      {showWelcomeOverlay && (
+        <WelcomeOverlay onDismiss={dismissWelcomeOverlay} />
+      )}
+
       {/* About button */}
       <div className="absolute right-2 sm:top-4 sm:right-4 top-2 z-10">
         <Link to="/about">

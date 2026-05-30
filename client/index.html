@@ -11,9 +11,8 @@
   <link rel="manifest" href="/site.webmanifest" />
 
     <!-- SEO Meta Tags -->
-    <title>Schema3D: Interactive SQL Database Schema Visualization Tool</title>
-    <meta name="description" content="Free open-source database schema visualizer in stunning 3D. Share and collaborate with URL-based schema sharing. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation. Perfect for database design and documentation." />
-    <meta name="keywords" content="schema visualization, 3d schema visualization, sql schema visualization, mermaid er diagram, mermaid mardown, database schema viewer, interactive schema tool, database visualization, sql schema explorer, 3d database viewer, schema diagram tool, database relationship viewer, schema visualizer, database schema visualizer, sql visualizer, er diagram tool, database design tool, sql parser, t-sql visualization, mermaid visualization, share database schema, schema collaboration, open source schema tool, url schema sharing" />
+    <title>Schema3D: 3D Database Schema Visualizer for SQL &amp; Mermaid</title>
+    <meta name="description" content="Schema3D is a free open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diagrams. Explore tables, columns, primary keys, foreign keys, and shareable schema views in your browser." />
     <meta name="author" content="Shane Jacobeen" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://schema3d.com" />
@@ -21,19 +20,20 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://schema3d.com" />
-    <meta property="og:title" content="Schema3D: Interactive SQL Database Schema Visualization Tool" />
-    <meta property="og:description" content="Free open-source database schema visualizer in 3D. Share schemas via URL for seamless collaboration. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships, tables, and foreign keys with full cardinality notation." />
+    <meta property="og:title" content="Schema3D: 3D Database Schema Visualizer for SQL &amp; Mermaid" />
+    <meta property="og:description" content="Free open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diagrams. Explore tables, columns, primary keys, foreign keys, and shareable schema views in your browser." />
     <meta property="og:site_name" content="Schema3D" />
-    <meta property="og:image" content="https://schema3d.com/images/Schema3D%20Logo.png" />
+    <meta property="og:image" content="https://schema3d.com/images/preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Schema3D 3D database schema visualizer preview" />
     <meta property="og:locale" content="en_US" />
     
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Schema3D: 3D SQL Schema Visualization Tool" />
-    <meta name="twitter:description" content="Free open-source database schema visualizer in 3D. Share schemas via URL for team collaboration. Interactive tool supporting SQL/T-SQL & Mermaid Markdown. Explore database relationships with full cardinality notation." />
-    <meta name="twitter:image" content="https://schema3d.com/images/Schema3D%20Logo.png" />
+    <meta name="twitter:title" content="Schema3D: 3D Database Schema Visualizer" />
+    <meta name="twitter:description" content="Free open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diagrams with shareable browser-based schema views." />
+    <meta name="twitter:image" content="https://schema3d.com/images/preview.png" />
     
     <!-- Additional SEO -->
     <meta name="theme-color" content="#0f172a" />
@@ -46,27 +46,23 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Schema3D",
-      "description": "Free open-source database visualization tool for 3D schema exploration. Share schemas via URL for seamless collaboration. Supports SQL/T-SQL & Mermaid Markdown for comprehensive database relationship mapping",
+      "description": "Free open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diagrams. Explore tables, columns, primary keys, foreign keys, and shareable schema views in your browser.",
       "url": "https://schema3d.com",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web Browser",
       "browserRequirements": "Requires JavaScript. Requires HTML5.",
       "softwareVersion": "1.0.0",
       "datePublished": "2025-01-01",
-      "dateModified": "2026-03-02",
+      "dateModified": "2026-05-29",
       "license": "https://opensource.org/licenses/MIT",
       "codeRepository": "https://github.com/shane-jacobeen/schema3d",
       "programmingLanguage": ["TypeScript", "JavaScript"],
       "keywords": "database schema, 3D visualization, SQL parser, Mermaid diagrams, database design, ER diagram, schema collaboration, developer tools",
+      "isAccessibleForFree": true,
       "offers": {
         "@type": "Offer",
         "price": "0",
         "priceCurrency": "USD"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "1"
       },
       "author": {
         "@type": "Person",
@@ -92,7 +88,7 @@
         "PNG & GLTF Export",
         "Open Source & Free Forever"
       ],
-      "screenshot": "https://schema3d.com/images/Schema3D%20Logo.png"
+      "screenshot": "https://schema3d.com/images/preview.png"
     }
     </script>
     
@@ -111,7 +107,27 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main
+        aria-labelledby="static-welcome-title"
+        style="align-items: center; background: #0f172a; color: #fff; display: flex; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; justify-content: center; padding: 24px;"
+      >
+        <section style="max-width: 640px;">
+          <p style="color: #93c5fd; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; margin: 0 0 12px; text-transform: uppercase;">
+            Open-source database visualization
+          </p>
+          <h1 id="static-welcome-title" style="font-size: clamp(32px, 7vw, 56px); line-height: 1; margin: 0 0 16px;">
+            Schema3D
+          </h1>
+          <p style="color: #cbd5e1; font-size: 18px; line-height: 1.6; margin: 0;">
+            Schema3D is a free open-source 3D database schema visualizer for
+            SQL, T-SQL, and Mermaid ER diagrams. Explore tables, columns,
+            primary keys, foreign keys, and shareable schema views directly in
+            your browser.
+          </p>
+        </section>
+      </main>
+    </div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>
