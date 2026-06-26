@@ -198,13 +198,11 @@ Schema3D/
 │   │   │   │   │   ├── use-schema-state.ts
 │   │   │   │   │   ├── use-selection-state.ts
 │   │   │   │   │   ├── use-filter-state.ts
-│   │   │   │   │   ├── use-url-schema.ts          # URL schema loading
-│   │   │   │   │   └── use-collect-view-state.ts  # View state collection
+│   │   │   │   │   ├── use-collect-view-state.ts  # View state collection
 │   │   │   │   ├── utils/      # State utilities
-│   │   │   │   │   ├── schema-utils.ts      # Layout, selections, comparisons
-│   │   │   │   │   ├── schema-state-utils.ts
+│   │   │   │   │   ├── layout-state-utils.ts  # Layout, selections, comparisons
+│   │   │   │   │   ├── category-state-utils.ts # Category management
 │   │   │   │   │   └── view-state-store.ts  # View state temporary storage
-│   │   │   │   │   └── schema-state-utils.ts # Category management
 │   │   │   │   └── types.ts
 │   │   │   ├── 3d/             # 3D visualization components
 │   │   │   │   ├── components/ # 3D scene components
@@ -470,7 +468,7 @@ erDiagram
 
 ## Testing
 
-The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **190 tests** across **14 test files**.
+The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **178 tests** across **15 test files**.
 
 ### Running Tests
 

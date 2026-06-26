@@ -72,7 +72,7 @@ export function SchemaSelector({
           setCurrentFormat(format);
 
           // Validate - auto-detect format by trying both parsers
-          const result = validateAndParse(scriptToLoad);
+          const result = validateAndParse(scriptToLoad, format);
           setIsValid(result.isValid);
           // Update persisted schema with detected format if valid
           if (result.schema) {
@@ -86,51 +86,47 @@ export function SchemaSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentSchema]);
 
-  // Live validation - runs on every text change
-  // Auto-detects format by trying both parsers
+  // Live validation - debounced to avoid parsing on every keystroke
   useEffect(() => {
-    // Auto-detect format by trying both parsers
-    const result = !scriptInput.trim()
-      ? { isValid: false, schema: null }
-      : validateAndParse(scriptInput);
+    const timeoutId = window.setTimeout(() => {
+      const result = !scriptInput.trim()
+        ? { isValid: false, schema: null }
+        : validateAndParse(scriptInput, currentFormat);
 
-    // Use startTransition to batch state updates and avoid cascading renders
-    startTransition(() => {
-      setIsValid(result.isValid);
+      startTransition(() => {
+        setIsValid(result.isValid);
 
-      // Update persisted schema if valid (includes detected format)
-      // Only update format state if it actually changed to avoid unnecessary re-renders
-      if (result.schema) {
-        const schema = result.schema;
-        // Preserve the existing name if it's not the parser's default
-        // This prevents losing meaningful names when validation re-parses
-        const preservedName = persistedSchemaRef.current?.name;
-        const shouldPreserveName =
-          preservedName && preservedName !== "Custom Database";
+        if (result.schema) {
+          const schema = result.schema;
+          const preservedName = persistedSchemaRef.current?.name;
+          const shouldPreserveName =
+            preservedName && preservedName !== "Custom Database";
 
-        persistedSchemaRef.current = {
-          ...schema,
-          name: shouldPreserveName ? preservedName : schema.name,
-        };
-        // Only update format if it's different from current to prevent re-render loops
-        setCurrentFormat((prevFormat) => {
-          return schema.format !== prevFormat ? schema.format : prevFormat;
-        });
-      }
-    });
+          persistedSchemaRef.current = {
+            ...schema,
+            name: shouldPreserveName ? preservedName : schema.name,
+          };
+          setCurrentFormat((prevFormat) => {
+            return schema.format !== prevFormat ? schema.format : prevFormat;
+          });
+        }
+      });
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
     // persistedSchemaRef is stable and doesn't need to be in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scriptInput]);
+  }, [scriptInput, currentFormat]);
 
   const handleSampleSelect = (schema: DatabaseSchema) => {
     persistedSchemaRef.current = schema;
     const text = getSchemaText(schema.name) || schemaToFormat(schema);
     setScriptInput(text);
+    setCurrentFormat(schema.format);
   };
 
   const handleOk = () => {
-    // Auto-detect format by trying both parsers
-    const parsed = parseSchema(scriptInput);
+    const parsed = parseSchema(scriptInput, currentFormat);
 
     if (parsed && parsed.tables.length > 0) {
       // Preserve the name from persistedSchemaRef if it exists (e.g., from sample schema selection)
@@ -151,10 +147,12 @@ export function SchemaSelector({
 
   const handleFileLoad = (content: string, detectedFormat: SchemaFormat) => {
     setScriptInput(content);
+    setCurrentFormat(detectedFormat);
     // Try parsing with the detected format first, then fall back to auto-detect
     const parsed = parseSchema(content, detectedFormat) || parseSchema(content);
     if (parsed) {
       persistedSchemaRef.current = parsed;
+      setCurrentFormat(parsed.format);
     }
     toast.success("File loaded successfully");
   };

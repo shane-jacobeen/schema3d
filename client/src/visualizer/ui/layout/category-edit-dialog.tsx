@@ -28,6 +28,7 @@ import {
 } from "@/shared/ui-components/tooltip";
 import { ChevronRight, ChevronLeft, Trash2 } from "lucide-react";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
+import { findUnusedColor } from "@/shared/utils/category-colors";
 
 interface CategoryEditDialogProps {
   open: boolean;
@@ -76,34 +77,8 @@ export function CategoryEditDialog({
           setTablesNotInCategory(allTables);
           setCategoryName("");
 
-          // Find an unused color from the palette
-          const COLOR_PALETTE = [
-            "#3b82f6", // Blue
-            "#10b981", // Emerald
-            "#f59e0b", // Amber
-            "#8b5cf6", // Violet
-            "#ec4899", // Pink
-            "#06b6d4", // Cyan
-            "#84cc16", // Lime
-            "#f97316", // Orange
-            "#ef4444", // Red
-            "#14b8a6", // Teal
-            "#a855f7", // Purple
-            "#f43f5e", // Rose
-            "#22d3ee", // Sky
-            "#34d399", // Green
-            "#fbbf24", // Yellow
-          ];
-
-          // Get all colors currently in use
           const usedColors = new Set(schema.tables.map((table) => table.color));
-
-          // Find first unused color or cycle through palette
-          const unusedColor =
-            COLOR_PALETTE.find((color) => !usedColors.has(color)) ||
-            COLOR_PALETTE[usedColors.size % COLOR_PALETTE.length]!;
-
-          setCategoryColor(unusedColor);
+          setCategoryColor(findUnusedColor(usedColors));
         } else {
           // For existing category
           const inCategory: Table[] = [];

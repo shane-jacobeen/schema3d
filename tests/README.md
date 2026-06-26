@@ -1,6 +1,6 @@
 # Testing Documentation
 
-This directory contains all test files for the Schema3D project: **176 tests** across **13 test files**, providing comprehensive coverage of core functionality.
+This directory contains all test files for the Schema3D project: **178 tests** across **15 test files**, providing comprehensive coverage of core functionality.
 
 ## Test Framework
 

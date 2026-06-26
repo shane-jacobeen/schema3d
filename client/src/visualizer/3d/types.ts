@@ -1,8 +1,11 @@
 import * as THREE from "three";
+import type React from "react";
 import type { Table, DatabaseSchema } from "@/shared/types/schema";
-
-export type CardinalitySymbol = "1" | "N" | "0..1" | "1..N" | "0..N";
-export type Cardinality = `${CardinalitySymbol}:${CardinalitySymbol}`;
+export type {
+  CardinalitySymbol,
+  Cardinality,
+} from "@/shared/types/cardinality";
+import type { Cardinality } from "@/shared/types/cardinality";
 
 export interface Relationship {
   id: string;
@@ -52,7 +55,10 @@ export interface RelationshipLinesProps {
   onSelect?: (relationship: Relationship | null) => void;
   onHover?: (relationship: Relationship | null) => void;
   onLongPress?: (relationship: Relationship) => void;
-  animatedPositions?: Map<string, [number, number, number]>;
+  animatedPositionsRef?: React.MutableRefObject<
+    Map<string, [number, number, number]>
+  >;
+  isAnimating?: boolean;
   visibleTableNames?: Set<string>;
 }
 
@@ -66,7 +72,10 @@ export interface RelationshipLineProps {
   onSelect?: (relationship: Relationship | null) => void;
   onHover?: (relationship: Relationship | null) => void;
   onLongPress?: (relationship: Relationship) => void;
-  animatedPositions?: Map<string, [number, number, number]>;
+  animatedPositionsRef?: React.MutableRefObject<
+    Map<string, [number, number, number]>
+  >;
+  isAnimating?: boolean;
   schema: DatabaseSchema;
   showLabel?: boolean;
 }

@@ -1,22 +1,10 @@
 import * as THREE from "three";
-/**
- * Calculates camera position to center on target without rotating
- * This maintains the current camera orientation and only translates to center the target
- */
+import { getOrbitControls } from "@/visualizer/3d/context/orbit-controls-context";
+
 export function calculateCameraPositionForRecenter(
   targetPoint: THREE.Vector3
 ): { position: THREE.Vector3; lookAt: THREE.Vector3 } {
-  // Get current camera state from OrbitControls
-  const orbitControls = (
-    window as {
-      __orbitControls?: {
-        getAzimuthalAngle: () => number;
-        getPolarAngle: () => number;
-        target: THREE.Vector3;
-        object: THREE.Camera;
-      };
-    }
-  ).__orbitControls;
+  const orbitControls = getOrbitControls();
   if (!orbitControls) {
     // Fallback: use default position
     return {

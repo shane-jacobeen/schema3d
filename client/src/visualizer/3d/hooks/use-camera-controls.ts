@@ -5,15 +5,14 @@ import {
   useCallback,
   startTransition,
   useMemo,
-  type ComponentRef,
 } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "@react-three/drei";
 import {
   calculateMaxCameraDistance,
   animateCameraZoom,
   getDefaultCameraPosition,
 } from "../utils/camera-utils";
+import { getOrbitControls } from "../context/orbit-controls-context";
 import type { Table } from "@/shared/types/schema";
 
 interface UseCameraControlsReturn {
@@ -62,9 +61,7 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
   const zoomCancelRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    const orbitControls = (
-      window as { __orbitControls?: ComponentRef<typeof OrbitControls> }
-    ).__orbitControls;
+    const orbitControls = getOrbitControls();
     if (!orbitControls) {
       startTransition(() => {
         setMaxCameraDistance(desiredMaxCameraDistance);

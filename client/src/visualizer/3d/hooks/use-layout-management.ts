@@ -5,7 +5,11 @@ import {
   DEFAULT_VIEW_MODE,
   type LayoutType,
 } from "@/visualizer/state/initial-state";
-import { applyLayoutToFilteredSchema } from "../utils/layout-utils";
+import {
+  applyLayoutToFilteredSchema,
+  applyLayoutToFilteredSchemaAsync,
+  shouldUseAsyncForceLayout,
+} from "../utils/layout-utils";
 import { getPendingViewState } from "@/visualizer/state/utils/view-state-store";
 
 interface UseLayoutManagementReturn {
@@ -77,6 +81,21 @@ export function useLayoutManagement(
       (layoutChanged || viewModeChanged || visibleTablesChanged) &&
       visibleTables.length > 0
     ) {
+      if (shouldUseAsyncForceLayout(visibleTables.length, currentLayout)) {
+        setCurrentSchema((prevSchema) => {
+          void applyLayoutToFilteredSchemaAsync(
+            prevSchema,
+            visibleTables,
+            currentLayout,
+            viewMode
+          ).then((updatedSchema) => {
+            startTableAnimation(updatedSchema);
+          });
+          return prevSchema;
+        });
+        return;
+      }
+
       setCurrentSchema((prevSchema) => {
         const updatedSchema = applyLayoutToFilteredSchema(
           prevSchema,
@@ -85,9 +104,8 @@ export function useLayoutManagement(
           viewMode
         );
 
-        // Animate to new positions
         startTableAnimation(updatedSchema);
-        return prevSchema; // Don't update yet, animation will handle it
+        return prevSchema;
       });
     }
   }, [

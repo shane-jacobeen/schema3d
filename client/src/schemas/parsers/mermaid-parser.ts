@@ -1,6 +1,6 @@
 import type { DatabaseSchema, Table, Column } from "@/shared/types/schema";
-import type { Cardinality } from "@/visualizer/3d/types";
-import { parseCardinality } from "@/visualizer/3d/components/relationships/relationship-utils";
+import type { Cardinality } from "@/shared/types/cardinality";
+import { parseCardinality } from "@/shared/types/cardinality";
 import {
   COLOR_PALETTE,
   guessCategory,
