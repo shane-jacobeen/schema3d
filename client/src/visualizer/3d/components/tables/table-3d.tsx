@@ -10,6 +10,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Text, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Table3DProps } from "../../types";
+import { useOrbitControlsRef } from "../../context/orbit-controls-context";
 import {
   LONG_PRESS_DURATION,
   TABLE_HEIGHT,
@@ -74,16 +75,14 @@ export const Table3D = memo(function Table3D({
   const isDraggingRef = useRef(false);
   const dragStartPositionRef = useRef<THREE.Vector3 | null>(null);
   const dragStartPointerRef = useRef<THREE.Vector2 | null>(null);
+  const orbitControlsContextRef = useOrbitControlsRef();
   const orbitControlsRef = useRef<ComponentRef<typeof OrbitControls> | null>(
     null
   );
 
-  // Get OrbitControls reference
   useEffect(() => {
-    orbitControlsRef.current =
-      (window as { __orbitControls?: ComponentRef<typeof OrbitControls> })
-        .__orbitControls ?? null;
-  }, []);
+    orbitControlsRef.current = orbitControlsContextRef.current;
+  }, [orbitControlsContextRef]);
 
   // Store callbacks in refs so global listeners always see latest values
   const onPositionChangeRef = useRef(onPositionChange);

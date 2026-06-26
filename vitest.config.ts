@@ -22,9 +22,8 @@ export default defineConfig({
         "**/*.config.*",
         "**/*.d.ts",
         "**/index.ts",
-        "client/src/main.tsx",
-        "client/src/App.tsx",
-        "client/src/components/ui/**",
+        "client/src/app/main.tsx",
+        "client/src/app/App.tsx",
       ],
       thresholds: {
         lines: 50,

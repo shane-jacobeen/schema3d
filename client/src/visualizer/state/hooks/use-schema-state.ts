@@ -1,6 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
+import {
+  applyLayoutToSchema,
+  applyLayoutToSchemaAsync,
+} from "@/visualizer/state/utils/schema-utils";
 import {
   getInitialSchema,
   DEFAULT_LAYOUT,
@@ -56,23 +59,46 @@ export function useSchemaState(
       newSchema: DatabaseSchema,
       onCategoriesReset?: (schema: DatabaseSchema) => void
     ) => {
-      // Apply default layout to the new schema with current view mode
-      const layoutSchema = applyLayout(newSchema, DEFAULT_LAYOUT);
+      const applySchema = (layoutSchema: DatabaseSchema) => {
+        // Set the schema directly - no animation for schema selector changes
+        setCurrentSchema(layoutSchema);
 
-      // Set the schema directly - no animation for schema selector changes
-      setCurrentSchema(layoutSchema);
+        clearAllSelections();
 
-      clearAllSelections();
+        // Reset category filters when a new schema is loaded
+        if (onCategoriesReset) {
+          onCategoriesReset(layoutSchema);
+        }
 
-      // Reset category filters when a new schema is loaded
-      if (onCategoriesReset) {
-        onCategoriesReset(layoutSchema);
+        // Reset camera to default position when schema changes
+        handleRecenter();
+      };
+
+      try {
+        // Apply default layout to the new schema with current view mode
+        const layoutSchema = applyLayout(newSchema, DEFAULT_LAYOUT);
+        applySchema(layoutSchema);
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message.includes("applyLayoutToSchemaAsync")
+        ) {
+          const viewMode = getViewMode();
+          void applyLayoutToSchemaAsync(newSchema, DEFAULT_LAYOUT, viewMode)
+            .then((layoutSchema) => {
+              applySchema(layoutSchema);
+            })
+            .catch(() => {
+              // Fall back to raw schema if async layout fails for any reason.
+              applySchema(newSchema);
+            });
+          return;
+        }
+
+        throw error;
       }
-
-      // Reset camera to default position when schema changes
-      handleRecenter();
     },
-    [applyLayout, clearAllSelections, handleRecenter]
+    [applyLayout, clearAllSelections, getViewMode, handleRecenter]
   );
 
   return {

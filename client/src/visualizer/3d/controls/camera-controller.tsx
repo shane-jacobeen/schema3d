@@ -1,7 +1,7 @@
-import { useRef, useEffect, type ComponentRef } from "react";
+import { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls as DreiOrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import { getOrbitControls } from "@/visualizer/3d/context/orbit-controls-context";
 
 // Constants
 const POSITION_THRESHOLD = 0.1;
@@ -61,9 +61,7 @@ export function CameraController({
 
   // Helper function to sync OrbitControls with camera position
   const syncOrbitControls = () => {
-    const orbitControls = (
-      window as { __orbitControls?: ComponentRef<typeof DreiOrbitControls> }
-    ).__orbitControls;
+    const orbitControls = getOrbitControls();
     if (!orbitControls) return;
 
     // Update OrbitControls target to match lookAt
@@ -122,10 +120,7 @@ export function CameraController({
       }
 
       if (translateOnly) {
-        // Only translate, don't rotate - just update OrbitControls target
-        const orbitControls = (
-          window as { __orbitControls?: ComponentRef<typeof DreiOrbitControls> }
-        ).__orbitControls;
+        const orbitControls = getOrbitControls();
         if (orbitControls) {
           orbitControls.target.lerp(targetLookAt.current, MOVE_SPEED);
           orbitControls.update();

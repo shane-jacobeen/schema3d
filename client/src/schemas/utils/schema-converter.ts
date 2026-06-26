@@ -1,7 +1,10 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { schemaToSql } from "../parsers/sql-parser";
-import type { Cardinality, CardinalitySymbol } from "@/visualizer/3d/types";
-import { parseCardinality } from "@/visualizer/3d/components/relationships/relationship-utils";
+import type {
+  Cardinality,
+  CardinalitySymbol,
+} from "@/shared/types/cardinality";
+import { parseCardinality } from "@/shared/types/cardinality";
 
 /**
  * Convert a DatabaseSchema to Mermaid ER diagram format

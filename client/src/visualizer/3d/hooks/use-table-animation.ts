@@ -130,12 +130,7 @@ export function useTableAnimation(
 
   const onAnimatedPositionChange = useCallback(
     (tableName: string, position: [number, number, number]) => {
-      // Update ref immediately for useFrame access
       animatedPositionsRef.current.set(tableName, position);
-
-      // Update state immediately to ensure RelationshipLines get updates
-      // Create a new Map to trigger React re-render
-      setAnimatedPositions(new Map(animatedPositionsRef.current));
     },
     []
   );

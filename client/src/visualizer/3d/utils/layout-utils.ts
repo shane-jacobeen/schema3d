@@ -1,6 +1,11 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
+import {
+  applyLayoutToSchema,
+  applyLayoutToSchemaAsync,
+} from "@/visualizer/state/utils/schema-utils";
 import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
+
+const FORCE_LAYOUT_WORKER_THRESHOLD = 50;
 
 /**
  * Apply layout to filtered schema and merge positions back into full schema
@@ -11,18 +16,48 @@ export function applyLayoutToFilteredSchema(
   layout: LayoutType,
   viewMode: "2D" | "3D"
 ): DatabaseSchema {
-  // Create a filtered schema with only visible tables
   const filteredSchema: DatabaseSchema = {
     ...currentSchema,
     tables: visibleTables,
   };
 
-  // Apply current layout to filtered schema
   const layoutedSchema = applyLayoutToSchema(filteredSchema, layout, viewMode);
 
-  // Create a new schema with updated positions for visible tables
-  // Keep hidden tables at their current positions
-  const updatedSchema: DatabaseSchema = {
+  return mergeLayoutPositions(currentSchema, layoutedSchema);
+}
+
+export async function applyLayoutToFilteredSchemaAsync(
+  currentSchema: DatabaseSchema,
+  visibleTables: DatabaseSchema["tables"],
+  layout: LayoutType,
+  viewMode: "2D" | "3D"
+): Promise<DatabaseSchema> {
+  const filteredSchema: DatabaseSchema = {
+    ...currentSchema,
+    tables: visibleTables,
+  };
+
+  const layoutedSchema = await applyLayoutToSchemaAsync(
+    filteredSchema,
+    layout,
+    viewMode
+  );
+
+  return mergeLayoutPositions(currentSchema, layoutedSchema);
+}
+
+export function shouldUseAsyncForceLayout(
+  tableCount: number,
+  layout: LayoutType
+): boolean {
+  return layout === "force" && tableCount >= FORCE_LAYOUT_WORKER_THRESHOLD;
+}
+
+function mergeLayoutPositions(
+  currentSchema: DatabaseSchema,
+  layoutedSchema: DatabaseSchema
+): DatabaseSchema {
+  return {
     ...currentSchema,
     tables: currentSchema.tables.map((table) => {
       const layoutedTable = layoutedSchema.tables.find(
@@ -34,10 +69,7 @@ export function applyLayoutToFilteredSchema(
           position: layoutedTable.position,
         };
       }
-      // Keep hidden tables at their current positions
       return table;
     }),
   };
-
-  return updatedSchema;
 }
