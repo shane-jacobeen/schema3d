@@ -1,9 +1,12 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Stars } from "@react-three/drei";
-import { Suspense, type MutableRefObject } from "react";
+import { Suspense, useState, type MutableRefObject } from "react";
 import * as THREE from "three";
 import { Table3D } from "./tables/table-3d";
 import { RelationshipLines } from "./relationships/relationship-lines";
+import { WebGLErrorBoundary } from "./webgl-error-boundary";
+import { WebGLFallback } from "./webgl-fallback";
+import { detectWebGLSupport } from "@/visualizer/3d/utils/webgl-support";
 import { CameraController } from "@/visualizer/3d/controls/camera-controller";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
@@ -105,113 +108,125 @@ export function SchemaScene({
   glCanvasRef,
   onPointerMissed,
 }: SchemaSceneProps) {
+  const [support] = useState(detectWebGLSupport);
+
+  if (!support.supported) {
+    const detail =
+      support.reason === "no-context"
+        ? "WebGL context creation failed."
+        : "WebGL instanced arrays are not available.";
+    return <WebGLFallback detail={detail} />;
+  }
+
   return (
-    <Canvas
-      gl={{ preserveDrawingBuffer: true }}
-      onCreated={({ gl }) => {
-        glCanvasRef.current = gl.domElement;
-      }}
-      onPointerMissed={onPointerMissed}
-    >
-      <PerspectiveCamera makeDefault position={[0, 12, 35]} fov={60} />
-      <OrbitControlsProvider controlsRef={orbitControlsRef}>
-        <OrbitControls
-          ref={(controls) => {
-            orbitControlsRef.current = controls;
-            setOrbitControls(controls);
-          }}
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={10}
-          maxDistance={maxCameraDistance}
-          enabled={!isCameraAnimating && !isDraggingTable}
-        />
-
-        <color attach="background" args={["#0f172a"]} />
-
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
-        <directionalLight position={[-10, -10, -5]} intensity={0.3} />
-        <Stars
-          radius={100}
-          depth={50}
-          count={visibleTables.length > 100 ? 1000 : 5000}
-          factor={2}
-          saturation={0}
-          fade
-          speed={1}
-        />
-
-        <CameraController
-          shouldRecenter={shouldRecenter}
-          defaultPosition={defaultCameraPosition}
-          recenterTarget={recenterTarget}
-          recenterLookAt={recenterLookAt}
-          translateOnly={recenterTranslateOnly}
-          onRecenterComplete={onRecenterComplete}
-          onAnimatingChange={onAnimatingChange}
-        />
-
-        <Suspense fallback={null}>
-          <RelationshipLines
-            schema={schema}
-            selectedRelationship={selectedRelationship}
-            hoveredRelationship={hoveredRelationship}
-            selectedTable={selectedTable}
-            onSelect={onRelationshipSelect}
-            onHover={onRelationshipHover}
-            onLongPress={onRelationshipLongPress}
-            animatedPositionsRef={animatedPositionsRef}
-            isAnimating={isAnimating}
-            visibleTableNames={visibleTableNames}
+    <WebGLErrorBoundary>
+      <Canvas
+        gl={{ preserveDrawingBuffer: true }}
+        onCreated={({ gl }) => {
+          glCanvasRef.current = gl.domElement;
+        }}
+        onPointerMissed={onPointerMissed}
+      >
+        <PerspectiveCamera makeDefault position={[0, 12, 35]} fov={60} />
+        <OrbitControlsProvider controlsRef={orbitControlsRef}>
+          <OrbitControls
+            ref={(controls) => {
+              orbitControlsRef.current = controls;
+              setOrbitControls(controls);
+            }}
+            enableDamping
+            dampingFactor={0.05}
+            minDistance={10}
+            maxDistance={maxCameraDistance}
+            enabled={!isCameraAnimating && !isDraggingTable}
           />
 
-          {visibleTables.map((table) => {
-            const isMatched = filteredTables.has(table.name);
-            const isRelated = relatedTables.has(table.name);
-            const hasSelection = !!(selectedTable || selectedRelationship);
+          <color attach="background" args={["#0f172a"]} />
 
-            const isDimmed = shouldDimTable(
-              table,
-              filteredTables,
-              relatedTables,
-              connectedTables,
-              hasSelection,
-              isFiltering
-            );
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[10, 10, 5]} intensity={1} />
+          <directionalLight position={[-10, -10, -5]} intensity={0.3} />
+          <Stars
+            radius={100}
+            depth={50}
+            count={visibleTables.length > 100 ? 1000 : 5000}
+            factor={2}
+            saturation={0}
+            fade
+            speed={1}
+          />
 
-            const isRelationshipHighlighted =
-              isTableInRelationship(table, selectedRelationship) ||
-              isTableInRelationship(table, hoveredRelationship);
+          <CameraController
+            shouldRecenter={shouldRecenter}
+            defaultPosition={defaultCameraPosition}
+            recenterTarget={recenterTarget}
+            recenterLookAt={recenterLookAt}
+            translateOnly={recenterTranslateOnly}
+            onRecenterComplete={onRecenterComplete}
+            onAnimatingChange={onAnimatingChange}
+          />
 
-            return (
-              <Table3D
-                key={table.name}
-                table={table}
-                isSelected={selectedTable?.name === table.name}
-                isHovered={hoveredTable?.name === table.name}
-                isHighlighted={isMatched}
-                isRelated={isRelated}
-                isDimmed={isDimmed}
-                isRelationshipHighlighted={isRelationshipHighlighted}
-                simplifiedRendering={visibleTables.length > 100}
-                onSelect={onTableSelect}
-                onHover={onTableHover}
-                onLongPress={onTableLongPress}
-                onPositionChange={onTablePositionChange}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-                targetPosition={targetPositions.get(table.name)}
-                animationStartTime={animationStartTime}
-                isAnimating={isAnimating}
-                onAnimatedPositionChange={onAnimatedPositionChange}
-              />
-            );
-          })}
+          <Suspense fallback={null}>
+            <RelationshipLines
+              schema={schema}
+              selectedRelationship={selectedRelationship}
+              hoveredRelationship={hoveredRelationship}
+              selectedTable={selectedTable}
+              onSelect={onRelationshipSelect}
+              onHover={onRelationshipHover}
+              onLongPress={onRelationshipLongPress}
+              animatedPositionsRef={animatedPositionsRef}
+              isAnimating={isAnimating}
+              visibleTableNames={visibleTableNames}
+            />
 
-          <polarGridHelper args={[40, 0, 8, 128, "#1e293b", "#1e293b"]} />
-        </Suspense>
-      </OrbitControlsProvider>
-    </Canvas>
+            {visibleTables.map((table) => {
+              const isMatched = filteredTables.has(table.name);
+              const isRelated = relatedTables.has(table.name);
+              const hasSelection = !!(selectedTable || selectedRelationship);
+
+              const isDimmed = shouldDimTable(
+                table,
+                filteredTables,
+                relatedTables,
+                connectedTables,
+                hasSelection,
+                isFiltering
+              );
+
+              const isRelationshipHighlighted =
+                isTableInRelationship(table, selectedRelationship) ||
+                isTableInRelationship(table, hoveredRelationship);
+
+              return (
+                <Table3D
+                  key={table.name}
+                  table={table}
+                  isSelected={selectedTable?.name === table.name}
+                  isHovered={hoveredTable?.name === table.name}
+                  isHighlighted={isMatched}
+                  isRelated={isRelated}
+                  isDimmed={isDimmed}
+                  isRelationshipHighlighted={isRelationshipHighlighted}
+                  simplifiedRendering={visibleTables.length > 100}
+                  onSelect={onTableSelect}
+                  onHover={onTableHover}
+                  onLongPress={onTableLongPress}
+                  onPositionChange={onTablePositionChange}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  targetPosition={targetPositions.get(table.name)}
+                  animationStartTime={animationStartTime}
+                  isAnimating={isAnimating}
+                  onAnimatedPositionChange={onAnimatedPositionChange}
+                />
+              );
+            })}
+
+            <polarGridHelper args={[40, 0, 8, 128, "#1e293b", "#1e293b"]} />
+          </Suspense>
+        </OrbitControlsProvider>
+      </Canvas>
+    </WebGLErrorBoundary>
   );
 }
