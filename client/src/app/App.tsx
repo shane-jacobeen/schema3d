@@ -4,6 +4,7 @@ import { lazy, Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ToastProvider } from "@/shared/ui-components/toast";
+import { ChunkLoadErrorBoundary } from "./chunk-load-error-boundary";
 
 // Lazy load components
 const SchemaVisualizer = lazy(() =>
@@ -28,13 +29,15 @@ function App() {
           minHeight: "-webkit-fill-available",
         }}
       >
-        <Suspense fallback={null}>
-          <Routes>
-            <Route path="/" element={<SchemaVisualizer />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        <ChunkLoadErrorBoundary>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<SchemaVisualizer />} />
+              <Route path="/about" element={<About />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </ChunkLoadErrorBoundary>
         <Analytics />
         <SpeedInsights />
         <ToastProvider />
