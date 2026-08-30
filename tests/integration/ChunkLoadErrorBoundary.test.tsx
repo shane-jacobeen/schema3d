@@ -1,11 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Component, type ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { ChunkLoadErrorBoundary } from "@/app/chunk-load-error-boundary";
@@ -21,10 +14,7 @@ function Thrower({ error }: { error: Error }): ReactNode {
 }
 
 // Outer boundary that proves a non-chunk error is re-thrown past the chunk one.
-class CatchAll extends Component<
-  { children: ReactNode },
-  { caught: boolean }
-> {
+class CatchAll extends Component<{ children: ReactNode }, { caught: boolean }> {
   state = { caught: false };
   static getDerivedStateFromError() {
     return { caught: true };
