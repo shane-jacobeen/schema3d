@@ -6,7 +6,10 @@ import { Table3D } from "./tables/table-3d";
 import { RelationshipLines } from "./relationships/relationship-lines";
 import { WebGLErrorBoundary } from "./webgl-error-boundary";
 import { WebGLFallback } from "./webgl-fallback";
-import { detectWebGLSupport } from "@/visualizer/3d/utils/webgl-support";
+import {
+  detectWebGLSupport,
+  WEBGL_CONTEXT_ATTRIBUTES,
+} from "@/visualizer/3d/utils/webgl-support";
 import { CameraController } from "@/visualizer/3d/controls/camera-controller";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
@@ -121,7 +124,7 @@ export function SchemaScene({
   return (
     <WebGLErrorBoundary>
       <Canvas
-        gl={{ preserveDrawingBuffer: true }}
+        gl={WEBGL_CONTEXT_ATTRIBUTES}
         onCreated={({ gl }) => {
           glCanvasRef.current = gl.domElement;
         }}

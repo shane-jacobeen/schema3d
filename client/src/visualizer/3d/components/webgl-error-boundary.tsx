@@ -28,9 +28,15 @@ export class WebGLErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    // This failure is handled: the boundary shows the fallback card, so the
+    // user is not stuck. Group every caught failure under one stable
+    // fingerprint so it stays visible without opening a fresh issue each time
+    // the message text differs (for example between browsers).
     posthog.captureException(error, {
       source: "webgl-error-boundary",
       componentStack: info.componentStack,
+      $exception_handled: true,
+      $exception_fingerprint: "webgl-scene-render-failure",
     });
   }
 
