@@ -21,7 +21,8 @@
     "three.js",
     "sql",
     "mermaid",
-    "erd"
+    "erd",
+    "drawdb"
   ],
   "scripts": {
     "dev": "tsx server/index.ts",

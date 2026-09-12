@@ -21,8 +21,8 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 ### Schema Management
 
 - **Multiple Sample Schemas**: Pre-configured schemas (Retailer Database, Blog Platform, University)
-- **Dual Format Support**: Import schemas via SQL CREATE TABLE statements or Mermaid ER diagrams
-- **Format Auto-Detection**: Automatically detects SQL or Mermaid format when pasting schema text
+- **Multi-Format Support**: Import SQL, Mermaid ER diagrams, or DrawDB JSON (`.json` / `.ddb`)
+- **Format Auto-Detection**: Automatically detects SQL, Mermaid, or DrawDB JSON when pasting
 - **Live Syntax Validation**: Real-time validation of SQL and Mermaid input with error feedback
 - **Schema Switching**: Easily switch between different database schemas
 
@@ -49,7 +49,8 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 ### Export Functionality
 
 - **PNG Screenshots**: Export your visualization as a high-quality image
-- **GLTF Export**: Export the entire 3D scene for use in other applications
+- **CSV Export**: Flatten table/column metadata for spreadsheets
+- **DrawDB JSON**: Download for DrawDB, or **Edit in DrawDB** (download + open editor)
 
 ### Sharing & Collaboration
 
@@ -441,6 +442,23 @@ erDiagram
   - `o{` = zero or many
 - Column constraints: `PK` (Primary Key), `FK` (Foreign Key), `UK` (Unique)
 - Multiple constraints per column: `PK, FK`
+
+### DrawDB JSON Format
+
+Schema3D can import [DrawDB](https://drawdb.app) diagram exports (File → Export → JSON) and `.ddb` files. Paste a `drawdb.app/editor?shareId=…` URL to load a shared gist, or open Schema3D with `?drawdbShareId=<gistId>`.
+
+Outbound: use **DrawDB** / **Edit in DrawDB** in the export panel. Schema3D does not mint DrawDB share IDs (no gist create API).
+
+**MVP notes:** DrawDB `views[]`, notes, and subject areas are ignored on import; canvas `x,y` positions are ignored in favor of Schema3D layout. The Blog Platform sample is authored as DrawDB JSON (`blog-platform.drawdb.json`); the SQL file remains as a parser regression fixture.
+
+## Related tools
+
+| Tool                         | Role                                                                 |
+| ---------------------------- | -------------------------------------------------------------------- |
+| [DrawDB](https://drawdb.app) | Browser-based schema editor — create/edit diagrams, export JSON      |
+| **Schema3D**                 | 3D explore & share — visualize relationships in space, share via URL |
+
+Use DrawDB to design; bring the JSON into Schema3D to explore and share in 3D.
 
 ## Development
 
