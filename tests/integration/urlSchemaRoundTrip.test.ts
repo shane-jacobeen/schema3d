@@ -11,6 +11,7 @@ import {
 } from "@/shared/utils/url-state";
 import { parseSqlSchema } from "@/schemas/parsers/sql-parser";
 import { parseMermaidSchema } from "@/schemas/parsers/mermaid-parser";
+import { parseDrawdbSchema } from "@/schemas/parsers/drawdb";
 import { schemaToSql, schemaToMermaid } from "@/schemas/utils/schema-converter";
 
 /**
@@ -76,7 +77,9 @@ describe("URL Schema Round-Trip Integration Tests", () => {
         const parsedSchema =
           format === "sql"
             ? parseSqlSchema(decodedResult!.schemaText)
-            : parseMermaidSchema(decodedResult!.schemaText);
+            : format === "mermaid"
+              ? parseMermaidSchema(decodedResult!.schemaText)
+              : parseDrawdbSchema(decodedResult!.schemaText);
 
         expect(parsedSchema).not.toBeNull();
         expect(parsedSchema?.tables.length).toBeGreaterThan(0);
@@ -238,8 +241,10 @@ describe("URL Schema Round-Trip Integration Tests", () => {
         const format = getSchemaFormat(schema.name);
         const text = getSchemaText(schema.name)!;
         const encoded = encodeSchemaToUrl(text);
+        const shareableUrl = createShareableUrl(encoded, format);
+        const hashPart = shareableUrl.split("#")[1];
 
-        mockWindowHash(`#${format}:${encoded}`);
+        mockWindowHash(`#${hashPart}`);
         const decodedResult = getSchemaFromHash();
 
         expect(decodedResult).not.toBeNull();
@@ -247,7 +252,9 @@ describe("URL Schema Round-Trip Integration Tests", () => {
         const parsedSchema =
           format === "sql"
             ? parseSqlSchema(decodedResult!.schemaText)
-            : parseMermaidSchema(decodedResult!.schemaText);
+            : format === "mermaid"
+              ? parseMermaidSchema(decodedResult!.schemaText)
+              : parseDrawdbSchema(decodedResult!.schemaText);
 
         expect(parsedSchema).not.toBeNull();
 
@@ -301,8 +308,9 @@ describe("URL Schema Round-Trip Integration Tests", () => {
       // Should encode quickly (< 100ms)
       expect(encodeTime).toBeLessThan(100);
 
-      // Decode
-      mockWindowHash(`#${format}:${encoded}`);
+      // Decode via the same shareable URL path used in production
+      const shareableUrl = createShareableUrl(encoded, format);
+      mockWindowHash(`#${shareableUrl.split("#")[1]}`);
       const startDecode = Date.now();
       const decodedResult = getSchemaFromHash();
       const decodeTime = Date.now() - startDecode;

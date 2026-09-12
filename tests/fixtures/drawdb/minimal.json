@@ -1,0 +1,79 @@
+{
+  "title": "Minimal",
+  "database": "generic",
+  "tables": [
+    {
+      "id": 0,
+      "name": "a",
+      "x": 0,
+      "y": 0,
+      "comment": "",
+      "indices": [],
+      "color": "#175e7a",
+      "fields": [
+        {
+          "id": 1,
+          "name": "id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": false,
+          "notNull": true,
+          "increment": true,
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "b",
+      "x": 280,
+      "y": 0,
+      "comment": "",
+      "indices": [],
+      "color": "#175e7a",
+      "fields": [
+        {
+          "id": 2,
+          "name": "id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": false,
+          "notNull": true,
+          "increment": true,
+          "comment": ""
+        },
+        {
+          "id": 3,
+          "name": "a_id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": true,
+          "increment": false,
+          "comment": ""
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": 1,
+      "name": "b_a_id_fk",
+      "startTableId": 1,
+      "startFieldId": 3,
+      "endTableId": 0,
+      "endFieldId": 1,
+      "cardinality": "many_to_one",
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action"
+    }
+  ],
+  "notes": [],
+  "subjectAreas": []
+}

@@ -202,6 +202,12 @@ describe("URL State Management", () => {
 
       const mermaidUrl = createShareableUrl(encoded, "mermaid");
       expect(mermaidUrl).toBe("https://schema3d.com/#mermaid:eNpVjc1ugzAQhF");
+
+      // DrawDB JSON uses generic #schema: (auto-detect) — not #drawdb: / #sql:
+      const drawdbUrl = createShareableUrl(encoded, "drawdb");
+      expect(drawdbUrl).toBe("https://schema3d.com/#schema:eNpVjc1ugzAQhF");
+      expect(drawdbUrl).not.toContain("#drawdb:");
+      expect(drawdbUrl).not.toContain("#sql:");
     });
 
     it("should preserve origin and pathname", () => {
