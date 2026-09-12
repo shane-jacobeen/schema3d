@@ -13,6 +13,7 @@
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "types": ["node", "vitest/globals", "vitest"],
     "paths": {

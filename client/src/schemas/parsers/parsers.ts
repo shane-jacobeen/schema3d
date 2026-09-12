@@ -4,8 +4,10 @@ import {
   parseMermaidSchema,
   identifyValidMermaidBlocks,
 } from "./mermaid-parser";
+import { parseDrawdbSchema } from "./drawdb/drawdb-to-schema";
+import { tryParseDrawdbJson } from "./drawdb/detect";
 
-export type SchemaFormat = "sql" | "mermaid";
+export type SchemaFormat = "sql" | "mermaid" | "drawdb";
 
 export interface ParserResult {
   schema: DatabaseSchema | null;
@@ -20,7 +22,7 @@ export interface ValidationBlock {
 
 /**
  * Unified parser interface for all schema formats.
- * Provides a consistent API for parsing SQL and Mermaid ER diagrams.
+ * Provides a consistent API for parsing SQL, Mermaid ER diagrams, and DrawDB JSON.
  */
 export const parsers = {
   sql: {
@@ -31,24 +33,18 @@ export const parsers = {
     parse: parseMermaidSchema,
     identifyBlocks: identifyValidMermaidBlocks,
   },
+  drawdb: {
+    parse: parseDrawdbSchema,
+    identifyBlocks: (_text: string): ValidationBlock[] => {
+      // DrawDB JSON is validated as a whole document, not block ranges
+      return [];
+    },
+  },
 } as const;
 
 /**
  * Parse schema text in the specified format.
- * If format is not provided, auto-detects by trying both SQL and Mermaid parsers.
- *
- * @param text - The schema text to parse (SQL CREATE TABLE statements or Mermaid ER diagram)
- * @param format - Optional format specification ("sql" or "mermaid"). If omitted, auto-detects.
- * @returns Parsed DatabaseSchema object, or null if parsing fails
- *
- * @example
- * ```typescript
- * // Parse SQL
- * const schema = parseSchema("CREATE TABLE users (id INT PRIMARY KEY);", "sql");
- *
- * // Auto-detect format
- * const schema = parseSchema(sqlText);
- * ```
+ * If format is not provided, auto-detects DrawDB JSON, then SQL, then Mermaid.
  */
 export function parseSchema(
   text: string,
@@ -58,8 +54,14 @@ export function parseSchema(
     return parsers[format].parse(text);
   }
 
-  // Auto-detect format by trying both parsers
-  // Try SQL first (more common), then Mermaid
+  // Prefer DrawDB when the payload is clearly JSON diagram-shaped
+  if (tryParseDrawdbJson(text)) {
+    const drawdbResult = parsers.drawdb.parse(text);
+    if (drawdbResult && drawdbResult.tables.length > 0) {
+      return drawdbResult;
+    }
+  }
+
   const sqlResult = parsers.sql.parse(text);
   if (sqlResult && sqlResult.tables.length > 0) {
     return sqlResult;
@@ -70,34 +72,29 @@ export function parseSchema(
     return mermaidResult;
   }
 
-  // If neither worked, return the first non-null result (might have tables but empty)
   return sqlResult || mermaidResult;
 }
 
 /**
  * Identify valid syntax blocks for live syntax highlighting in the editor.
- * Returns an array of text ranges with their validation status.
- * If format is not provided, tries both SQL and Mermaid and uses the one with more valid blocks.
- *
- * @param text - The schema text to analyze
- * @param format - Optional format specification. If omitted, auto-detects by comparing valid block counts.
- * @returns Array of validation blocks with start/end positions and isValid flag
- *
- * @example
- * ```typescript
- * const blocks = identifyValidBlocks("CREATE TABLE users (id INT);", "sql");
- * // Returns: [{ start: 0, end: 35, isValid: true }]
- * ```
+ * DrawDB JSON has no block ranges; falls back to SQL/Mermaid heuristics.
  */
 export function identifyValidBlocks(
   text: string,
   format?: SchemaFormat
 ): ValidationBlock[] {
+  if (format === "drawdb") {
+    return parsers.drawdb.identifyBlocks(text);
+  }
+
   if (format) {
     return parsers[format].identifyBlocks(text);
   }
 
-  // Try both formats and use the one with more valid blocks
+  if (tryParseDrawdbJson(text)) {
+    return [];
+  }
+
   const sqlBlocks = parsers.sql.identifyBlocks(text);
   const mermaidBlocks = parsers.mermaid.identifyBlocks(text);
 
@@ -109,19 +106,6 @@ export function identifyValidBlocks(
 
 /**
  * Validate and parse schema text, returning both the parsed schema and validation status.
- * If format is not provided, auto-detects by trying both parsers.
- *
- * @param text - The schema text to validate and parse
- * @param format - Optional format specification. If omitted, auto-detects.
- * @returns ParserResult object containing the parsed schema (or null) and isValid flag
- *
- * @example
- * ```typescript
- * const result = validateAndParse("CREATE TABLE users (id INT PRIMARY KEY);");
- * if (result.isValid) {
- *   console.log("Schema is valid:", result.schema);
- * }
- * ```
  */
 export function validateAndParse(
   text: string,
