@@ -2,13 +2,32 @@ import { useMemo } from "react";
 import { Card } from "@/shared/ui-components/card";
 import { Badge } from "@/shared/ui-components/badge";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { getSampleSchemas } from "@/schemas/utils/load-schemas";
+import {
+  getSampleSchemas,
+  getSchemaFormat,
+} from "@/schemas/utils/load-schemas";
 import { parseSchema } from "@/schemas/parsers";
 
 interface SampleSchemaSelectorProps {
   currentInput: string;
-  format: "sql" | "mermaid";
+  format: "sql" | "mermaid" | "drawdb";
   onSelect: (schema: DatabaseSchema) => void;
+}
+
+function formatBadgeClass(format: string): string {
+  if (format === "mermaid") {
+    return "border-purple-500 text-purple-400";
+  }
+  if (format === "drawdb") {
+    return "border-emerald-500 text-emerald-400";
+  }
+  return "border-blue-500 text-blue-400";
+}
+
+function formatBadgeLabel(format: string): string {
+  if (format === "mermaid") return "Mermaid";
+  if (format === "drawdb") return "DrawDB";
+  return "SQL";
 }
 
 /**
@@ -23,7 +42,7 @@ export function SampleSchemaSelector({
   const selectedSchema = useMemo(() => {
     if (!currentInput.trim()) return null;
 
-    // Auto-detect format by trying both parsers
+    // Auto-detect format by trying parsers (incl. DrawDB JSON)
     const parsed = parseSchema(currentInput);
     if (!parsed) return null;
 
@@ -53,6 +72,7 @@ export function SampleSchemaSelector({
           const isSelected = selectedSchema?.name === schema.name;
           const tableCount = schema.tables.filter((t) => !t.isView).length;
           const viewCount = schema.tables.filter((t) => t.isView).length;
+          const sourceFormat = getSchemaFormat(schema.name);
           return (
             <Card
               key={schema.name}
@@ -71,13 +91,9 @@ export function SampleSchemaSelector({
                     </h4>
                     <Badge
                       variant="outline"
-                      className={`text-xs px-1.5 py-0 ${
-                        schema.format === "mermaid"
-                          ? "border-purple-500 text-purple-400"
-                          : "border-blue-500 text-blue-400"
-                      }`}
+                      className={`text-xs px-1.5 py-0 ${formatBadgeClass(sourceFormat)}`}
                     >
-                      {schema.format === "mermaid" ? "Mermaid" : "SQL"}
+                      {formatBadgeLabel(sourceFormat)}
                     </Badge>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-400">

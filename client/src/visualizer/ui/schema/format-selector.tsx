@@ -8,7 +8,7 @@ interface FormatSelectorProps {
 }
 
 /**
- * Component for selecting schema format (SQL or Mermaid)
+ * Schema format selector: SQL, Mermaid, or DrawDB JSON.
  */
 export function FormatSelector({ value, onChange }: FormatSelectorProps) {
   return (
@@ -16,7 +16,11 @@ export function FormatSelector({ value, onChange }: FormatSelectorProps) {
       type="single"
       value={value}
       onValueChange={(newValue: string | undefined) => {
-        if (newValue === "sql" || newValue === "mermaid") {
+        if (
+          newValue === "sql" ||
+          newValue === "mermaid" ||
+          newValue === "drawdb"
+        ) {
           onChange(newValue);
         }
       }}
@@ -28,6 +32,9 @@ export function FormatSelector({ value, onChange }: FormatSelectorProps) {
       </CustomToggleGroupItem>
       <CustomToggleGroupItem value="mermaid" aria-label="Mermaid format">
         Mermaid
+      </CustomToggleGroupItem>
+      <CustomToggleGroupItem value="drawdb" aria-label="DrawDB JSON format">
+        DrawDB
       </CustomToggleGroupItem>
     </ToggleGroup>
   );

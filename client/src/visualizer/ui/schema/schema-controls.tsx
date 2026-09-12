@@ -1,4 +1,4 @@
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, startTransition, useRef } from "react";
 import { Pencil } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
 import { useToast, LocalToastContainer } from "@/shared/ui-components/toast";
@@ -18,6 +18,15 @@ import {
   validateAndParse,
   type SchemaFormat,
 } from "@/schemas/parsers";
+import {
+  isDrawdbShareUrl,
+  fetchDrawdbShareJson,
+  DrawdbShareError,
+} from "@/schemas/parsers/drawdb";
+import {
+  getEditorTextForSchema,
+  resolveSchemaFormat,
+} from "./schema-editor-text";
 import { SchemaEditor } from "./schema-editor";
 import { FormatSelector } from "./format-selector";
 import { SampleSchemaSelector } from "./sample-schema-selector";
@@ -38,56 +47,123 @@ export function SchemaSelector({
   const [scriptInput, setScriptInput] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [currentFormat, setCurrentFormat] = useState<SchemaFormat>("sql");
+  const [isFetchingShare, setIsFetchingShare] = useState(false);
   const { toast } = useToast();
+  const shareFetchRef = useRef<string | null>(null);
 
-  // Update format when user explicitly selects format via FormatSelector
+  // Explicit format toggle: convert current schema into the target format text
   const updateFormat = (newFormat: SchemaFormat) => {
+    const base =
+      persistedSchemaRef.current || parseSchema(scriptInput) || currentSchema;
+
+    // Preserve tables; rewrite format + editor text
+    const withFormat: DatabaseSchema = { ...base, format: newFormat };
+    const text =
+      newFormat === "drawdb" && base.name === "Blog Platform"
+        ? getSchemaText("Blog Platform") || schemaToFormat(withFormat)
+        : schemaToFormat(withFormat);
+
     setCurrentFormat(newFormat);
-    // Parse with the explicitly selected format
-    const parsed = parseSchema(scriptInput, newFormat);
+    setScriptInput(text);
+    persistedSchemaRef.current = withFormat;
+
+    const parsed = parseSchema(text, newFormat) || parseSchema(text);
     if (parsed) {
-      persistedSchemaRef.current = parsed;
-    } else if (persistedSchemaRef.current) {
-      // If parsing fails but we have a schema, update the format field
       persistedSchemaRef.current = {
-        ...persistedSchemaRef.current,
+        ...parsed,
+        name: base.name || parsed.name,
         format: newFormat,
       };
     }
   };
 
-  // Initialize dialog when it opens
+  // Initialize dialog when it opens — migrate Blog Platform content to JSON
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          // Convert persisted schema to selected format for display
-          const scriptToLoad = schemaToFormat(
-            persistedSchemaRef.current || currentSchema
-          );
-          setScriptInput(scriptToLoad);
+          const schema = persistedSchemaRef.current || currentSchema;
+          const format = resolveSchemaFormat(schema);
+          const scriptToLoad = getEditorTextForSchema({
+            ...schema,
+            format,
+          });
 
-          // Set format from persisted schema or default
-          const format = persistedSchemaRef.current?.format || "sql";
+          setScriptInput(scriptToLoad);
           setCurrentFormat(format);
 
-          // Validate - auto-detect format by trying both parsers
+          // Keep persisted schema on drawdb when opening Blog Platform
+          if (schema.name === "Blog Platform" && schema.format !== "drawdb") {
+            persistedSchemaRef.current = { ...schema, format: "drawdb" };
+          }
+
           const result = validateAndParse(scriptToLoad, format);
           setIsValid(result.isValid);
-          // Update persisted schema with detected format if valid
           if (result.schema) {
-            persistedSchemaRef.current = result.schema;
-            setCurrentFormat(result.schema.format);
+            persistedSchemaRef.current = {
+              ...result.schema,
+              name: schema.name || result.schema.name,
+              format,
+            };
+            setCurrentFormat(format);
           }
         });
       });
     }
-    // persistedSchemaRef is stable and doesn't need to be in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentSchema]);
 
+  // Resolve pasted DrawDB share URLs → gist JSON (async)
+  useEffect(() => {
+    const trimmed = scriptInput.trim();
+    if (!trimmed || !isDrawdbShareUrl(trimmed)) {
+      return;
+    }
+
+    if (shareFetchRef.current === trimmed) {
+      return;
+    }
+    shareFetchRef.current = trimmed;
+
+    let cancelled = false;
+    setIsFetchingShare(true);
+
+    (async () => {
+      try {
+        const json = await fetchDrawdbShareJson(trimmed);
+        if (cancelled) return;
+        setScriptInput(json);
+        setCurrentFormat("drawdb");
+        toast.success("Loaded schema from DrawDB share");
+      } catch (err) {
+        if (cancelled) return;
+        const message =
+          err instanceof DrawdbShareError
+            ? err.message
+            : "Failed to load DrawDB share. Export JSON from DrawDB and import the file instead.";
+        toast.error(message);
+        shareFetchRef.current = null;
+      } finally {
+        if (!cancelled) {
+          setIsFetchingShare(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scriptInput, toast]);
+
   // Live validation - debounced to avoid parsing on every keystroke
   useEffect(() => {
+    if (isDrawdbShareUrl(scriptInput)) {
+      startTransition(() => {
+        setIsValid(false);
+      });
+      return;
+    }
+
     const timeoutId = window.setTimeout(() => {
       const result = !scriptInput.trim()
         ? { isValid: false, schema: null }
@@ -102,37 +178,47 @@ export function SchemaSelector({
           const shouldPreserveName =
             preservedName && preservedName !== "Custom Database";
 
+          const name = shouldPreserveName ? preservedName : schema.name;
+          // Blog Platform sample must stay drawdb/JSON internally
+          const format: SchemaFormat =
+            name === "Blog Platform" ? "drawdb" : schema.format;
+
           persistedSchemaRef.current = {
             ...schema,
-            name: shouldPreserveName ? preservedName : schema.name,
+            name,
+            format,
           };
           setCurrentFormat((prevFormat) => {
-            return schema.format !== prevFormat ? schema.format : prevFormat;
+            return format !== prevFormat ? format : prevFormat;
           });
         }
       });
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
-    // persistedSchemaRef is stable and doesn't need to be in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptInput, currentFormat]);
 
   const handleSampleSelect = (schema: DatabaseSchema) => {
-    persistedSchemaRef.current = schema;
-    const text = getSchemaText(schema.name) || schemaToFormat(schema);
-    setScriptInput(text);
-    setCurrentFormat(schema.format);
+    const format = resolveSchemaFormat(schema);
+    const migrated: DatabaseSchema = { ...schema, format };
+    persistedSchemaRef.current = migrated;
+    setCurrentFormat(format);
+    setScriptInput(getEditorTextForSchema(migrated));
   };
 
   const handleOk = () => {
     const parsed = parseSchema(scriptInput, currentFormat);
 
     if (parsed && parsed.tables.length > 0) {
-      // Preserve the name from persistedSchemaRef if it exists (e.g., from sample schema selection)
+      const name = persistedSchemaRef.current?.name || parsed.name;
+      const format: SchemaFormat =
+        name === "Blog Platform" ? "drawdb" : parsed.format;
+
       const schemaWithName = {
         ...parsed,
-        name: persistedSchemaRef.current?.name || parsed.name,
+        name,
+        format,
       };
 
       persistedSchemaRef.current = schemaWithName;
@@ -140,7 +226,7 @@ export function SchemaSelector({
       setIsOpen(false);
     } else {
       toast.error(
-        `Failed to parse schema. Please ensure you're using valid SQL or Mermaid syntax.`
+        `Failed to parse schema. Please ensure you're using valid SQL, Mermaid, or DrawDB JSON.`
       );
     }
   };
@@ -158,8 +244,6 @@ export function SchemaSelector({
   };
 
   const handleOpenChange = (open: boolean) => {
-    // When closing via clickaway or X button, don't apply changes
-    // Keep the SQL input persisted in memory
     setIsOpen(open);
   };
 
@@ -207,12 +291,17 @@ export function SchemaSelector({
                 <FileUploadButton onFileLoad={handleFileLoad} />
               </div>
             </div>
+            {isFetchingShare && (
+              <p className="mt-2 text-xs text-slate-400">
+                Loading DrawDB share…
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter className="pt-3 sm:pt-4">
           <Button
             onClick={handleOk}
-            disabled={!isValid || !scriptInput.trim()}
+            disabled={!isValid || !scriptInput.trim() || isFetchingShare}
             variant="primary"
             className="w-full"
             size="lg"
