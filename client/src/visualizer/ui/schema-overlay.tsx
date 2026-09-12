@@ -9,6 +9,7 @@ import { LayoutControls } from "@/visualizer/ui/layout/layout-controls";
 import { ExportControls } from "@/visualizer/ui/export/export-controls";
 import { ShareButton } from "@/visualizer/ui/schema/share-button";
 import { schemaToFormat } from "@/schemas/utils/schema-converter";
+import { getSchemaText } from "@/schemas/utils/load-schemas";
 import { TableInfo } from "@/visualizer/ui/panels/table-info";
 import { RelationshipInfo } from "@/visualizer/ui/panels/relationship-info";
 import { useCollectViewState } from "@/visualizer/state/hooks/use-collect-view-state";
@@ -183,7 +184,7 @@ export function SchemaOverlay({
       <div className="absolute bottom-safe-bottom right-2 sm:bottom-safe-bottom-lg sm:right-4 flex flex-col gap-2">
         {/* Share button */}
         <ShareButton
-          schemaText={schemaToFormat(schema)}
+          schemaText={getSchemaText(schema.name) || schemaToFormat(schema)}
           format={schema.format}
           viewState={viewState}
           variant="outline"
