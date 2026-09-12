@@ -6,11 +6,13 @@ import {
 } from "@/visualizer/state/utils/schema-utils";
 import {
   getInitialSchema,
+  tryLoadDrawdbShareFromQuery,
   DEFAULT_LAYOUT,
   type LayoutType,
 } from "@/visualizer/state/initial-state";
 import { removeSchemaFromUrl, hasSchemaInUrl } from "@/shared/utils/url-state";
 import { consumePendingViewState } from "@/visualizer/state/utils/view-state-store";
+import { useToast } from "@/shared/ui-components/toast";
 
 interface UseSchemaStateReturn {
   currentSchema: DatabaseSchema;
@@ -22,6 +24,33 @@ interface UseSchemaStateReturn {
   ) => void;
 }
 
+function clearDrawdbShareQueryParams(): void {
+  try {
+    const url = new URL(window.location.href);
+    let changed = false;
+    for (const key of ["drawdbShareId", "drawdb"]) {
+      if (url.searchParams.has(key)) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
+    }
+    if (changed) {
+      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function hasDrawdbShareQuery(): boolean {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return !!(params.get("drawdbShareId") || params.get("drawdb"));
+  } catch {
+    return false;
+  }
+}
+
 export function useSchemaState(
   clearAllSelections: () => void,
   handleRecenter: () => void,
@@ -30,6 +59,7 @@ export function useSchemaState(
   const [currentSchema, setCurrentSchema] =
     useState<DatabaseSchema>(getInitialSchema);
   const persistedSchemaRef = useRef<DatabaseSchema>(getInitialSchema());
+  const { toast } = useToast();
 
   // Clean up URL hash and pending view state after initial schema load
   useEffect(() => {
@@ -40,6 +70,35 @@ export function useSchemaState(
     // Consume/clear the pending view state after all hooks have initialized
     consumePendingViewState();
   }, []);
+
+  // Optional DrawDB share via ?drawdbShareId= (does not touch #sql: / #pako:)
+  useEffect(() => {
+    if (!hasDrawdbShareQuery()) {
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const loaded = await tryLoadDrawdbShareFromQuery();
+      if (cancelled) return;
+      if (!loaded) {
+        toast.error(
+          "Failed to load DrawDB share. Export JSON from DrawDB and import the file instead."
+        );
+        clearDrawdbShareQueryParams();
+        return;
+      }
+      setCurrentSchema(loaded);
+      persistedSchemaRef.current = loaded;
+      clearDrawdbShareQueryParams();
+      clearAllSelections();
+      handleRecenter();
+      toast.success("Loaded schema from DrawDB share");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [clearAllSelections, handleRecenter, toast]);
 
   const applyLayout = useCallback(
     (

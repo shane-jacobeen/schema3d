@@ -175,7 +175,13 @@ export function createShareableUrl(
   format: SchemaFormat,
   encodedViewState?: string
 ): string {
-  const prefix = format === "sql" ? URL_PREFIXES.SQL : URL_PREFIXES.MERMAID;
+  // DrawDB JSON shares use generic #schema: (auto-detect); do not invent #drawdb:
+  const prefix =
+    format === "sql"
+      ? URL_PREFIXES.SQL
+      : format === "mermaid"
+        ? URL_PREFIXES.MERMAID
+        : URL_PREFIXES.SCHEMA;
   const baseUrl = window.location.origin + window.location.pathname;
 
   // Append view state as second colon segment if provided
