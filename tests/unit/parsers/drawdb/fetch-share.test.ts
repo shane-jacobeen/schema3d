@@ -90,6 +90,20 @@ describe("fetchDrawdbShareJson", () => {
     ).rejects.toBeInstanceOf(DrawdbShareError);
   });
 
+  it("throws a rate-limit message on 403/429", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+    });
+
+    await expect(
+      fetchDrawdbShareJson(
+        "abcdef0123456789abcdef0123456789",
+        fetchImpl as unknown as typeof fetch
+      )
+    ).rejects.toThrow(/rate limit/i);
+  });
+
   it("throws when share.json is missing", async () => {
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
@@ -102,6 +116,62 @@ describe("fetchDrawdbShareJson", () => {
         fetchImpl as unknown as typeof fetch
       )
     ).rejects.toThrow(/share\.json/i);
+  });
+
+  it("fetches raw_url when gist file is truncated", async () => {
+    const fullContent = JSON.stringify({
+      tables: [{ id: 0, name: "posts", fields: [] }],
+      relationships: [],
+      notes: [],
+      subjectAreas: [],
+    });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          files: {
+            "share.json": {
+              content: "{truncated…",
+              truncated: true,
+              raw_url:
+                "https://gist.githubusercontent.com/u/abcdef0123456789abcdef0123456789/raw/share.json",
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () => fullContent,
+      });
+
+    const result = await fetchDrawdbShareJson(
+      "abcdef0123456789abcdef0123456789",
+      fetchImpl as unknown as typeof fetch
+    );
+    expect(result).toBe(fullContent);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("throws when truncated without raw_url", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        files: {
+          "share.json": {
+            content: "{truncated…",
+            truncated: true,
+          },
+        },
+      }),
+    });
+
+    await expect(
+      fetchDrawdbShareJson(
+        "abcdef0123456789abcdef0123456789",
+        fetchImpl as unknown as typeof fetch
+      )
+    ).rejects.toThrow(/truncated/i);
   });
 
   it("throws DrawdbShareError for unparseable share input", async () => {

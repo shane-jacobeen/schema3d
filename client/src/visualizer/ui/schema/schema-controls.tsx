@@ -19,7 +19,7 @@ import {
   type SchemaFormat,
 } from "@/schemas/parsers";
 import {
-  isDrawdbShareUrl,
+  parseDrawdbShareId,
   fetchDrawdbShareJson,
   DrawdbShareError,
 } from "@/schemas/parsers/drawdb";
@@ -160,7 +160,8 @@ export function SchemaSelector({
 
   const loadDrawdbShare = async (raw: string) => {
     const trimmed = raw.trim();
-    if (!trimmed || !isDrawdbShareUrl(trimmed)) {
+    // Accept drawdb.app URLs or bare gist IDs (same as ?drawdbShareId=)
+    if (!trimmed || !parseDrawdbShareId(trimmed)) {
       return;
     }
     if (shareFetchRef.current === trimmed) {
@@ -287,7 +288,7 @@ export function SchemaSelector({
                     void loadDrawdbShare(pasted);
                   }
                 }}
-                placeholder="Paste https://drawdb.app/editor?shareId=…"
+                placeholder="Paste drawdb.app link or gist ID…"
                 disabled={isFetchingShare}
                 className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-blue-500"
               />

@@ -22,8 +22,19 @@ This document outlines key flows that should be manually verified before release
     - All tables visible with correct colors
     - Relationship lines drawn correctly
     - Mermaid format auto-detected for University
+    - DrawDB JSON auto-detected for Blog Platform
     - Cardinality notation displays correctly
     - No console errors
+
+- [ ] **Share encodes live edits**
+  - Load Blog Platform, edit the schema text, Apply
+  - Click Share and open the copied URL
+  - Verify the shared view reflects your edits (not the stock sample)
+
+- [ ] **DrawDB share paste**
+  - Paste a `drawdb.app` share URL into the share field
+  - Paste a bare gist ID into the same field
+  - Verify both load diagram JSON into the editor
 
 ---
 
@@ -32,19 +43,19 @@ This document outlines key flows that should be manually verified before release
 ### ✅ Large Schema Handling
 
 - [ ] **Large Schemas (50+ tables)**
-  - Test with both SQL and Mermaid formats
+  - Test with SQL, Mermaid, and DrawDB JSON formats
   - Verify:
     - Schema parses without errors
     - All tables and relationships render correctly
     - Performance is acceptable (no lag)
     - Camera navigation is smooth
 
-### ✅ Format Switching
+### ✅ Format Detection
 
-- [ ] **Bidirectional Format Conversion**
-  - Test both SQL ↔ Mermaid conversions
+- [ ] **Multi-Format Import**
+  - Test SQL, Mermaid, and DrawDB JSON (paste / file upload / samples)
   - Verify:
-    - Editor content converts correctly
+    - Format badge reflects the detected format
     - Schema structure is preserved
     - All tables, columns, and relationships maintained
     - Cardinality information retained
@@ -52,12 +63,12 @@ This document outlines key flows that should be manually verified before release
 ### ✅ Validation Feedback
 
 - [ ] **Input Validation**
-  - Test with both valid and invalid SQL/Mermaid syntax
+  - Test with both valid and invalid SQL / Mermaid / DrawDB JSON
   - Verify:
     - Invalid syntax is grayed out
     - Valid syntax has proper highlighting
     - Error feedback shown for invalid input
-    - "OK" button enabled only for valid schemas
+    - "Apply Changes" button enabled only for valid schemas
 
 ---
 
@@ -90,7 +101,7 @@ This document outlines key flows that should be manually verified before release
     - Lines are visible and properly colored
 
 - [ ] **Cardinality Notation**
-  - Test with both SQL and Mermaid schemas
+  - Test with SQL, Mermaid, and DrawDB schemas
   - Verify all cardinality types render correctly:
     - One-to-one (||--||) shows donuts on both ends
     - One-to-many (||--o{) shows donut + crow's-foot

@@ -46,10 +46,17 @@ export function parseDrawdbShareId(input: string): string | null {
 
 /**
  * True if the text looks like a DrawDB share URL (not bare JSON / SQL).
+ * Bare gist ids are not treated as URLs — use {@link parseDrawdbShareId} for those.
  */
 export function isDrawdbShareUrl(text: string): boolean {
   return parseDrawdbShareId(text) !== null && /drawdb\.app/i.test(text.trim());
 }
+
+type GistFile = {
+  content?: string;
+  truncated?: boolean;
+  raw_url?: string;
+};
 
 /**
  * Fetch DrawDB diagram JSON text from a GitHub gist shareId.
@@ -61,7 +68,7 @@ export async function fetchDrawdbShareJson(
   const shareId = parseDrawdbShareId(shareIdOrUrl);
   if (!shareId) {
     throw new DrawdbShareError(
-      "Could not parse DrawDB share URL. Expected drawdb.app/editor?shareId=…"
+      "Could not parse DrawDB share. Paste a drawdb.app link or gist ID."
     );
   }
 
@@ -79,16 +86,18 @@ export async function fetchDrawdbShareJson(
   }
 
   if (!response.ok) {
+    if (response.status === 403 || response.status === 429) {
+      throw new DrawdbShareError(
+        "GitHub Gist rate limit reached. Try again later, or export JSON from DrawDB and import the file instead."
+      );
+    }
     throw new DrawdbShareError(
       `DrawDB share not found (${response.status}). Export JSON from DrawDB and import the file instead.`
     );
   }
 
   let payload: {
-    files?: Record<
-      string,
-      { content?: string; truncated?: boolean } | undefined
-    >;
+    files?: Record<string, GistFile | undefined>;
   };
   try {
     payload = (await response.json()) as typeof payload;
@@ -102,10 +111,54 @@ export async function fetchDrawdbShareJson(
     payload.files?.["share.json"] ||
     payload.files?.["share.JSON"] ||
     Object.values(payload.files || {}).find(
-      (f) => f?.content && f.content.trim().startsWith("{")
+      (f) =>
+        (f?.content && f.content.trim().startsWith("{")) ||
+        (f?.truncated && f.raw_url)
     );
 
-  const content = shareFile?.content;
+  if (!shareFile) {
+    throw new DrawdbShareError(
+      "Gist has no share.json content. Export JSON from DrawDB and import the file instead."
+    );
+  }
+
+  if (shareFile.truncated) {
+    if (!shareFile.raw_url) {
+      throw new DrawdbShareError(
+        "DrawDB share is too large (gist truncated). Export JSON from DrawDB and import the file instead."
+      );
+    }
+
+    let rawResponse: Response;
+    try {
+      rawResponse = await fetchImpl(shareFile.raw_url);
+    } catch {
+      throw new DrawdbShareError(
+        "Failed to download full DrawDB share. Export JSON from DrawDB and import the file instead."
+      );
+    }
+
+    if (!rawResponse.ok) {
+      if (rawResponse.status === 403 || rawResponse.status === 429) {
+        throw new DrawdbShareError(
+          "GitHub Gist rate limit reached. Try again later, or export JSON from DrawDB and import the file instead."
+        );
+      }
+      throw new DrawdbShareError(
+        "DrawDB share is too large (gist truncated). Export JSON from DrawDB and import the file instead."
+      );
+    }
+
+    const rawContent = await rawResponse.text();
+    if (!rawContent.trim()) {
+      throw new DrawdbShareError(
+        "Gist has no share.json content. Export JSON from DrawDB and import the file instead."
+      );
+    }
+    return rawContent;
+  }
+
+  const content = shareFile.content;
   if (!content || !content.trim()) {
     throw new DrawdbShareError(
       "Gist has no share.json content. Export JSON from DrawDB and import the file instead."

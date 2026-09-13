@@ -58,16 +58,17 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
             id="schema3d-welcome-description"
             className="text-slate-300 leading-relaxed"
           >
-            Explore SQL, T-SQL, and Mermaid ER diagrams as an interactive 3D
-            database schema. Schema3D runs in your browser, supports shareable
-            URL-based views, and helps teams inspect tables, columns, primary
-            keys, foreign keys, and relationships without connecting to a
-            database.
+            Explore SQL, T-SQL, Mermaid ER diagrams, and DrawDB JSON as an
+            interactive 3D database schema. Schema3D runs in your browser,
+            supports shareable URL-based views, and helps teams inspect tables,
+            columns, primary keys, foreign keys, and relationships without
+            connecting to a database.
           </p>
 
           <p className="text-center text-sm italic text-slate-400">
             SQL schema visualizer <span aria-hidden="true">•</span> Mermaid ER
-            diagrams <span aria-hidden="true">•</span> Browser-only
+            diagrams <span aria-hidden="true">•</span> DrawDB JSON{" "}
+            <span aria-hidden="true">•</span> Browser-only
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

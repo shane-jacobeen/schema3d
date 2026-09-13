@@ -6,7 +6,7 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 
 **[Live Demo](https://schema3d.com)** | [Documentation](#getting-started) | [Contributing](CONTRIBUTING.md)
 
-![Schema3D 3D database schema visualizer preview](client/public/images/preview.png)
+![Schema3D 3D database schema visualizer preview](client/public/images/demo.gif)
 
 ## Features
 
@@ -23,7 +23,7 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 - **Multiple Sample Schemas**: Pre-configured schemas (Retailer Database, Blog Platform, University)
 - **Multi-Format Support**: Import SQL, Mermaid ER diagrams, or DrawDB JSON (`.json` / `.ddb`)
 - **Format Auto-Detection**: Automatically detects SQL, Mermaid, or DrawDB JSON when pasting
-- **Live Syntax Validation**: Real-time validation of SQL and Mermaid input with error feedback
+- **Live Syntax Validation**: Real-time validation of SQL, Mermaid, and DrawDB JSON with error feedback
 - **Schema Switching**: Easily switch between different database schemas
 
 ### Layout Algorithms
@@ -58,7 +58,8 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 - **URL size limits**: Very large schemas may exceed browser URL length limits; sharing works best with moderately sized schemas
 - **View State Preservation**: Shared links preserve selected categories, layout algorithm, and view mode
 - **One-Click Sharing**: Copy shareable links to clipboard with a single click
-- **Format Support**: Compatible with SQL and Mermaid schema formats
+- **Format Support**: Compatible with SQL, Mermaid, and DrawDB JSON schema formats
+- **DrawDB share links**: Paste a `drawdb.app` share URL or gist ID to import a shared diagram
 - **Backward Compatible**: New URLs work in older versions, gracefully degrading if view state isn't supported
 
 ### Additional Features
@@ -177,7 +178,7 @@ Schema3D/
 │   │   │   └── main.tsx        # Application entry point
 │   │   │
 │   │   ├── schemas/            # Schema parsing and format conversion
-│   │   │   ├── parsers/        # SQL and Mermaid parsers (format-agnostic)
+│   │   │   ├── parsers/        # SQL, Mermaid, and DrawDB parsers
 │   │   │   │   ├── sql-parser.ts
 │   │   │   │   ├── mermaid-parser.ts
 │   │   │   │   ├── parser-utils.ts
@@ -294,7 +295,7 @@ Schema3D/
 - **Domain-based**: Code is organized by domain (schemas, visualizer) rather than by technical type
 - **Clear separation**:
   - `schemas/` - Schema parsing and format conversion (format-agnostic, reusable)
-    - `parsers/` - SQL and Mermaid parsers
+    - `parsers/` - SQL, Mermaid, and DrawDB parsers
     - `utils/` - Format conversion utilities
     - `sample-schemas/` - Sample data files
   - `visualizer/` - Visualization domain
@@ -351,9 +352,9 @@ Schema3D/
 ### Changing Schemas
 
 1. Click the **"Change Schema"** button in the top-left overview card
-2. Select a sample schema (SQL or Mermaid) or paste your own schema text
-3. The format will be auto-detected, or you can manually select SQL or Mermaid
-4. Click **"OK"** to apply the changes
+2. Select a sample schema (SQL, Mermaid, or DrawDB JSON), paste schema text, or paste a DrawDB share link / gist ID
+3. The format will be auto-detected (shown as a badge in the editor)
+4. Click **"Apply Changes"** to apply the changes
 
 ### Selecting Tables and Relationships
 
@@ -487,7 +488,7 @@ Use DrawDB to design; bring the JSON into Schema3D to explore and share in 3D.
 
 ## Testing
 
-The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **178 tests** across **15 test files**.
+The project uses [Vitest](https://vitest.dev/) for comprehensive testing with **274 tests** across **29 test files**.
 
 ### Running Tests
 
