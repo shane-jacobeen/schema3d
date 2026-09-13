@@ -5,8 +5,8 @@ import { schemaToFormat } from "@/schemas/utils/schema-converter";
 
 /**
  * Resolve editor format for a schema.
- * Respects an explicit format (so format toggles stick); falls back to the
- * sample's native format when missing.
+ * Respects an explicit format when set; falls back to the sample's native
+ * format when missing.
  */
 export function resolveSchemaFormat(schema: DatabaseSchema): SchemaFormat {
   if (
@@ -22,7 +22,7 @@ export function resolveSchemaFormat(schema: DatabaseSchema): SchemaFormat {
 /**
  * Resolve editor text for a schema.
  * Uses the canonical sample fixture when the schema is in that sample's
- * native format; otherwise converts via schemaToFormat (format toggle).
+ * native format; otherwise converts via schemaToFormat.
  */
 export function getEditorTextForSchema(schema: DatabaseSchema): string {
   const format = resolveSchemaFormat(schema);

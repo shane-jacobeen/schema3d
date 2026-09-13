@@ -1,6 +1,7 @@
 import { useState, useEffect, startTransition, useRef } from "react";
 import { Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
+import { Badge } from "@/shared/ui-components/badge";
 import { Input } from "@/shared/ui-components/input";
 import { useToast, LocalToastContainer } from "@/shared/ui-components/toast";
 import {
@@ -12,8 +13,6 @@ import {
   DialogFooter,
 } from "@/shared/ui-components/dialog";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { getSchemaText } from "@/schemas/utils/load-schemas";
-import { schemaToFormat } from "@/schemas/utils/schema-converter";
 import {
   parseSchema,
   validateAndParse,
@@ -29,13 +28,28 @@ import {
   resolveSchemaFormat,
 } from "./schema-editor-text";
 import { SchemaEditor } from "./schema-editor";
-import { FormatSelector } from "./format-selector";
 import { SampleSchemaSelector } from "./sample-schema-selector";
 import { FileUploadButton } from "./file-upload-button";
 import { EditInDrawdbButton } from "./edit-in-drawdb-button";
 
 const EDITOR_SCROLLBAR_CLASS =
   "[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-slate-400/70 [scrollbar-width:thin] [scrollbar-color:rgb(100,116,139,0.5)_transparent]";
+
+function formatBadgeLabel(format: SchemaFormat): string {
+  if (format === "mermaid") return "Mermaid";
+  if (format === "drawdb") return "DrawDB";
+  return "SQL";
+}
+
+function formatBadgeClass(format: SchemaFormat): string {
+  if (format === "mermaid") {
+    return "border-purple-500/60 bg-purple-500/10 text-purple-300";
+  }
+  if (format === "drawdb") {
+    return "border-emerald-500/60 bg-emerald-500/10 text-emerald-300";
+  }
+  return "border-blue-500/60 bg-blue-500/10 text-blue-300";
+}
 
 interface SchemaSelectorProps {
   currentSchema: DatabaseSchema;
@@ -57,33 +71,7 @@ export function SchemaSelector({
   const { toast } = useToast();
   const shareFetchRef = useRef<string | null>(null);
 
-  // Explicit format toggle: convert current schema into the target format text
-  const updateFormat = (newFormat: SchemaFormat) => {
-    const base =
-      persistedSchemaRef.current || parseSchema(scriptInput) || currentSchema;
-
-    // Preserve tables; rewrite format + editor text
-    const withFormat: DatabaseSchema = { ...base, format: newFormat };
-    const text =
-      newFormat === "drawdb" && base.name === "Blog Platform"
-        ? getSchemaText("Blog Platform") || schemaToFormat(withFormat)
-        : schemaToFormat(withFormat);
-
-    setCurrentFormat(newFormat);
-    setScriptInput(text);
-    persistedSchemaRef.current = withFormat;
-
-    const parsed = parseSchema(text, newFormat) || parseSchema(text);
-    if (parsed) {
-      persistedSchemaRef.current = {
-        ...parsed,
-        name: base.name || parsed.name,
-        format: newFormat,
-      };
-    }
-  };
-
-  // Initialize dialog when it opens — migrate Blog Platform content to JSON
+  // Initialize dialog when it opens
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => {
@@ -116,7 +104,7 @@ export function SchemaSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentSchema]);
 
-  // Live validation (editor only — DrawDB share URLs use the dedicated field)
+  // Live validation — detect format from editor contents
   useEffect(() => {
     if (!scriptInput.trim()) {
       startTransition(() => setIsValid(false));
@@ -255,7 +243,7 @@ export function SchemaSelector({
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700 p-4 sm:p-6">
-        <div className="absolute right-10 top-4 z-10 sm:right-6">
+        <div className="absolute right-10 top-4 z-10 sm:right-12">
           <EditInDrawdbButton
             getSchema={resolveSchemaForDrawdb}
             className="shrink-0 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 hover:text-white"
@@ -313,23 +301,25 @@ export function SchemaSelector({
             </div>
           </div>
 
-          <div className="border-t border-slate-700 pt-4 sm:pt-6">
-            <div className="mb-2 sm:mb-3">
-              <FormatSelector value={currentFormat} onChange={updateFormat} />
-            </div>
-            <div className="relative">
-              <SchemaEditor
-                value={scriptInput}
-                format={currentFormat}
-                onChange={(newValue) => {
-                  setScriptInput(newValue);
-                }}
-                className={`h-[150px] sm:h-[275px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 py-2 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
-              />
-              <LocalToastContainer />
-              <div className="absolute bottom-2 right-2">
-                <FileUploadButton onFileLoad={handleFileLoad} />
-              </div>
+          <div className="relative">
+            <Badge
+              variant="outline"
+              className={`pointer-events-none absolute top-2 right-2 z-10 px-2 py-0.5 ${formatBadgeClass(currentFormat)}`}
+              title="Detected schema format"
+            >
+              {formatBadgeLabel(currentFormat)}
+            </Badge>
+            <SchemaEditor
+              value={scriptInput}
+              format={currentFormat}
+              onChange={(newValue) => {
+                setScriptInput(newValue);
+              }}
+              className={`h-[150px] sm:h-[275px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
+            />
+            <LocalToastContainer />
+            <div className="absolute bottom-2 right-2">
+              <FileUploadButton onFileLoad={handleFileLoad} />
             </div>
           </div>
         </div>

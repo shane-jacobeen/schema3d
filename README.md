@@ -239,7 +239,8 @@ Schema3D/
 │   │   │       ├── schema/     # Schema-related UI components
 │   │   │       │   ├── schema-controls.tsx
 │   │   │       │   ├── schema-editor.tsx
-│   │   │       │   ├── format-selector.tsx
+│   │   │       │   ├── schema-editor-text.ts
+│   │   │       │   ├── edit-in-drawdb-button.tsx
 │   │   │       │   ├── file-upload-button.tsx
 │   │   │       │   ├── sample-schema-selector.tsx
 │   │   │       │   └── share-button.tsx       # Shareable URL generation
