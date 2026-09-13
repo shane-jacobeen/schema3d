@@ -1,6 +1,7 @@
 import { useState, useEffect, startTransition, useRef } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
+import { Input } from "@/shared/ui-components/input";
 import { useToast, LocalToastContainer } from "@/shared/ui-components/toast";
 import {
   Dialog,
@@ -31,6 +32,10 @@ import { SchemaEditor } from "./schema-editor";
 import { FormatSelector } from "./format-selector";
 import { SampleSchemaSelector } from "./sample-schema-selector";
 import { FileUploadButton } from "./file-upload-button";
+import { EditInDrawdbButton } from "./edit-in-drawdb-button";
+
+const EDITOR_SCROLLBAR_CLASS =
+  "[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-slate-400/70 [scrollbar-width:thin] [scrollbar-color:rgb(100,116,139,0.5)_transparent]";
 
 interface SchemaSelectorProps {
   currentSchema: DatabaseSchema;
@@ -47,6 +52,7 @@ export function SchemaSelector({
   const [scriptInput, setScriptInput] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [currentFormat, setCurrentFormat] = useState<SchemaFormat>("sql");
+  const [drawdbShareInput, setDrawdbShareInput] = useState("");
   const [isFetchingShare, setIsFetchingShare] = useState(false);
   const { toast } = useToast();
   const shareFetchRef = useRef<string | null>(null);
@@ -91,11 +97,8 @@ export function SchemaSelector({
 
           setScriptInput(scriptToLoad);
           setCurrentFormat(format);
-
-          // Keep persisted schema on drawdb when opening Blog Platform
-          if (schema.name === "Blog Platform" && schema.format !== "drawdb") {
-            persistedSchemaRef.current = { ...schema, format: "drawdb" };
-          }
+          setDrawdbShareInput("");
+          shareFetchRef.current = null;
 
           const result = validateAndParse(scriptToLoad, format);
           setIsValid(result.isValid);
@@ -113,61 +116,22 @@ export function SchemaSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentSchema]);
 
-  // Resolve pasted DrawDB share URLs → gist JSON (async)
+  // Live validation (editor only — DrawDB share URLs use the dedicated field)
   useEffect(() => {
-    const trimmed = scriptInput.trim();
-    if (!trimmed || !isDrawdbShareUrl(trimmed)) {
-      return;
-    }
-
-    if (shareFetchRef.current === trimmed) {
-      return;
-    }
-    shareFetchRef.current = trimmed;
-
-    let cancelled = false;
-    setIsFetchingShare(true);
-
-    (async () => {
-      try {
-        const json = await fetchDrawdbShareJson(trimmed);
-        if (cancelled) return;
-        setScriptInput(json);
-        setCurrentFormat("drawdb");
-        toast.success("Loaded schema from DrawDB share");
-      } catch (err) {
-        if (cancelled) return;
-        const message =
-          err instanceof DrawdbShareError
-            ? err.message
-            : "Failed to load DrawDB share. Export JSON from DrawDB and import the file instead.";
-        toast.error(message);
-        shareFetchRef.current = null;
-      } finally {
-        if (!cancelled) {
-          setIsFetchingShare(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [scriptInput, toast]);
-
-  // Live validation - debounced to avoid parsing on every keystroke
-  useEffect(() => {
-    if (isDrawdbShareUrl(scriptInput)) {
-      startTransition(() => {
-        setIsValid(false);
-      });
+    if (!scriptInput.trim()) {
+      startTransition(() => setIsValid(false));
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      const result = !scriptInput.trim()
-        ? { isValid: false, schema: null }
-        : validateAndParse(scriptInput, currentFormat);
+      // Prefer the selected format, then fall back to auto-detect (e.g. paste)
+      let result = validateAndParse(scriptInput, currentFormat);
+      if (!result.isValid) {
+        const auto = validateAndParse(scriptInput);
+        if (auto.isValid) {
+          result = auto;
+        }
+      }
 
       startTransition(() => {
         setIsValid(result.isValid);
@@ -179,17 +143,14 @@ export function SchemaSelector({
             preservedName && preservedName !== "Custom Database";
 
           const name = shouldPreserveName ? preservedName : schema.name;
-          // Blog Platform sample must stay drawdb/JSON internally
-          const format: SchemaFormat =
-            name === "Blog Platform" ? "drawdb" : schema.format;
 
           persistedSchemaRef.current = {
             ...schema,
             name,
-            format,
+            format: schema.format,
           };
           setCurrentFormat((prevFormat) => {
-            return format !== prevFormat ? format : prevFormat;
+            return schema.format !== prevFormat ? schema.format : prevFormat;
           });
         }
       });
@@ -205,20 +166,49 @@ export function SchemaSelector({
     persistedSchemaRef.current = migrated;
     setCurrentFormat(format);
     setScriptInput(getEditorTextForSchema(migrated));
+    setDrawdbShareInput("");
+    shareFetchRef.current = null;
+  };
+
+  const loadDrawdbShare = async (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed || !isDrawdbShareUrl(trimmed)) {
+      return;
+    }
+    if (shareFetchRef.current === trimmed) {
+      return;
+    }
+    shareFetchRef.current = trimmed;
+
+    setIsFetchingShare(true);
+    try {
+      const json = await fetchDrawdbShareJson(trimmed);
+      setScriptInput(json);
+      setCurrentFormat("drawdb");
+      toast.success("Loaded schema from DrawDB share");
+    } catch (err) {
+      shareFetchRef.current = null;
+      const message =
+        err instanceof DrawdbShareError
+          ? err.message
+          : "Failed to load DrawDB share. Export JSON from DrawDB and import the file instead.";
+      toast.error(message);
+    } finally {
+      setIsFetchingShare(false);
+    }
   };
 
   const handleOk = () => {
-    const parsed = parseSchema(scriptInput, currentFormat);
+    const parsed =
+      parseSchema(scriptInput, currentFormat) || parseSchema(scriptInput);
 
     if (parsed && parsed.tables.length > 0) {
       const name = persistedSchemaRef.current?.name || parsed.name;
-      const format: SchemaFormat =
-        name === "Blog Platform" ? "drawdb" : parsed.format;
 
       const schemaWithName = {
         ...parsed,
         name,
-        format,
+        format: currentFormat || parsed.format,
       };
 
       persistedSchemaRef.current = schemaWithName;
@@ -243,12 +233,17 @@ export function SchemaSelector({
     toast.success("File loaded successfully");
   };
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+  const resolveSchemaForDrawdb = (): DatabaseSchema => {
+    return (
+      parseSchema(scriptInput, currentFormat) ||
+      parseSchema(scriptInput) ||
+      persistedSchemaRef.current ||
+      currentSchema
+    );
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -260,18 +255,63 @@ export function SchemaSelector({
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700 p-4 sm:p-6">
-        <DialogHeader>
+        <div className="absolute right-10 top-4 z-10 sm:right-6">
+          <EditInDrawdbButton
+            getSchema={resolveSchemaForDrawdb}
+            className="shrink-0 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 hover:text-white"
+          />
+        </div>
+        <DialogHeader className="pr-24 sm:pr-36">
           <DialogTitle className="text-white text-base sm:text-lg">
             Select or Import Database Schema
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 sm:space-y-6">
-          <SampleSchemaSelector
-            currentInput={scriptInput}
-            format={currentFormat}
-            onSelect={handleSampleSelect}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
+            <div className="w-full sm:w-[40%] sm:shrink-0">
+              <SampleSchemaSelector
+                currentInput={scriptInput}
+                format={currentFormat}
+                onSelect={handleSampleSelect}
+              />
+            </div>
+
+            <div className="min-w-0 flex-1 space-y-2">
+              <label
+                htmlFor="drawdb-share-input"
+                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-300"
+              >
+                DrawDB share link
+                {isFetchingShare && (
+                  <Loader2
+                    size={14}
+                    className="animate-spin text-slate-400"
+                    aria-label="Loading DrawDB share"
+                  />
+                )}
+              </label>
+              <Input
+                id="drawdb-share-input"
+                value={drawdbShareInput}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setDrawdbShareInput(value);
+                  void loadDrawdbShare(value);
+                }}
+                onPaste={(e) => {
+                  const pasted = e.clipboardData.getData("text/plain");
+                  if (pasted.trim()) {
+                    setDrawdbShareInput(pasted);
+                    void loadDrawdbShare(pasted);
+                  }
+                }}
+                placeholder="Paste https://drawdb.app/editor?shareId=…"
+                disabled={isFetchingShare}
+                className="border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus-visible:ring-blue-500"
+              />
+            </div>
+          </div>
 
           <div className="border-t border-slate-700 pt-4 sm:pt-6">
             <div className="mb-2 sm:mb-3">
@@ -284,18 +324,13 @@ export function SchemaSelector({
                 onChange={(newValue) => {
                   setScriptInput(newValue);
                 }}
-                className="h-[150px] sm:h-[275px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 py-2 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`h-[150px] sm:h-[275px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 py-2 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
               />
               <LocalToastContainer />
               <div className="absolute bottom-2 right-2">
                 <FileUploadButton onFileLoad={handleFileLoad} />
               </div>
             </div>
-            {isFetchingShare && (
-              <p className="mt-2 text-xs text-slate-400">
-                Loading DrawDB share…
-              </p>
-            )}
           </div>
         </div>
         <DialogFooter className="pt-3 sm:pt-4">

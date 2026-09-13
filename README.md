@@ -50,7 +50,7 @@ An open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diag
 
 - **PNG Screenshots**: Export your visualization as a high-quality image
 - **CSV Export**: Flatten table/column metadata for spreadsheets
-- **DrawDB JSON**: Download for DrawDB, or **Edit in DrawDB** (download + open editor)
+- **Edit in DrawDB**: From the schema edit dialog — download DrawDB JSON and import it in the DrawDB editor
 
 ### Sharing & Collaboration
 
@@ -445,9 +445,9 @@ erDiagram
 
 ### DrawDB JSON Format
 
-Schema3D can import [DrawDB](https://drawdb.app) diagram exports (File → Export → JSON) and `.ddb` files. Paste a `drawdb.app/editor?shareId=…` URL to load a shared gist, or open Schema3D with `?drawdbShareId=<gistId>`.
+Schema3D can import [DrawDB](https://drawdb.app) diagram exports (File → Export → JSON) and `.ddb` files. In the schema edit dialog, paste a `drawdb.app/editor?shareId=…` URL into the DrawDB share field, or open Schema3D with `?drawdbShareId=<gistId>`.
 
-Outbound: use **DrawDB** / **Edit in DrawDB** in the export panel. Schema3D does not mint DrawDB share IDs (no gist create API).
+Outbound: use **Edit in DrawDB** (top right of the schema edit dialog) to download JSON and open the DrawDB editor. Schema3D does not mint DrawDB share IDs (no gist create API).
 
 **MVP notes:** DrawDB `views[]`, notes, and subject areas are ignored on import; canvas `x,y` positions are ignored in favor of Schema3D layout. The Blog Platform sample is authored as DrawDB JSON (`blog-platform.drawdb.json`); the SQL file remains as a parser regression fixture.
 

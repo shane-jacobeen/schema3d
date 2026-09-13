@@ -1,32 +1,45 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
 import type { SchemaFormat } from "@/schemas/parsers";
-import { getSchemaText } from "@/schemas/utils/load-schemas";
+import { getSchemaText, getSchemaFormat } from "@/schemas/utils/load-schemas";
 import { schemaToFormat } from "@/schemas/utils/schema-converter";
 
 /**
- * Resolve editor text for a schema, preferring canonical sample fixtures.
- * Blog Platform always uses its DrawDB JSON (not SQL, not reconstructed).
- */
-export function getEditorTextForSchema(schema: DatabaseSchema): string {
-  const sampleText = getSchemaText(schema.name);
-  if (sampleText) {
-    return sampleText;
-  }
-  return schemaToFormat(schema);
-}
-
-/**
- * Ensure Blog Platform (and other DrawDB samples) keep format "drawdb".
+ * Resolve editor format for a schema.
+ * Respects an explicit format (so format toggles stick); falls back to the
+ * sample's native format when missing.
  */
 export function resolveSchemaFormat(schema: DatabaseSchema): SchemaFormat {
-  if (schema.name === "Blog Platform") {
-    return "drawdb";
+  if (
+    schema.format === "sql" ||
+    schema.format === "mermaid" ||
+    schema.format === "drawdb"
+  ) {
+    return schema.format;
   }
-  return schema.format || "sql";
+  return getSchemaFormat(schema.name) || "sql";
 }
 
 /**
- * Apply Blog Platform / DrawDB format migration to a schema object.
+ * Resolve editor text for a schema.
+ * Uses the canonical sample fixture when the schema is in that sample's
+ * native format; otherwise converts via schemaToFormat (format toggle).
+ */
+export function getEditorTextForSchema(schema: DatabaseSchema): string {
+  const format = resolveSchemaFormat(schema);
+  const nativeFormat = getSchemaFormat(schema.name);
+
+  if (format === nativeFormat) {
+    const sampleText = getSchemaText(schema.name);
+    if (sampleText) {
+      return sampleText;
+    }
+  }
+
+  return schemaToFormat({ ...schema, format });
+}
+
+/**
+ * Ensure format is set (native sample format when unset).
  */
 export function migrateSchemaFormat(schema: DatabaseSchema): DatabaseSchema {
   const format = resolveSchemaFormat(schema);

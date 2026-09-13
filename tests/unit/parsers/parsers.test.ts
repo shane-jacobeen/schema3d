@@ -70,9 +70,17 @@ describe("validateAndParse", () => {
 });
 
 describe("identifyValidBlocks", () => {
-  it("returns empty blocks for DrawDB JSON (whole-document format)", () => {
-    const blocks = identifyValidBlocks(JSON.stringify(minimal), "drawdb");
-    expect(blocks).toEqual([]);
+  it("marks valid DrawDB JSON as a single valid whole-document block", () => {
+    const text = JSON.stringify(minimal);
+    const blocks = identifyValidBlocks(text, "drawdb");
+    expect(blocks).toEqual([{ start: 0, end: text.length, isValid: true }]);
+  });
+
+  it("marks invalid DrawDB-shaped JSON as a single invalid block", () => {
+    const text =
+      '{"tables":[],"relationships":[],"notes":[],"subjectAreas":[]}';
+    const blocks = identifyValidBlocks(text, "drawdb");
+    expect(blocks).toEqual([{ start: 0, end: text.length, isValid: false }]);
   });
 
   it("returns SQL blocks for CREATE TABLE when format is sql", () => {

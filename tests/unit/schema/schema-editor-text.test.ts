@@ -14,6 +14,12 @@ vi.mock("@/schemas/utils/load-schemas", () => ({
     if (name === "Retailer") return "CREATE TABLE products (id INT);";
     return null;
   }),
+  getSchemaFormat: vi.fn((name: string) => {
+    if (name === "Blog Platform") return "drawdb";
+    if (name === "University") return "mermaid";
+    if (name === "Retailer") return "sql";
+    return "sql";
+  }),
 }));
 
 vi.mock("@/schemas/utils/schema-converter", () => ({
@@ -29,11 +35,21 @@ vi.mock("@/schemas/utils/schema-converter", () => ({
 }));
 
 describe("resolveSchemaFormat", () => {
-  it("forces Blog Platform to drawdb", () => {
+  it("respects an explicit Blog Platform format (e.g. after toggle)", () => {
     expect(
       resolveSchemaFormat({
         name: "Blog Platform",
         format: "sql",
+        tables: [],
+      })
+    ).toBe("sql");
+  });
+
+  it("falls back to native DrawDB for Blog Platform when format unset", () => {
+    expect(
+      resolveSchemaFormat({
+        name: "Blog Platform",
+        format: undefined as unknown as "sql",
         tables: [],
       })
     ).toBe("drawdb");
@@ -58,15 +74,23 @@ describe("getEditorTextForSchema", () => {
     vi.clearAllMocks();
   });
 
-  it("migrates Blog Platform to fixture JSON (not reconstructed SQL)", () => {
+  it("uses Blog Platform fixture JSON when format is drawdb", () => {
     const schema: DatabaseSchema = {
       name: "Blog Platform",
-      format: "sql",
+      format: "drawdb",
       tables: [],
     };
     const text = getEditorTextForSchema(schema);
     expect(text).toBe(blogJson);
-    expect(text).not.toMatch(/CREATE TABLE/i);
+  });
+
+  it("converts Blog Platform via schemaToFormat when toggled to SQL", () => {
+    const text = getEditorTextForSchema({
+      name: "Blog Platform",
+      format: "sql",
+      tables: [],
+    });
+    expect(text).toContain("CREATE TABLE reconstructed");
   });
 
   it("uses Retailer SQL fixture for Retailer", () => {
@@ -89,13 +113,22 @@ describe("getEditorTextForSchema", () => {
 });
 
 describe("migrateSchemaFormat", () => {
-  it("rewrites Blog Platform sql → drawdb", () => {
+  it("fills native drawdb when Blog Platform format is missing", () => {
     const migrated = migrateSchemaFormat({
       name: "Blog Platform",
-      format: "sql",
+      format: undefined as unknown as "sql",
       tables: [],
     });
     expect(migrated.format).toBe("drawdb");
+  });
+
+  it("does not override an explicit sql format on Blog Platform", () => {
+    const schema: DatabaseSchema = {
+      name: "Blog Platform",
+      format: "sql",
+      tables: [],
+    };
+    expect(migrateSchemaFormat(schema)).toBe(schema);
   });
 
   it("returns same reference when format already correct", () => {

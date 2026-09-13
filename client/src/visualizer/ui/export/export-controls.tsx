@@ -1,10 +1,8 @@
-import { Image, FileSpreadsheet, Download, ExternalLink } from "lucide-react";
+import { Image, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
 import { Card } from "@/shared/ui-components/card";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { escapeCSV, downloadFile, generateTimestamp } from "./export-utils";
-import { schemaToDrawdbText } from "@/schemas/parsers/drawdb";
-import { useToast } from "@/shared/ui-components/toast";
 
 interface ExportControlsProps {
   schema: DatabaseSchema;
@@ -12,8 +10,6 @@ interface ExportControlsProps {
 }
 
 export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
-  const { toast } = useToast();
-
   const exportScreenshot = () => {
     if (!canvasRef?.current) {
       console.error("Canvas not available for screenshot");
@@ -72,32 +68,6 @@ export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
     }
   };
 
-  const downloadForDrawdb = () => {
-    try {
-      const json = schemaToDrawdbText(schema);
-      const filename = `${schema.name.replace(/\s+/g, "_")}_drawdb.json`;
-      downloadFile(json, filename, "application/json;charset=utf-8;");
-    } catch (error) {
-      console.error("DrawDB export failed:", error);
-      toast.error("Failed to export DrawDB JSON");
-    }
-  };
-
-  const editInDrawdb = () => {
-    try {
-      const json = schemaToDrawdbText(schema);
-      const filename = `${schema.name.replace(/\s+/g, "_")}_drawdb.json`;
-      downloadFile(json, filename, "application/json;charset=utf-8;");
-      window.open("https://drawdb.app/editor", "_blank", "noopener,noreferrer");
-      toast.info(
-        "DrawDB opened — use File → Import and select the downloaded JSON"
-      );
-    } catch (error) {
-      console.error("Edit in DrawDB failed:", error);
-      toast.error("Failed to prepare DrawDB export");
-    }
-  };
-
   return (
     <Card className="bg-slate-900/70 border-slate-700 text-white backdrop-blur-sm p-2 sm:p-3">
       <h3 className="text-xs font-semibold mb-1.5 sm:mb-2 text-slate-400 text-center">
@@ -124,27 +94,6 @@ export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
             className="hidden sm:block sm:w-3.5 sm:h-3.5"
           />
           <span>CSV</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={downloadForDrawdb}
-          title="Download schema as DrawDB JSON"
-        >
-          <Download size={12} className="hidden sm:block sm:w-3.5 sm:h-3.5" />
-          <span>DrawDB</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={editInDrawdb}
-          title="Download DrawDB JSON and open DrawDB editor"
-        >
-          <ExternalLink
-            size={12}
-            className="hidden sm:block sm:w-3.5 sm:h-3.5"
-          />
-          <span>Edit in DrawDB</span>
         </Button>
       </div>
     </Card>

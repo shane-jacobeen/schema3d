@@ -35,9 +35,12 @@ export const parsers = {
   },
   drawdb: {
     parse: parseDrawdbSchema,
-    identifyBlocks: (_text: string): ValidationBlock[] => {
-      // DrawDB JSON is validated as a whole document, not block ranges
-      return [];
+    identifyBlocks: (text: string): ValidationBlock[] => {
+      // Whole-document format: one span for highlighting (empty → editor grays all)
+      if (!text.trim()) return [];
+      const schema = parseDrawdbSchema(text);
+      const isValid = schema !== null && schema.tables.length > 0;
+      return [{ start: 0, end: text.length, isValid }];
     },
   },
 } as const;
@@ -92,7 +95,7 @@ export function identifyValidBlocks(
   }
 
   if (tryParseDrawdbJson(text)) {
-    return [];
+    return parsers.drawdb.identifyBlocks(text);
   }
 
   const sqlBlocks = parsers.sql.identifyBlocks(text);

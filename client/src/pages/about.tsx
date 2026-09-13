@@ -353,7 +353,7 @@ export default function About() {
                     >
                       GitHub Discussions
                     </a>
-                    —it's the best place to connect with other users and share
+                    ; it's the best place to connect with other users and share
                     ideas!
                   </p>
                   <p>

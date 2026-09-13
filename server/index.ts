@@ -36,6 +36,15 @@ app.use(express.urlencoded({ extended: false }));
   // Serve the app on port 3000 (or PORT env var)
   // this serves both the API and the client
   const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `Port ${port} is already in use. Stop the other process (e.g. \`lsof -tiTCP:${port} -sTCP:LISTEN | xargs kill\`) and retry.`
+      );
+      process.exit(1);
+    }
+    throw err;
+  });
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });
