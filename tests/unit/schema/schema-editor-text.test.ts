@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   getEditorTextForSchema,
   resolveSchemaFormat,
-  migrateSchemaFormat,
 } from "@/visualizer/ui/schema/schema-editor-text";
 import type { DatabaseSchema } from "@/shared/types/schema";
 
@@ -35,7 +34,7 @@ vi.mock("@/schemas/utils/schema-converter", () => ({
 }));
 
 describe("resolveSchemaFormat", () => {
-  it("respects an explicit Blog Platform format (e.g. after toggle)", () => {
+  it("respects an explicit Blog Platform format", () => {
     expect(
       resolveSchemaFormat({
         name: "Blog Platform",
@@ -84,7 +83,7 @@ describe("getEditorTextForSchema", () => {
     expect(text).toBe(blogJson);
   });
 
-  it("converts Blog Platform via schemaToFormat when toggled to SQL", () => {
+  it("converts Blog Platform via schemaToFormat when format is SQL", () => {
     const text = getEditorTextForSchema({
       name: "Blog Platform",
       format: "sql",
@@ -109,34 +108,5 @@ describe("getEditorTextForSchema", () => {
       tables: [],
     });
     expect(text).toContain("CREATE TABLE reconstructed");
-  });
-});
-
-describe("migrateSchemaFormat", () => {
-  it("fills native drawdb when Blog Platform format is missing", () => {
-    const migrated = migrateSchemaFormat({
-      name: "Blog Platform",
-      format: undefined as unknown as "sql",
-      tables: [],
-    });
-    expect(migrated.format).toBe("drawdb");
-  });
-
-  it("does not override an explicit sql format on Blog Platform", () => {
-    const schema: DatabaseSchema = {
-      name: "Blog Platform",
-      format: "sql",
-      tables: [],
-    };
-    expect(migrateSchemaFormat(schema)).toBe(schema);
-  });
-
-  it("returns same reference when format already correct", () => {
-    const schema: DatabaseSchema = {
-      name: "Blog Platform",
-      format: "drawdb",
-      tables: [],
-    };
-    expect(migrateSchemaFormat(schema)).toBe(schema);
   });
 });

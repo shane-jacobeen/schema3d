@@ -448,7 +448,7 @@ erDiagram
 
 Schema3D can import [DrawDB](https://drawdb.app) diagram exports (File → Export → JSON) and `.ddb` files. In the schema edit dialog, paste a `drawdb.app/editor?shareId=…` URL into the DrawDB share field, or open Schema3D with `?drawdbShareId=<gistId>`.
 
-Outbound: use **Edit in DrawDB** (top right of the schema edit dialog) to download JSON and open the DrawDB editor. Schema3D does not mint DrawDB share IDs (no gist create API).
+Outbound: use **Edit in DrawDB** (icon above upload in the schema editor) to download JSON and open the DrawDB editor. Schema3D does not mint DrawDB share IDs (no gist create API).
 
 **MVP notes:** DrawDB `views[]`, notes, and subject areas are ignored on import; canvas `x,y` positions are ignored in favor of Schema3D layout. The Blog Platform sample is authored as DrawDB JSON (`blog-platform.drawdb.json`); the SQL file remains as a parser regression fixture.
 

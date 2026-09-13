@@ -242,25 +242,18 @@ export function SchemaSelector({
           <Pencil size={14} className="sm:w-4 sm:h-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] sm:max-h-[80vh] overflow-y-auto bg-slate-900 border-slate-700 p-4 sm:p-6">
-        <div className="absolute right-10 top-4 z-10 sm:right-12">
-          <EditInDrawdbButton
-            getSchema={resolveSchemaForDrawdb}
-            className="shrink-0 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 hover:text-white"
-          />
-        </div>
-        <DialogHeader className="pr-24 sm:pr-36">
+      <DialogContent className="flex h-[90vh] max-h-[90vh] max-w-[95vw] flex-col gap-4 overflow-hidden bg-slate-900 border-slate-700 p-4 sm:h-[80vh] sm:max-h-[80vh] sm:max-w-2xl sm:p-6">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="text-white text-base sm:text-lg">
             Select or Import Database Schema
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 sm:gap-6">
+          <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
             <div className="w-full sm:w-[40%] sm:shrink-0">
               <SampleSchemaSelector
                 currentInput={scriptInput}
-                format={currentFormat}
                 onSelect={handleSampleSelect}
               />
             </div>
@@ -301,7 +294,7 @@ export function SchemaSelector({
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative min-h-0 flex-1">
             <Badge
               variant="outline"
               className={`pointer-events-none absolute top-2 right-2 z-10 px-2 py-0.5 ${formatBadgeClass(currentFormat)}`}
@@ -315,15 +308,16 @@ export function SchemaSelector({
               onChange={(newValue) => {
                 setScriptInput(newValue);
               }}
-              className={`h-[150px] sm:h-[275px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
+              className={`h-full min-h-[120px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
             />
             <LocalToastContainer />
-            <div className="absolute bottom-2 right-2">
+            <div className="absolute bottom-2 right-2 flex flex-col gap-2">
+              <EditInDrawdbButton getSchema={resolveSchemaForDrawdb} />
               <FileUploadButton onFileLoad={handleFileLoad} />
             </div>
           </div>
         </div>
-        <DialogFooter className="pt-3 sm:pt-4">
+        <DialogFooter className="shrink-0 pt-0 sm:pt-0">
           <Button
             onClick={handleOk}
             disabled={!isValid || !scriptInput.trim() || isFetchingShare}

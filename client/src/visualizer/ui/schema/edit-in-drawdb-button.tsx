@@ -9,6 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui-components/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/tooltip";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { schemaToDrawdbText } from "@/schemas/parsers/drawdb";
 import { downloadFile } from "@/visualizer/ui/export/export-utils";
@@ -18,20 +24,18 @@ interface EditInDrawdbButtonProps {
   /** Resolve the schema at click time (e.g. current editor contents). */
   getSchema: () => DatabaseSchema;
   className?: string;
-  size?: "sm" | "default" | "lg" | "icon";
 }
 
 const actionLinkClass =
   "font-medium text-blue-400 underline underline-offset-2 hover:text-blue-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm";
 
 /**
- * Opens a short guide: download DrawDB JSON, then import in DrawDB
+ * Icon FAB that opens a short guide: download DrawDB JSON, then import in DrawDB
  * (DrawDB cannot receive a Schema3D diagram via URL).
  */
 export function EditInDrawdbButton({
   getSchema,
   className,
-  size = "sm",
 }: EditInDrawdbButtonProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -55,18 +59,28 @@ export function EditInDrawdbButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size={size}
-          variant="outline"
-          className={className}
-          title="Edit this schema in DrawDB"
-        >
-          <ExternalLink size={14} />
-          <span className="hidden sm:inline">Edit in DrawDB</span>
-          <span className="sm:hidden">DrawDB</span>
-        </Button>
-      </DialogTrigger>
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button
+                size="icon-sm"
+                variant="outline"
+                className={className}
+                aria-label="Edit in DrawDB"
+              >
+                <ExternalLink size={18} className="sm:w-5 sm:h-5" />
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent
+            side="left"
+            className="bg-slate-800 text-white border-slate-700"
+          >
+            Edit in DrawDB
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700 text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Edit in DrawDB</DialogTitle>

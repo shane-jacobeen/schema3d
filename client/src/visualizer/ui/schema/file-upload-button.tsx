@@ -1,6 +1,12 @@
 import { useRef, ChangeEvent } from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/tooltip";
 import type { SchemaFormat } from "@/schemas/parsers";
 import { parseSchema } from "@/schemas/parsers";
 import { useToast } from "@/shared/ui-components/toast";
@@ -74,14 +80,26 @@ export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
         onChange={handleFileUpload}
         className="hidden"
       />
-      <Button
-        size="icon-sm"
-        variant="outline"
-        onClick={handleClick}
-        title="Upload Schema File"
-      >
-        <Upload size={18} className="sm:w-5 sm:h-5" />
-      </Button>
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="outline"
+              onClick={handleClick}
+              aria-label="Upload schema file"
+            >
+              <Upload size={18} className="sm:w-5 sm:h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="left"
+            className="bg-slate-800 text-white border-slate-700"
+          >
+            Upload schema file
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </>
   );
 }

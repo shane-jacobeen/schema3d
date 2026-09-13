@@ -9,7 +9,6 @@ import { parseSchema } from "@/schemas/parsers";
 
 interface SampleSchemaSelectorProps {
   currentInput: string;
-  format: "sql" | "mermaid" | "drawdb";
   onSelect: (schema: DatabaseSchema) => void;
 }
 
@@ -24,7 +23,6 @@ function formatBadgeLabel(format: string): string {
  */
 export function SampleSchemaSelector({
   currentInput,
-  format: _format,
   onSelect,
 }: SampleSchemaSelectorProps) {
   const samples = useMemo(() => getSampleSchemas(), []);

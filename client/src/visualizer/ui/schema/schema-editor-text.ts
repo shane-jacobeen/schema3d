@@ -37,14 +37,3 @@ export function getEditorTextForSchema(schema: DatabaseSchema): string {
 
   return schemaToFormat({ ...schema, format });
 }
-
-/**
- * Ensure format is set (native sample format when unset).
- */
-export function migrateSchemaFormat(schema: DatabaseSchema): DatabaseSchema {
-  const format = resolveSchemaFormat(schema);
-  if (format === schema.format) {
-    return schema;
-  }
-  return { ...schema, format };
-}
