@@ -37,6 +37,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "ci": "npm run lint && npm run format:check && npm run check && npm run test:coverage && npm run build && test -f dist/index.js && test -d dist/public",
     "prepare": "husky"
   },
   "dependencies": {
