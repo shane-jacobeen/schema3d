@@ -14,5 +14,6 @@ export {
   DEFAULT_VIEW_MODE,
   getDefaultBaseSchema,
   getInitialSchema,
+  tryLoadDrawdbShareFromQuery,
   type LayoutType,
 } from "./initial-state";

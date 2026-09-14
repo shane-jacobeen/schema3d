@@ -5,6 +5,7 @@ import type {
   CardinalitySymbol,
 } from "@/shared/types/cardinality";
 import { parseCardinality } from "@/shared/types/cardinality";
+import { schemaToDrawdbText } from "../parsers/drawdb";
 
 /**
  * Convert a DatabaseSchema to Mermaid ER diagram format
@@ -109,16 +110,18 @@ export function schemaToMermaid(schema: DatabaseSchema): string {
 }
 
 /**
- * Convert a DatabaseSchema to the specified format
- * @param schema The schema to convert
- * @param format The target format ("sql" or "mermaid")
- * @returns The schema in the specified format
+ * Convert a DatabaseSchema to its native editor/share text.
+ * drawdb → DrawDB JSON; mermaid → ER diagram; sql → DDL.
  */
 export function schemaToFormat(schema: DatabaseSchema): string {
   if (schema.format === "mermaid") {
     return schemaToMermaid(schema);
   }
+  if (schema.format === "drawdb") {
+    return schemaToDrawdbText(schema);
+  }
   return schemaToSql(schema);
 }
 
 export { schemaToSql } from "../parsers/sql-parser";
+export { schemaToDrawdbJson, schemaToDrawdbText } from "../parsers/drawdb";

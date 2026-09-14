@@ -125,6 +125,51 @@ describe("schemaToFormat", () => {
     }
   });
 
+  it("should convert DrawDB schema to DrawDB JSON", () => {
+    const schema = parseSchema(
+      JSON.stringify({
+        title: "Tiny",
+        database: "generic",
+        tables: [
+          {
+            id: 0,
+            name: "users",
+            x: 0,
+            y: 0,
+            comment: "",
+            indices: [],
+            color: "#175e7a",
+            fields: [
+              {
+                id: 1,
+                name: "id",
+                type: "INTEGER",
+                default: "",
+                check: "",
+                primary: true,
+                unique: false,
+                notNull: true,
+                increment: true,
+                comment: "",
+              },
+            ],
+          },
+        ],
+        relationships: [],
+        notes: [],
+        subjectAreas: [],
+      })
+    );
+
+    expect(schema).not.toBeNull();
+    expect(schema!.format).toBe("drawdb");
+    const output = schemaToFormat(schema!);
+    expect(output.trim().startsWith("{")).toBe(true);
+    expect(output).toContain('"tables"');
+    expect(output).toContain("users");
+    expect(() => JSON.parse(output)).not.toThrow();
+  });
+
   it("should preserve relationships in converted format", () => {
     const sql = `
       CREATE TABLE users (id INT PRIMARY KEY);

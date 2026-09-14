@@ -25,7 +25,7 @@ export interface Table {
 }
 
 export interface DatabaseSchema {
-  format: "sql" | "mermaid";
+  format: "sql" | "mermaid" | "drawdb";
   name: string;
   tables: Table[];
 }

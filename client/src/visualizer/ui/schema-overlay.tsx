@@ -183,6 +183,7 @@ export function SchemaOverlay({
       <div className="absolute bottom-safe-bottom right-2 sm:bottom-safe-bottom-lg sm:right-4 flex flex-col gap-2">
         {/* Share button */}
         <ShareButton
+          // Always encode the live schema — never prefer sample fixtures by name
           schemaText={schemaToFormat(schema)}
           format={schema.format}
           viewState={viewState}

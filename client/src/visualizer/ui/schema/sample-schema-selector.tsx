@@ -1,98 +1,96 @@
 import { useMemo } from "react";
-import { Card } from "@/shared/ui-components/card";
-import { Badge } from "@/shared/ui-components/badge";
+import { ChevronDown } from "lucide-react";
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { getSampleSchemas } from "@/schemas/utils/load-schemas";
+import {
+  getSampleSchemas,
+  getSchemaFormat,
+} from "@/schemas/utils/load-schemas";
 import { parseSchema } from "@/schemas/parsers";
 
 interface SampleSchemaSelectorProps {
   currentInput: string;
-  format: "sql" | "mermaid";
   onSelect: (schema: DatabaseSchema) => void;
 }
 
+function formatBadgeLabel(format: string): string {
+  if (format === "mermaid") return "Mermaid";
+  if (format === "drawdb") return "DrawDB";
+  return "SQL";
+}
+
 /**
- * Component for selecting sample schemas
+ * Dropdown for selecting a sample schema.
  */
 export function SampleSchemaSelector({
   currentInput,
-  format: _format,
   onSelect,
 }: SampleSchemaSelectorProps) {
-  // Determine which schema matches the current input
-  const selectedSchema = useMemo(() => {
-    if (!currentInput.trim()) return null;
+  const samples = useMemo(() => getSampleSchemas(), []);
 
-    // Auto-detect format by trying both parsers
+  const selectedName = useMemo(() => {
+    if (!currentInput.trim()) return "";
+
     const parsed = parseSchema(currentInput);
-    if (!parsed) return null;
+    if (!parsed) return "";
 
-    // Compare table names and counts
     const parsedTableNames = new Set(parsed.tables.map((t) => t.name).sort());
 
-    for (const schema of getSampleSchemas()) {
+    for (const schema of samples) {
       const schemaTableNames = new Set(schema.tables.map((t) => t.name).sort());
       if (
         parsedTableNames.size === schemaTableNames.size &&
         Array.from(parsedTableNames).every((name) => schemaTableNames.has(name))
       ) {
-        return schema;
+        return schema.name;
       }
     }
 
-    return null;
-  }, [currentInput]);
+    return "";
+  }, [currentInput, samples]);
 
   return (
     <div className="w-full">
-      <h3 className="text-xs sm:text-sm font-semibold text-slate-300 mb-2 sm:mb-3">
-        Sample Schemas
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full">
-        {getSampleSchemas().map((schema) => {
-          const isSelected = selectedSchema?.name === schema.name;
-          const tableCount = schema.tables.filter((t) => !t.isView).length;
-          const viewCount = schema.tables.filter((t) => t.isView).length;
-          return (
-            <Card
-              key={schema.name}
-              className={`p-3 sm:p-4 cursor-pointer transition-all w-full ${
-                isSelected
-                  ? "bg-blue-500/20 border-blue-500"
-                  : "bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600"
-              }`}
-              onClick={() => onSelect(schema)}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-white text-sm sm:text-base truncate">
-                      {schema.name}
-                    </h4>
-                    <Badge
-                      variant="outline"
-                      className={`text-xs px-1.5 py-0 ${
-                        schema.format === "mermaid"
-                          ? "border-purple-500 text-purple-400"
-                          : "border-blue-500 text-blue-400"
-                      }`}
-                    >
-                      {schema.format === "mermaid" ? "Mermaid" : "SQL"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-400">
-                    {tableCount} {tableCount === 1 ? "table" : "tables"}
-                    {viewCount > 0 && (
-                      <>
-                        , {viewCount} {viewCount === 1 ? "view" : "views"}
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+      <label
+        htmlFor="sample-schema-select"
+        className="block text-xs sm:text-sm font-semibold text-slate-300 mb-2"
+      >
+        Sample schema
+      </label>
+      <div className="relative">
+        <select
+          id="sample-schema-select"
+          value={selectedName}
+          onChange={(e) => {
+            const schema = samples.find((s) => s.name === e.target.value);
+            if (schema) onSelect(schema);
+          }}
+          className="w-full appearance-none h-9 rounded-md border border-slate-700 bg-slate-800 text-white text-sm pl-3 pr-9 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="" disabled>
+            Select a sample…
+          </option>
+          {samples.map((schema) => {
+            const tableCount = schema.tables.filter((t) => !t.isView).length;
+            const viewCount = schema.tables.filter((t) => t.isView).length;
+            const sourceFormat = getSchemaFormat(schema.name);
+            const views =
+              viewCount > 0
+                ? `, ${viewCount} ${viewCount === 1 ? "view" : "views"}`
+                : "";
+            return (
+              <option key={schema.name} value={schema.name}>
+                {schema.name} ({formatBadgeLabel(sourceFormat)} · {tableCount}{" "}
+                {tableCount === 1 ? "table" : "tables"}
+                {views})
+              </option>
+            );
+          })}
+        </select>
+        <ChevronDown
+          size={16}
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+          aria-hidden
+        />
       </div>
     </div>
   );

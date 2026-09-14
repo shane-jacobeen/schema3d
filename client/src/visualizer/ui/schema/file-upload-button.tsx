@@ -1,16 +1,26 @@
 import { useRef, ChangeEvent } from "react";
 import { Upload } from "lucide-react";
 import { Button } from "@/shared/ui-components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui-components/tooltip";
 import type { SchemaFormat } from "@/schemas/parsers";
 import { parseSchema } from "@/schemas/parsers";
 import { useToast } from "@/shared/ui-components/toast";
+import {
+  isAcceptedSchemaUploadFilename,
+  SCHEMA_UPLOAD_ACCEPT,
+} from "./schema-upload-utils";
 
 interface FileUploadButtonProps {
   onFileLoad: (content: string, format: SchemaFormat) => void;
 }
 
 /**
- * Component for uploading schema files
+ * Component for uploading schema files (SQL, Mermaid, DrawDB JSON/.ddb)
  */
 export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -20,14 +30,8 @@ export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check file extension
-    const fileName = file.name.toLowerCase();
-    const isValidFile =
-      fileName.endsWith(".sql") ||
-      fileName.endsWith(".mmd") ||
-      fileName.endsWith(".mermaid");
-    if (!isValidFile) {
-      toast.error("Please upload a .sql, .mmd, or .mermaid file");
+    if (!isAcceptedSchemaUploadFilename(file.name)) {
+      toast.error("Please upload a .sql, .mmd, .mermaid, .json, or .ddb file");
       return;
     }
 
@@ -40,7 +44,6 @@ export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
           return;
         }
 
-        // Auto-detect format by parsing
         const parsed = parseSchema(content);
         const detectedFormat = parsed?.format || "sql";
         onFileLoad(content, detectedFormat);
@@ -59,7 +62,6 @@ export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
     };
     reader.readAsText(file, "UTF-8");
 
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -74,18 +76,30 @@ export function FileUploadButton({ onFileLoad }: FileUploadButtonProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".sql,.mmd,.mermaid,.txt,text/plain,application/sql"
+        accept={SCHEMA_UPLOAD_ACCEPT}
         onChange={handleFileUpload}
         className="hidden"
       />
-      <Button
-        size="icon-sm"
-        variant="outline"
-        onClick={handleClick}
-        title="Upload Schema File"
-      >
-        <Upload size={18} className="sm:w-5 sm:h-5" />
-      </Button>
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="outline"
+              onClick={handleClick}
+              aria-label="Upload schema file"
+            >
+              <Upload size={18} className="sm:w-5 sm:h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="left"
+            className="bg-slate-800 text-white border-slate-700"
+          >
+            Upload schema file
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </>
   );
 }

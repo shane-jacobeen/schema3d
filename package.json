@@ -1,6 +1,6 @@
 {
   "name": "schema3d",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A 3D database schema visualization tool that renders database schemas as interactive 3D objects",
   "type": "module",
   "license": "MIT",
@@ -21,10 +21,11 @@
     "three.js",
     "sql",
     "mermaid",
-    "erd"
+    "erd",
+    "drawdb"
   ],
   "scripts": {
-    "dev": "tsx server/index.ts",
+    "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "NODE_ENV=production vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
@@ -36,6 +37,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "ci": "npm run lint && npm run format:check && npm run check && npm run test:coverage && npm run build && test -f dist/index.js && test -d dist/public",
     "prepare": "husky"
   },
   "dependencies": {

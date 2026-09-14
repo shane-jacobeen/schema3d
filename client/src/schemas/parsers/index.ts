@@ -3,3 +3,4 @@ export * from "./parsers";
 export * from "./sql-parser";
 export * from "./mermaid-parser";
 export * from "./parser-utils";
+export * from "./drawdb";

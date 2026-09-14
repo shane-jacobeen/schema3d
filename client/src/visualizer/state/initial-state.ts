@@ -117,3 +117,37 @@ export function getInitialSchema(): DatabaseSchema {
   const baseSchema = getDefaultBaseSchema();
   return applyLayoutToSchema(baseSchema, DEFAULT_LAYOUT, DEFAULT_VIEW_MODE);
 }
+
+/**
+ * If the page was opened with ?drawdbShareId=<gistId> (or a full DrawDB
+ * share URL in ?drawdb=), fetch the gist and return a schema. Does not
+ * touch #sql: / #pako: hashes.
+ *
+ * Returns null when the query param is absent or fetch/parse fails.
+ * Callers should toast on failure; this is async for use outside getInitialSchema.
+ */
+export async function tryLoadDrawdbShareFromQuery(
+  search: string = typeof window !== "undefined" ? window.location.search : ""
+): Promise<DatabaseSchema | null> {
+  const params = new URLSearchParams(search);
+  const shareParam = params.get("drawdbShareId") || params.get("drawdb");
+
+  if (!shareParam) {
+    return null;
+  }
+
+  try {
+    const { fetchDrawdbShareJson, parseDrawdbShareId } =
+      await import("@/schemas/parsers/drawdb");
+    const shareId = parseDrawdbShareId(shareParam) || shareParam.trim();
+    const json = await fetchDrawdbShareJson(shareId);
+    const parsed = parseSchema(json, "drawdb");
+    if (!parsed) {
+      return null;
+    }
+    return applyLayoutToSchema(parsed, DEFAULT_LAYOUT, DEFAULT_VIEW_MODE);
+  } catch (error) {
+    console.error("Failed to load DrawDB share from query:", error);
+    return null;
+  }
+}

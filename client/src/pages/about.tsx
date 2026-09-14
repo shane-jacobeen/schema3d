@@ -50,8 +50,8 @@ export default function About() {
                   spatial environment.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
-                  Import schemas from SQL scripts or Mermaid ER diagrams,
-                  organize tables with custom categories, and share
+                  Import schemas from SQL scripts, Mermaid ER diagrams, or
+                  DrawDB JSON, organize tables with custom categories, and share
                   visualizations with your team. Schema3D provides everything
                   you need to understand and document complex database
                   structures. Explore the features below to see how Schema3D can
@@ -156,6 +156,18 @@ export default function About() {
                           Server database visualization.
                         </span>
                       </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-blue-400 mt-1">•</span>
+                        <span>
+                          <strong className="text-white">
+                            DrawDB JSON Import & Edit:
+                          </strong>{" "}
+                          Import DrawDB diagrams as JSON (or{" "}
+                          <code className="text-slate-200">.ddb</code>), paste a
+                          DrawDB share link or gist ID, and open the current
+                          schema in DrawDB with one click for 2D editing.
+                        </span>
+                      </li>
                     </ul>
                   </TabsContent>
 
@@ -184,7 +196,8 @@ export default function About() {
                           Share your database visualizations instantly with a
                           single click. The share button copies a compressed URL
                           to your clipboard that anyone can use to view the
-                          exact same schema with your customizations applied.
+                          exact same schema — including your in-editor edits —
+                          with your customizations applied.
                         </span>
                       </li>
                     </ul>
@@ -248,9 +261,9 @@ export default function About() {
                 <p className="text-slate-300 leading-relaxed mb-3">
                   Built with React, Three.js, and React Three Fiber for powerful
                   3D rendering, combined with custom parsers that support
-                  standard SQL, T-SQL syntax, and Mermaid ER diagram format. The
-                  database visualization engine uses physics-based layout
-                  algorithms and graph theory to create intuitive spatial
+                  standard SQL, T-SQL syntax, Mermaid ER diagrams, and DrawDB
+                  JSON. The database visualization engine uses physics-based
+                  layout algorithms and graph theory to create intuitive spatial
                   arrangements of your database structure.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
@@ -260,7 +273,7 @@ export default function About() {
                   lines with cardinality notation. Schema3D is a modern
                   web-based tool that runs entirely in your browser, requiring
                   no installation or database connections. It works with MySQL,
-                  PostgreSQL, SQL Server, and Mermaid ER diagrams.
+                  PostgreSQL, SQL Server, Mermaid ER diagrams, and DrawDB JSON.
                 </p>
               </div>
 
@@ -295,6 +308,18 @@ export default function About() {
                     </p>
                   </section>
 
+                  <section id="drawdb-json">
+                    <h3 className="text-base font-semibold text-white mb-1">
+                      Does Schema3D support DrawDB JSON?
+                    </h3>
+                    <p>
+                      Yes. Import DrawDB diagram JSON (or{" "}
+                      <code className="text-slate-200">.ddb</code> files), paste
+                      a DrawDB share link or gist ID, and use Edit in DrawDB to
+                      open the current schema in DrawDB for 2D editing.
+                    </p>
+                  </section>
+
                   <section id="privacy">
                     <h3 className="text-base font-semibold text-white mb-1">
                       Does schema data leave the browser?
@@ -303,7 +328,8 @@ export default function About() {
                       Schema3D runs as a browser-based visualizer. Schema text
                       is parsed locally in the web app and does not require a
                       database connection. Shared links encode schema data in
-                      the URL so collaborators can open the same view.
+                      the URL so collaborators can open the same view. Loading a
+                      DrawDB share link fetches the diagram from GitHub Gists.
                     </p>
                   </section>
 
@@ -353,7 +379,7 @@ export default function About() {
                     >
                       GitHub Discussions
                     </a>
-                    —it's the best place to connect with other users and share
+                    ; it's the best place to connect with other users and share
                     ideas!
                   </p>
                   <p>
