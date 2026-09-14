@@ -5,6 +5,7 @@ export {
   parseDrawdbShareId,
   isDrawdbShareUrl,
   fetchDrawdbShareJson,
+  formatDrawdbJsonForEditor,
   DrawdbShareError,
 } from "./fetch-share";
 export type {

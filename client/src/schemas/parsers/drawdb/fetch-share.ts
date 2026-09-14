@@ -52,6 +52,19 @@ export function isDrawdbShareUrl(text: string): boolean {
   return parseDrawdbShareId(text) !== null && /drawdb\.app/i.test(text.trim());
 }
 
+/**
+ * Pretty-print DrawDB JSON for the schema editor.
+ * Gist share payloads are often minified; reopening the dialog uses
+ * schemaToFormat which is indented — match that on first paste/load.
+ */
+export function formatDrawdbJsonForEditor(raw: string): string {
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
+}
+
 type GistFile = {
   content?: string;
   truncated?: boolean;
@@ -155,7 +168,7 @@ export async function fetchDrawdbShareJson(
         "Gist has no share.json content. Export JSON from DrawDB and import the file instead."
       );
     }
-    return rawContent;
+    return formatDrawdbJsonForEditor(rawContent);
   }
 
   const content = shareFile.content;
@@ -165,5 +178,5 @@ export async function fetchDrawdbShareJson(
     );
   }
 
-  return content;
+  return formatDrawdbJsonForEditor(content);
 }

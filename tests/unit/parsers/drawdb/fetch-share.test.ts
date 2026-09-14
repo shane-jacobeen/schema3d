@@ -49,13 +49,14 @@ describe("fetchDrawdbShareJson", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns share.json content on success", async () => {
-    const content = JSON.stringify({
+  it("returns pretty-printed share.json content on success", async () => {
+    const diagram = {
       tables: [],
       relationships: [],
       notes: [],
       subjectAreas: [],
-    });
+    };
+    const content = JSON.stringify(diagram);
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -69,11 +70,29 @@ describe("fetchDrawdbShareJson", () => {
       "https://drawdb.app/editor?shareId=abcdef0123456789abcdef0123456789",
       fetchImpl as unknown as typeof fetch
     );
-    expect(result).toBe(content);
+    expect(result).toBe(JSON.stringify(diagram, null, 2));
     expect(fetchImpl).toHaveBeenCalledWith(
       "https://api.github.com/gists/abcdef0123456789abcdef0123456789",
       expect.any(Object)
     );
+  });
+
+  it("pretty-prints minified gist JSON for the editor", async () => {
+    const minified =
+      '{"tables":[{"id":0,"name":"t","fields":[]}],"relationships":[],"notes":[],"subjectAreas":[]}';
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        files: { "share.json": { content: minified } },
+      }),
+    });
+
+    const result = await fetchDrawdbShareJson(
+      "abcdef0123456789abcdef0123456789",
+      fetchImpl as unknown as typeof fetch
+    );
+    expect(result).toContain("\n");
+    expect(JSON.parse(result)).toEqual(JSON.parse(minified));
   });
 
   it("throws DrawdbShareError on HTTP failure", async () => {
@@ -149,7 +168,7 @@ describe("fetchDrawdbShareJson", () => {
       "abcdef0123456789abcdef0123456789",
       fetchImpl as unknown as typeof fetch
     );
-    expect(result).toBe(fullContent);
+    expect(result).toBe(JSON.stringify(JSON.parse(fullContent), null, 2));
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
@@ -192,12 +211,13 @@ describe("fetchDrawdbShareJson", () => {
   });
 
   it("falls back to first JSON-looking gist file when share.json is absent", async () => {
-    const content = JSON.stringify({
+    const diagram = {
       tables: [{ id: 0, name: "t", fields: [] }],
       relationships: [],
       notes: [],
       subjectAreas: [],
-    });
+    };
+    const content = JSON.stringify(diagram);
     const fetchImpl = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -211,6 +231,6 @@ describe("fetchDrawdbShareJson", () => {
       "abcdef0123456789abcdef0123456789",
       fetchImpl as unknown as typeof fetch
     );
-    expect(result).toBe(content);
+    expect(result).toBe(JSON.stringify(diagram, null, 2));
   });
 });
