@@ -8,12 +8,20 @@ const previewImageUrl = "https://schema3d.com/images/preview.png";
 export function SchemaMetadata() {
   return (
     <Helmet>
-      <title>Schema3D: 3D Database Schema Visualizer for SQL & Mermaid</title>
+      <title>Schema3D: Interactive Open-Source Schema Visualizer</title>
       <meta
         name="description"
-        content="Free open-source 3D database schema visualizer for SQL, T-SQL, and Mermaid ER diagrams. Explore tables, columns, primary keys, foreign keys, and shareable schema views in your browser."
+        content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
       />
-      <link rel="canonical" href="https://schema3d.com" />
+      <link rel="canonical" href="https://schema3d.com/" />
+      <meta
+        property="og:title"
+        content="Schema3D: Interactive Open-Source Schema Visualizer"
+      />
+      <meta
+        property="og:description"
+        content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
+      />
       <meta property="og:image" content={previewImageUrl} />
       <meta
         property="og:image:alt"
@@ -30,19 +38,19 @@ export function SchemaMetadata() {
 export function AboutPageMetadata() {
   return (
     <Helmet>
-      <title>About Schema3D - Database Visualization Tool | Schema3D</title>
+      <title>About Schema3D: The Open-Source Schema Visualizer</title>
       <meta
         name="description"
-        content="Learn how Schema3D visualizes SQL, T-SQL, and Mermaid ER diagrams in 3D, including browser-only parsing, shareable URLs, schema relationship mapping, and export support."
+        content="How Schema3D works as a browser-only, interactive 3D schema visualizer. Supports SQL, T-SQL, Mermaid ER, and DrawDB. Built for exploring relationships without a live database."
       />
       <link rel="canonical" href="https://schema3d.com/about" />
       <meta
         property="og:title"
-        content="About Schema3D - Database Visualization Tool"
+        content="About Schema3D: The Open-Source Schema Visualizer"
       />
       <meta
         property="og:description"
-        content="Learn how Schema3D visualizes SQL, T-SQL, and Mermaid ER diagrams in 3D, including browser-only parsing, shareable URLs, schema relationship mapping, and export support."
+        content="How Schema3D works as a browser-only, interactive 3D schema visualizer. Supports SQL, T-SQL, Mermaid ER, and DrawDB. Built for exploring relationships without a live database."
       />
       <meta property="og:url" content="https://schema3d.com/about" />
       <meta property="og:image" content={previewImageUrl} />
@@ -52,11 +60,11 @@ export function AboutPageMetadata() {
       />
       <meta
         name="twitter:title"
-        content="About Schema3D - Database Visualization Tool"
+        content="About Schema3D: The Open-Source Schema Visualizer"
       />
       <meta
         name="twitter:description"
-        content="Learn how Schema3D visualizes SQL, T-SQL, and Mermaid ER diagrams in 3D with browser-only parsing and shareable schema URLs."
+        content="How Schema3D works as a browser-only, interactive 3D schema visualizer. Supports SQL, T-SQL, Mermaid ER, and DrawDB. Built for exploring relationships without a live database."
       />
       <meta name="twitter:image" content={previewImageUrl} />
       <script type="application/ld+json">
