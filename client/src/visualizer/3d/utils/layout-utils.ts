@@ -2,10 +2,9 @@ import type { DatabaseSchema } from "@/shared/types/schema";
 import {
   applyLayoutToSchema,
   applyLayoutToSchemaAsync,
+  shouldApplyLayoutAsync,
 } from "@/visualizer/state/utils/schema-utils";
 import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
-
-const FORCE_LAYOUT_WORKER_THRESHOLD = 50;
 
 /**
  * Apply layout to filtered schema and merge positions back into full schema
@@ -50,7 +49,7 @@ export function shouldUseAsyncForceLayout(
   tableCount: number,
   layout: LayoutType
 ): boolean {
-  return layout === "force" && tableCount >= FORCE_LAYOUT_WORKER_THRESHOLD;
+  return shouldApplyLayoutAsync(tableCount, layout);
 }
 
 function mergeLayoutPositions(

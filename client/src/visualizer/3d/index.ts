@@ -3,7 +3,7 @@ export * from "./components/relationships/cardinality";
 export * from "./components/relationships/relationship-utils";
 export * from "./components/tables/table-utils";
 export * from "./utils/camera-utils";
-export * from "./utils/layout-algorithm";
+export * from "@/visualizer/layout/layout-algorithm";
 export * from "./constants";
 export * from "./types";
 

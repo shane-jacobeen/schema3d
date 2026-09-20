@@ -5,11 +5,14 @@ import { useSchemaState } from "@/visualizer/state/hooks/use-schema-state";
 
 const mockApplyLayoutToSchema = vi.fn();
 const mockApplyLayoutToSchemaAsync = vi.fn();
+const mockShouldApplyLayoutAsync = vi.fn();
 
 vi.mock("@/visualizer/state/utils/schema-utils", () => ({
   applyLayoutToSchema: (...args: unknown[]) => mockApplyLayoutToSchema(...args),
   applyLayoutToSchemaAsync: (...args: unknown[]) =>
     mockApplyLayoutToSchemaAsync(...args),
+  shouldApplyLayoutAsync: (...args: unknown[]) =>
+    mockShouldApplyLayoutAsync(...args),
 }));
 
 describe("useSchemaState", () => {
@@ -47,9 +50,12 @@ describe("useSchemaState", () => {
     mockApplyLayoutToSchemaAsync.mockImplementation(
       async (schema: DatabaseSchema) => schema
     );
+    mockShouldApplyLayoutAsync.mockImplementation(
+      (tableCount: number) => tableCount >= 50
+    );
   });
 
-  it("falls back to async layout when sync force layout path throws for large schema", async () => {
+  it("uses async layout for large force-layout schemas", async () => {
     const clearAllSelections = vi.fn();
     const handleRecenter = vi.fn();
     const onCategoriesReset = vi.fn();
@@ -58,15 +64,6 @@ describe("useSchemaState", () => {
     const { result } = renderHook(() =>
       useSchemaState(clearAllSelections, handleRecenter, () => "3D")
     );
-
-    mockApplyLayoutToSchema.mockImplementation((schema: DatabaseSchema) => {
-      if (schema.name === "Large Schema") {
-        throw new Error(
-          "Large force-directed layouts must use applyLayoutToSchemaAsync"
-        );
-      }
-      return schema;
-    });
 
     expect(() => {
       act(() => {
@@ -78,7 +75,13 @@ describe("useSchemaState", () => {
     }).not.toThrow();
 
     await waitFor(() => {
+      expect(mockShouldApplyLayoutAsync).toHaveBeenCalledWith(200, "force");
       expect(mockApplyLayoutToSchemaAsync).toHaveBeenCalled();
+      expect(mockApplyLayoutToSchema).not.toHaveBeenCalledWith(
+        largeSchema,
+        expect.anything(),
+        expect.anything()
+      );
       expect(result.current.currentSchema.name).toBe("Large Schema");
     });
 

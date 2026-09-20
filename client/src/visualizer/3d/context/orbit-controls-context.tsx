@@ -6,7 +6,8 @@ import type { ComponentRef } from "react";
 export type OrbitControlsRef = ComponentRef<typeof DreiOrbitControls> | null;
 
 /**
- * Shared ref for OrbitControls, set inside the Canvas and read from hooks/components.
+ * Shared ref for OrbitControls. Written inside the Canvas; read from hooks
+ * and camera utilities that sit outside the React tree.
  */
 export const orbitControlsRefHolder: { current: OrbitControlsRef } = {
   current: null,
@@ -29,6 +30,7 @@ export function OrbitControlsProvider({
   );
 }
 
+/** Prefer context inside Canvas; fall back to the module holder outside it. */
 export function useOrbitControlsRef(): MutableRefObject<OrbitControlsRef> {
   const contextRef = useContext(OrbitControlsContext);
   if (contextRef) {
@@ -39,8 +41,4 @@ export function useOrbitControlsRef(): MutableRefObject<OrbitControlsRef> {
 
 export function getOrbitControls(): OrbitControlsRef {
   return orbitControlsRefHolder.current;
-}
-
-export function setOrbitControls(controls: OrbitControlsRef): void {
-  orbitControlsRefHolder.current = controls;
 }

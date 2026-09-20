@@ -1,14 +1,15 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { computeForceDirectedLayout } from "./force-layout-core";
-import ForceLayoutWorker from "../workers/force-layout.worker?worker";
+import ForceLayoutWorker from "./workers/force-layout.worker?worker";
 
-const WORKER_THRESHOLD = 50;
+/** Schemas at or above this table count use a web worker for force layout. */
+export const FORCE_LAYOUT_WORKER_THRESHOLD = 50;
 
 export function runForceDirectedLayout(
   schema: DatabaseSchema,
   viewMode: "2D" | "3D" = "3D"
 ): DatabaseSchema | Promise<DatabaseSchema> {
-  if (schema.tables.length < WORKER_THRESHOLD) {
+  if (schema.tables.length < FORCE_LAYOUT_WORKER_THRESHOLD) {
     return computeForceDirectedLayout(schema, viewMode);
   }
 

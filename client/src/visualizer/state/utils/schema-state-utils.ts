@@ -1,5 +1,0 @@
-export {
-  initializeCategories,
-  getInitialCategories,
-  updateCategoriesForSchema,
-} from "./category-state-utils";

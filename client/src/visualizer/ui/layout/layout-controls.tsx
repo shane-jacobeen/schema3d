@@ -21,7 +21,6 @@ export type { LayoutType } from "@/visualizer/state/initial-state";
 interface LayoutControlsProps {
   schema: DatabaseSchema;
   onSchemaChange: (schema: DatabaseSchema) => void;
-  onCategoryUpdate?: (schema: DatabaseSchema) => void;
   currentLayout?: LayoutType;
   onLayoutChange?: (layout: LayoutType) => void;
   viewMode?: "2D" | "3D";
@@ -81,7 +80,6 @@ function LayoutButton({
 export function LayoutControls({
   schema,
   onSchemaChange,
-  onCategoryUpdate,
   currentLayout = DEFAULT_LAYOUT,
   onLayoutChange,
   viewMode = DEFAULT_VIEW_MODE,
@@ -101,7 +99,6 @@ export function LayoutControls({
           selectedCategories={selectedCategories}
           onCategoryToggle={onCategoryToggle}
           onSchemaChange={onSchemaChange}
-          onCategoryUpdate={onCategoryUpdate}
         />
 
         {/* View Mode and Layout - always visible */}

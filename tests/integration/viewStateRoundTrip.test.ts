@@ -6,11 +6,8 @@ import {
   encodeSchemaToUrl,
   decodeSchemaFromUrl,
 } from "@/shared/utils/url-encoding";
-import {
-  RETAILER_SQL,
-  BLOG_PLATFORM_SQL,
-  UNIVERSITY_MERMAID,
-} from "@/schemas/utils/load-schemas";
+import { RETAILER_SQL, UNIVERSITY_MERMAID } from "@/schemas/utils/load-schemas";
+import { BLOG_PLATFORM_SQL } from "../fixtures/blog-platform-sql";
 import { parseSqlSchema } from "@/schemas/parsers/sql-parser";
 import {
   setPendingViewState,

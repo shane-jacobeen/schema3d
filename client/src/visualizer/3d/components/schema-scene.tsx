@@ -27,34 +27,41 @@ import type { Relationship } from "@/visualizer/3d/types";
 import { shouldDimTable, isTableInRelationship } from "@/visualizer/3d/index";
 import {
   OrbitControlsProvider,
-  setOrbitControls,
   type OrbitControlsRef,
 } from "@/visualizer/3d/context/orbit-controls-context";
 import { captureSchemaVisualizedIfPending } from "@/shared/analytics";
 
-interface SchemaSceneProps {
+export interface SchemaSceneRefs {
   orbitControlsRef: MutableRefObject<OrbitControlsRef>;
-  schema: DatabaseSchema;
+  glCanvasRef: MutableRefObject<HTMLCanvasElement | null>;
+}
+
+export interface SchemaSceneFilter {
   visibleTables: DatabaseSchema["tables"];
   visibleTableNames: Set<string>;
-  selectedTable: Table | null;
-  hoveredTable: Table | null;
-  selectedRelationship: Relationship | null;
-  hoveredRelationship: Relationship | null;
   filteredTables: Set<string>;
   relatedTables: Set<string>;
   connectedTables: Set<string>;
   isFiltering: boolean;
+}
+
+export interface SchemaSceneSelection {
+  selectedTable: Table | null;
+  hoveredTable: Table | null;
+  selectedRelationship: Relationship | null;
+  hoveredRelationship: Relationship | null;
+}
+
+export interface SchemaSceneAnimation {
   targetPositions: Map<string, [number, number, number]>;
-  animatedPositions: Map<string, [number, number, number]>;
   animationStartTime: number | null;
   isAnimating: boolean;
-  animatedPositionsRef: React.MutableRefObject<
-    Map<string, [number, number, number]>
-  >;
+  animatedPositionsRef: MutableRefObject<Map<string, [number, number, number]>>;
+}
+
+export interface SchemaSceneCamera {
   maxCameraDistance: number;
   isCameraAnimating: boolean;
-  isDraggingTable: boolean;
   shouldRecenter: boolean;
   defaultCameraPosition: THREE.Vector3;
   recenterTarget: THREE.Vector3 | null;
@@ -62,6 +69,10 @@ interface SchemaSceneProps {
   recenterTranslateOnly: boolean;
   recenterOrbitOnly: boolean;
   restrictPolarAngle: boolean;
+}
+
+export interface SchemaSceneHandlers {
+  isDraggingTable: boolean;
   onTableSelect: (table: Table | null) => void;
   onTableHover: (table: Table | null) => void;
   onTableLongPress: (table: Table) => void;
@@ -80,53 +91,77 @@ interface SchemaSceneProps {
   onDragEnd: () => void;
   onRecenterComplete: () => void;
   onAnimatingChange: (isAnimating: boolean) => void;
-  glCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
   onPointerMissed: () => void;
 }
 
+interface SchemaSceneProps {
+  refs: SchemaSceneRefs;
+  schema: DatabaseSchema;
+  filter: SchemaSceneFilter;
+  selection: SchemaSceneSelection;
+  animation: SchemaSceneAnimation;
+  camera: SchemaSceneCamera;
+  handlers: SchemaSceneHandlers;
+}
+
 export function SchemaScene({
-  orbitControlsRef,
+  refs,
   schema,
-  visibleTables,
-  visibleTableNames,
-  selectedTable,
-  hoveredTable,
-  selectedRelationship,
-  hoveredRelationship,
-  filteredTables,
-  relatedTables,
-  connectedTables,
-  isFiltering,
-  targetPositions,
-  animatedPositions: _animatedPositions,
-  animationStartTime,
-  isAnimating,
-  animatedPositionsRef,
-  maxCameraDistance,
-  isCameraAnimating,
-  isDraggingTable,
-  shouldRecenter,
-  defaultCameraPosition,
-  recenterTarget,
-  recenterLookAt,
-  recenterTranslateOnly,
-  recenterOrbitOnly,
-  restrictPolarAngle,
-  onTableSelect,
-  onTableHover,
-  onTableLongPress,
-  onTablePositionChange,
-  onRelationshipSelect,
-  onRelationshipHover,
-  onRelationshipLongPress,
-  onAnimatedPositionChange,
-  onDragStart,
-  onDragEnd,
-  onRecenterComplete,
-  onAnimatingChange,
-  glCanvasRef,
-  onPointerMissed,
+  filter,
+  selection,
+  animation,
+  camera,
+  handlers,
 }: SchemaSceneProps) {
+  const { orbitControlsRef, glCanvasRef } = refs;
+  const {
+    visibleTables,
+    visibleTableNames,
+    filteredTables,
+    relatedTables,
+    connectedTables,
+    isFiltering,
+  } = filter;
+  const {
+    selectedTable,
+    hoveredTable,
+    selectedRelationship,
+    hoveredRelationship,
+  } = selection;
+  const {
+    targetPositions,
+    animationStartTime,
+    isAnimating,
+    animatedPositionsRef,
+  } = animation;
+  const {
+    maxCameraDistance,
+    isCameraAnimating,
+    shouldRecenter,
+    defaultCameraPosition,
+    recenterTarget,
+    recenterLookAt,
+    recenterTranslateOnly,
+    recenterOrbitOnly,
+    restrictPolarAngle,
+  } = camera;
+  const {
+    isDraggingTable,
+    onTableSelect,
+    onTableHover,
+    onTableLongPress,
+    onTablePositionChange,
+    onRelationshipSelect,
+    onRelationshipHover,
+    onRelationshipLongPress,
+    onAnimatedPositionChange,
+    onDragStart,
+    onDragEnd,
+    onRecenterComplete,
+    onAnimatingChange,
+    onPointerMissed,
+  } = handlers;
+
   const [support] = useState(detectWebGLSupport);
   const canvasReadyRef = useRef(false);
 
@@ -169,7 +204,6 @@ export function SchemaScene({
           <OrbitControls
             ref={(controls) => {
               orbitControlsRef.current = controls;
-              setOrbitControls(controls);
             }}
             enableDamping
             dampingFactor={0.05}

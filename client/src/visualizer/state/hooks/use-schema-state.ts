@@ -3,6 +3,7 @@ import type { DatabaseSchema } from "@/shared/types/schema";
 import {
   applyLayoutToSchema,
   applyLayoutToSchemaAsync,
+  shouldApplyLayoutAsync,
 } from "@/visualizer/state/utils/schema-utils";
 import {
   getInitialSchema,
@@ -135,29 +136,20 @@ export function useSchemaState(
         handleRecenter();
       };
 
-      try {
-        // Apply default layout to the new schema with current view mode
-        const layoutSchema = applyLayout(newSchema, DEFAULT_LAYOUT);
-        applySchema(layoutSchema);
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message.includes("applyLayoutToSchemaAsync")
-        ) {
-          const viewMode = getViewMode();
-          void applyLayoutToSchemaAsync(newSchema, DEFAULT_LAYOUT, viewMode)
-            .then((layoutSchema) => {
-              applySchema(layoutSchema);
-            })
-            .catch(() => {
-              // Fall back to raw schema if async layout fails for any reason.
-              applySchema(newSchema);
-            });
-          return;
-        }
-
-        throw error;
+      const viewMode = getViewMode();
+      if (shouldApplyLayoutAsync(newSchema.tables.length, DEFAULT_LAYOUT)) {
+        void applyLayoutToSchemaAsync(newSchema, DEFAULT_LAYOUT, viewMode)
+          .then((layoutSchema) => {
+            applySchema(layoutSchema);
+          })
+          .catch(() => {
+            // Fall back to raw schema if async layout fails for any reason.
+            applySchema(newSchema);
+          });
+        return;
       }
+
+      applySchema(applyLayout(newSchema, DEFAULT_LAYOUT));
     },
     [applyLayout, clearAllSelections, getViewMode, handleRecenter]
   );

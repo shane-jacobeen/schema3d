@@ -147,3 +147,21 @@ export function createCategoryColorMap(
 
   return categoryMap;
 }
+
+/**
+ * Get an existing category color or assign the next palette color.
+ */
+export function getOrAssignCategoryColor(
+  categoryMap: Map<string, string>,
+  category: string,
+  colorPalette: readonly string[] = COLOR_PALETTE
+): string {
+  const existing = categoryMap.get(category);
+  if (existing) {
+    return existing;
+  }
+
+  const color = colorPalette[categoryMap.size % colorPalette.length] as string;
+  categoryMap.set(category, color);
+  return color;
+}
