@@ -26,7 +26,10 @@ export function useLayoutManagement(
   visibleTables: DatabaseSchema["tables"],
   selectedCategories: Set<string>,
   startTableAnimation: (schema: DatabaseSchema) => void,
-  frameCameraForViewMode: (mode: "2D" | "3D") => void
+  frameCameraForViewMode: (
+    mode: "2D" | "3D",
+    tables?: DatabaseSchema["tables"]
+  ) => void
 ): UseLayoutManagementReturn {
   // Check for view state from URL on first render (before it's consumed)
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => {
@@ -58,9 +61,9 @@ export function useLayoutManagement(
         visibleTables.map((t) => t.name)
       );
       // A schema that loads directly in 2D (shared link or persisted state)
-      // uses the same 45° elevation check as the toggle.
+      // needs the same untilt + FOV fit as the toggle.
       if (viewMode === "2D") {
-        frameCameraForViewMode(viewMode);
+        frameCameraForViewMode(viewMode, visibleTables);
       }
       return;
     }
@@ -82,8 +85,8 @@ export function useLayoutManagement(
     prevViewModeRef.current = viewMode;
     prevVisibleTableNamesRef.current = currentVisibleNames;
 
-    // Rotate above the graph only when 2D is toggled from a shallow angle.
-    // Returning to 3D leaves the camera where it is.
+    // Untilt immediately on a shallow 2D toggle so the camera does not wait
+    // for layout. Fit distance is applied once the new positions exist.
     if (viewModeChanged) {
       frameCameraForViewMode(viewMode);
     }
@@ -93,6 +96,14 @@ export function useLayoutManagement(
       (layoutChanged || viewModeChanged || visibleTablesChanged) &&
       visibleTables.length > 0
     ) {
+      const fitCameraAfterLayout = (tables: DatabaseSchema["tables"]) => {
+        if (viewMode !== "2D") return;
+        frameCameraForViewMode(
+          viewMode,
+          tables.filter((table) => currentVisibleNames.has(table.name))
+        );
+      };
+
       if (shouldUseAsyncForceLayout(visibleTables.length, currentLayout)) {
         setCurrentSchema((prevSchema) => {
           void applyLayoutToFilteredSchemaAsync(
@@ -103,6 +114,7 @@ export function useLayoutManagement(
           )
             .then((updatedSchema) => {
               startTableAnimation(updatedSchema);
+              fitCameraAfterLayout(updatedSchema.tables);
             })
             .catch((error) => {
               // A failed worker leaves the tables at their old positions.
@@ -123,6 +135,7 @@ export function useLayoutManagement(
         );
 
         startTableAnimation(updatedSchema);
+        fitCameraAfterLayout(updatedSchema.tables);
         return prevSchema;
       });
     }

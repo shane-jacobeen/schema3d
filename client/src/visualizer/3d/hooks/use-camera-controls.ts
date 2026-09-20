@@ -12,6 +12,7 @@ import {
   animateCameraZoom,
   getDefaultCameraPosition,
   getTopDownCameraPosition,
+  getTopDownFitDistance,
   shouldRotateToTopDownFor2D,
 } from "../utils/camera-utils";
 import { getOrbitControls } from "../context/orbit-controls-context";
@@ -35,7 +36,10 @@ interface UseCameraControlsReturn {
   setRestrictPolarAngle: React.Dispatch<React.SetStateAction<boolean>>;
   setIsCameraAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   handleRecenter: () => void;
-  frameCameraForViewMode: (mode: "2D" | "3D") => void;
+  frameCameraForViewMode: (
+    mode: "2D" | "3D",
+    tables?: Array<{ position: [number, number, number] }>
+  ) => void;
 }
 
 export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
@@ -135,33 +139,50 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     defaultCameraPositionRef.current = defaultCameraPosition;
   }, [defaultCameraPosition]);
 
-  // 2D flattens tables onto y=0. Only rotate when the current view is
-  // shallower than 45° (including from below); keep look-at and distance.
-  const frameCameraForViewMode = useCallback((mode: "2D" | "3D") => {
-    if (mode !== "2D") {
+  // 2D flattens tables onto y=0. Untilt when shallower than 45°, and zoom out
+  // far enough that the flattened bounds fit in the FOV.
+  const frameCameraForViewMode = useCallback(
+    (
+      mode: "2D" | "3D",
+      tables: Array<{ position: [number, number, number] }> = []
+    ) => {
+      if (mode !== "2D") {
+        setRestrictPolarAngle(false);
+        return;
+      }
+
+      const orbitControls = getOrbitControls();
+      const lookAt =
+        orbitControls?.target.clone() ?? new THREE.Vector3(0, 0, 0);
+      const from =
+        orbitControls?.object.position.clone() ??
+        defaultCameraPositionRef.current.clone();
+
+      const untilt = shouldRotateToTopDownFor2D(from, lookAt);
+      const fitDistance =
+        tables.length > 0 ? getTopDownFitDistance(tables, lookAt) : 0;
+      const needsZoom = from.distanceTo(lookAt) < fitDistance - 0.5;
+
+      if (!untilt && !needsZoom) {
+        setRestrictPolarAngle(true);
+        return;
+      }
+
+      setRecenterTarget(
+        getTopDownCameraPosition(from, lookAt, {
+          fitDistance,
+          untilt,
+        })
+      );
+      setRecenterLookAt(lookAt);
+      setRecenterTranslateOnly(false);
+      setRecenterOrbitOnly(true);
       setRestrictPolarAngle(false);
-      return;
-    }
-
-    const orbitControls = getOrbitControls();
-    const lookAt = orbitControls?.target.clone() ?? new THREE.Vector3(0, 0, 0);
-    const from =
-      orbitControls?.object.position.clone() ??
-      defaultCameraPositionRef.current.clone();
-
-    if (!shouldRotateToTopDownFor2D(from, lookAt)) {
-      setRestrictPolarAngle(true);
-      return;
-    }
-
-    setRecenterTarget(getTopDownCameraPosition(from, lookAt));
-    setRecenterLookAt(lookAt);
-    setRecenterTranslateOnly(false);
-    setRecenterOrbitOnly(true);
-    setRestrictPolarAngle(false);
-    setIsCameraAnimating(true);
-    setShouldRecenter(true);
-  }, []);
+      setIsCameraAnimating(true);
+      setShouldRecenter(true);
+    },
+    []
+  );
 
   return {
     shouldRecenter,

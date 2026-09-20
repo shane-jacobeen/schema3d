@@ -114,25 +114,47 @@ export function getDefaultCameraPosition(maxDistance: number): THREE.Vector3 {
 }
 
 /**
- * Point directly above the current look-at on the same orbit.
- * Preserves distance and azimuth; only the polar angle changes.
+ * Point above the current look-at on the same azimuth.
+ * Optionally untilts to a top-down polar angle and/or zooms out to fitDistance.
  */
 export function getTopDownCameraPosition(
   currentPosition: THREE.Vector3,
-  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0)
+  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0),
+  options: { fitDistance?: number; untilt?: boolean } = {}
 ): THREE.Vector3 {
+  const { fitDistance = 0, untilt = true } = options;
   const offset = currentPosition.clone().sub(lookAt);
   const spherical = new THREE.Spherical().setFromVector3(offset);
-  spherical.radius = Math.max(spherical.radius, 20);
-  spherical.phi = TOP_DOWN_POLAR_ANGLE;
+  spherical.radius = Math.max(spherical.radius, fitDistance, 20);
+  if (untilt) {
+    spherical.phi = TOP_DOWN_POLAR_ANGLE;
+  }
   spherical.makeSafe();
   return lookAt.clone().add(new THREE.Vector3().setFromSpherical(spherical));
 }
 
 /**
+ * Orbit distance that fits the flattened schema in the camera's vertical FOV.
+ * Measured from lookAt across the XZ plane, with padding.
+ */
+export function getTopDownFitDistance(
+  tables: Array<{ position: [number, number, number] }>,
+  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0)
+): number {
+  let halfExtent = 0;
+  tables.forEach((table) => {
+    const [x, , z] = table.position;
+    halfExtent = Math.max(halfExtent, Math.hypot(x - lookAt.x, z - lookAt.z));
+  });
+
+  const fovRadians = (CAMERA_FOV_DEGREES * Math.PI) / 180;
+  return Math.max(20, (halfExtent * 1.4) / Math.tan(fovRadians / 2));
+}
+
+/**
  * Calculate max camera distance based on schema extent
  * @param tables - Array of tables with positions
- * @returns Max camera distance (clamped between 50 and 200)
+ * @returns Max camera distance (clamped between 50 and 400)
  */
 export function calculateMaxCameraDistance(
   tables: Array<{ position: [number, number, number] }>
@@ -154,9 +176,12 @@ export function calculateMaxCameraDistance(
     }
   });
 
-  // Set maxDistance to 2x the furthest distance, with minimum of 50 and maximum of 400
-  // This allows zooming out enough to see the entire schema plus some extra space
-  return Math.max(50, Math.min(400, maxDistance * 2));
+  // Allow zooming out to the 2D FOV fit, not only 2x furthest table distance.
+  const framingDistance = Math.max(
+    maxDistance * 2,
+    getTopDownFitDistance(tables, center)
+  );
+  return Math.max(50, Math.min(400, framingDistance));
 }
 
 /**
