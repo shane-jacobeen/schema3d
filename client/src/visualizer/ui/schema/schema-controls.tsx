@@ -32,9 +32,6 @@ import { SampleSchemaSelector } from "./sample-schema-selector";
 import { FileUploadButton } from "./file-upload-button";
 import { EditInDrawdbButton } from "./edit-in-drawdb-button";
 
-const EDITOR_SCROLLBAR_CLASS =
-  "[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-slate-400/70 [scrollbar-width:thin] [scrollbar-color:rgb(100,116,139,0.5)_transparent]";
-
 function formatBadgeLabel(format: SchemaFormat): string {
   if (format === "mermaid") return "Mermaid";
   if (format === "drawdb") return "DrawDB";
@@ -309,7 +306,7 @@ export function SchemaSelector({
               onChange={(newValue) => {
                 setScriptInput(newValue);
               }}
-              className={`h-full min-h-[120px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
+              className="h-full min-h-[120px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-hidden focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500"
             />
             <LocalToastContainer />
             <div className="absolute bottom-2 right-2 flex flex-col gap-2">

@@ -19,6 +19,8 @@ function App() {
   return (
     <BrowserRouter>
       <div
+        translate="no"
+        className="notranslate"
         style={{
           width: "100vw",
           height: "100vh",
