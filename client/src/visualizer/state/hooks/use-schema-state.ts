@@ -12,6 +12,7 @@ import {
 } from "@/visualizer/state/initial-state";
 import { removeSchemaFromUrl, hasSchemaInUrl } from "@/shared/utils/url-state";
 import { consumePendingViewState } from "@/visualizer/state/utils/view-state-store";
+import { noteSchemaInputRoute } from "@/shared/analytics";
 import { useToast } from "@/shared/ui-components/toast";
 
 interface UseSchemaStateReturn {
@@ -88,6 +89,7 @@ export function useSchemaState(
         clearDrawdbShareQueryParams();
         return;
       }
+      noteSchemaInputRoute("url");
       setCurrentSchema(loaded);
       persistedSchemaRef.current = loaded;
       clearDrawdbShareQueryParams();

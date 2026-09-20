@@ -3,6 +3,7 @@ import { Button } from "@/shared/ui-components/button";
 import { Card } from "@/shared/ui-components/card";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { escapeCSV, downloadFile, generateTimestamp } from "./export-utils";
+import { captureSchemaExported } from "@/shared/analytics";
 
 interface ExportControlsProps {
   schema: DatabaseSchema;
@@ -21,6 +22,7 @@ export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
         if (blob) {
           const filename = `${schema.name.replace(/\s+/g, "_")}_screenshot.png`;
           downloadFile(blob, filename, "image/png");
+          captureSchemaExported("png");
         }
       }, "image/png");
     } catch (error) {
@@ -63,6 +65,7 @@ export function ExportControls({ schema, canvasRef }: ExportControlsProps) {
         "_"
       )}_schema_${generateTimestamp()}.csv`;
       downloadFile(csvContent, filename, "text/csv;charset=utf-8;");
+      captureSchemaExported("csv");
     } catch (error) {
       console.error("CSV export failed:", error);
     }

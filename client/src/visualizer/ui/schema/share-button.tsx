@@ -14,6 +14,7 @@ import {
 import { createShareableUrl } from "@/shared/utils/url-state";
 import type { SchemaFormat } from "@/schemas/parsers";
 import type { SharedViewState } from "@/shared/types/schema";
+import { captureSchemaShared } from "@/shared/analytics";
 
 interface ShareButtonProps {
   /**
@@ -106,6 +107,7 @@ export function ShareButton({
 
       // Copy to clipboard
       await navigator.clipboard.writeText(shareableUrl);
+      captureSchemaShared();
 
       // Show success feedback
       setIsCopied(true);
