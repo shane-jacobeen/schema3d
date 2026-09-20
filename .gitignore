@@ -12,4 +12,5 @@ coverage
 .vitest
 *.log
 *.bundle
+*.bak
 /.idea/

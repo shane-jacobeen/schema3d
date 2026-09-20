@@ -190,7 +190,7 @@ Schema3D/
 │   │   │   │   └── index.ts
 │   │   │   ├── sample-schemas/ # Sample schema files
 │   │   │   │   ├── retailer.sql
-│   │   │   │   ├── blog-platform.sql
+│   │   │   │   ├── blog-platform.drawdb.json
 │   │   │   │   └── university.mmd
 │   │   │   └── index.ts
 │   │   │
@@ -206,6 +206,11 @@ Schema3D/
 │   │   │   │   │   ├── category-state-utils.ts # Category management
 │   │   │   │   │   └── view-state-store.ts  # View state temporary storage
 │   │   │   │   └── types.ts
+│   │   │   ├── layout/         # Layout algorithms (force, hierarchical, circular)
+│   │   │   │   ├── layout-algorithm.ts
+│   │   │   │   ├── force-layout-core.ts
+│   │   │   │   ├── run-force-layout.ts
+│   │   │   │   └── workers/
 │   │   │   ├── 3d/             # 3D visualization components
 │   │   │   │   ├── components/ # 3D scene components
 │   │   │   │   │   ├── relationships/
@@ -214,6 +219,9 @@ Schema3D/
 │   │   │   │   │   │   └── relationship-utils.ts
 │   │   │   │   │   ├── tables/
 │   │   │   │   │   │   ├── table-3d.tsx
+│   │   │   │   │   │   ├── use-table-drag.ts
+│   │   │   │   │   │   ├── use-table-layout-animation.ts
+│   │   │   │   │   │   ├── use-table-appearance.ts
 │   │   │   │   │   │   └── table-utils.ts
 │   │   │   │   │   ├── schema-scene.tsx
 │   │   │   │   │   └── schema-visualizer.tsx
@@ -226,7 +234,6 @@ Schema3D/
 │   │   │   │   │   └── use-interaction-handlers.ts
 │   │   │   │   ├── utils/      # 3D visualization utilities
 │   │   │   │   │   ├── camera-utils.ts
-│   │   │   │   │   ├── layout-algorithm.ts
 │   │   │   │   │   └── layout-utils.ts
 │   │   │   │   ├── constants.ts
 │   │   │   │   ├── types.ts
@@ -265,8 +272,6 @@ Schema3D/
 │   │   │   │   ├── toggle-group.tsx
 │   │   │   │   ├── toast.tsx
 │   │   │   │   └── ...         # Other UI components
-│   │   │   ├── hooks/          # Shared React hooks
-│   │   │   │   └── use-is-mobile.tsx
 │   │   │   ├── utils/          # Shared utilities
 │   │   │   │   ├── button-styles.ts
 │   │   │   │   ├── url-encoding.ts    # Schema and view state encoding/decoding

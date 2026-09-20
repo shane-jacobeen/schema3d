@@ -2,9 +2,9 @@ import type { DatabaseSchema, Table, Column } from "@/shared/types/schema";
 import type { Cardinality } from "@/shared/types/cardinality";
 import { parseCardinality } from "@/shared/types/cardinality";
 import {
-  COLOR_PALETTE,
   guessCategory,
   calculatePosition,
+  getOrAssignCategoryColor,
 } from "./parser-utils";
 
 /**
@@ -276,15 +276,7 @@ export function parseMermaidSchema(mermaid: string): DatabaseSchema | null {
     const tableList = Array.from(tables.values());
     const schemaTables: Table[] = tableList.map((table, index) => {
       const category = guessCategory(table.name);
-
-      if (!categoryMap.has(category)) {
-        categoryMap.set(
-          category,
-          COLOR_PALETTE[categoryMap.size % COLOR_PALETTE.length]
-        );
-      }
-
-      const color = categoryMap.get(category)!;
+      const color = getOrAssignCategoryColor(categoryMap, category);
       const position = calculatePosition(index, tableList.length);
 
       const columns: Column[] = table.columns.map((col) => {
@@ -402,43 +394,6 @@ function parseMermaidCardinality(segment: string): Cardinality {
   const rightSymbol = mapSide(right);
 
   return `${leftSymbol}:${rightSymbol}` as Cardinality;
-}
-
-/**
- * Detect if text is Mermaid format
- */
-export function detectMermaidFormat(text: string): boolean {
-  const trimmed = text.trim();
-  return trimmed.toLowerCase().startsWith("erdiagram");
-}
-
-/**
- * Detect if text is SQL format
- */
-export function detectSqlFormat(text: string): boolean {
-  const trimmed = text.trim().toUpperCase();
-  return (
-    trimmed.includes("CREATE TABLE") ||
-    trimmed.includes("CREATE VIEW") ||
-    trimmed.includes("ALTER TABLE")
-  );
-}
-
-/**
- * Auto-detect format and return 'sql', 'mermaid', or null
- */
-export function detectFormat(text: string): "sql" | "mermaid" | null {
-  if (!text.trim()) return null;
-
-  if (detectMermaidFormat(text)) {
-    return "mermaid";
-  }
-
-  if (detectSqlFormat(text)) {
-    return "sql";
-  }
-
-  return null; // Unknown format
 }
 
 /**

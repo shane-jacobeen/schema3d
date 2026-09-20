@@ -5,7 +5,7 @@ import {
   applyForceDirectedLayout,
   applyCircularLayout,
   applyHierarchicalLayout,
-} from "@/visualizer/3d/utils/layout-algorithm";
+} from "@/visualizer/layout/layout-algorithm";
 import {
   DEFAULT_LAYOUT,
   DEFAULT_VIEW_MODE,

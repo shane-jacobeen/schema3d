@@ -2,29 +2,27 @@ import { SchemaMetadata } from "@/shared/metadata";
 import { SchemaScene } from "./schema-scene";
 import { SchemaOverlay } from "@/visualizer/ui/schema-overlay";
 import { useVisualizerState } from "../hooks/use-visualizer-state";
+import { VisualizerStateProvider } from "../context/visualizer-state-context";
 
 export function SchemaVisualizer() {
+  const state = useVisualizerState();
   const {
     glCanvasRef,
     containerRef,
-    detailsPanelRef,
     orbitControlsRef,
     schemaState,
     animationState,
     cameraState,
     filterState,
     selectionState,
-    layoutState,
     interactionHandlers,
     connectedTables,
     isFiltering,
     handleRecenterComplete,
-    handleTableClose,
-    handleRelationshipClose,
-  } = useVisualizerState();
+  } = state;
 
   return (
-    <>
+    <VisualizerStateProvider value={state}>
       <SchemaMetadata />
       <div
         ref={containerRef}
@@ -45,7 +43,6 @@ export function SchemaVisualizer() {
           connectedTables={connectedTables}
           isFiltering={isFiltering}
           targetPositions={animationState.targetPositions}
-          animatedPositions={animationState.animatedPositions}
           animationStartTime={animationState.animationStartTime}
           isAnimating={animationState.isAnimating}
           animatedPositionsRef={animationState.animatedPositionsRef}
@@ -82,34 +79,8 @@ export function SchemaVisualizer() {
           glCanvasRef={glCanvasRef}
           onPointerMissed={interactionHandlers.handlePointerMissed}
         />
-        <SchemaOverlay
-          schema={schemaState.currentSchema}
-          selectedTable={selectionState.selectedTable}
-          selectedRelationship={selectionState.selectedRelationship}
-          currentLayout={layoutState.currentLayout}
-          viewMode={layoutState.viewMode}
-          selectedCategories={filterState.selectedCategories}
-          persistedSchemaRef={schemaState.persistedSchemaRef}
-          glCanvasRef={glCanvasRef}
-          detailsPanelRef={detailsPanelRef}
-          onSchemaChange={schemaState.setCurrentSchema}
-          onCategoryUpdate={(updatedSchema) => {
-            schemaState.setCurrentSchema(updatedSchema);
-          }}
-          onSchemaChangeFromSelector={(newSchema) =>
-            schemaState.handleSchemaChangeFromSelector(newSchema, (schema) =>
-              filterState.resetCategories(schema)
-            )
-          }
-          onLayoutChange={layoutState.handleLayoutChange}
-          onViewModeChange={layoutState.setViewMode}
-          onCategoryToggle={filterState.handleCategoryToggle}
-          onFilter={filterState.handleFilter}
-          onRecenter={cameraState.handleRecenter}
-          onTableClose={handleTableClose}
-          onRelationshipClose={handleRelationshipClose}
-        />
+        <SchemaOverlay />
       </div>
-    </>
+    </VisualizerStateProvider>
   );
 }

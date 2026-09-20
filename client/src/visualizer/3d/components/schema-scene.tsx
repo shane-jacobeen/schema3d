@@ -27,7 +27,6 @@ import type { Relationship } from "@/visualizer/3d/types";
 import { shouldDimTable, isTableInRelationship } from "@/visualizer/3d/index";
 import {
   OrbitControlsProvider,
-  setOrbitControls,
   type OrbitControlsRef,
 } from "@/visualizer/3d/context/orbit-controls-context";
 import { captureSchemaVisualizedIfPending } from "@/shared/analytics";
@@ -46,7 +45,6 @@ interface SchemaSceneProps {
   connectedTables: Set<string>;
   isFiltering: boolean;
   targetPositions: Map<string, [number, number, number]>;
-  animatedPositions: Map<string, [number, number, number]>;
   animationStartTime: number | null;
   isAnimating: boolean;
   animatedPositionsRef: React.MutableRefObject<
@@ -98,7 +96,6 @@ export function SchemaScene({
   connectedTables,
   isFiltering,
   targetPositions,
-  animatedPositions: _animatedPositions,
   animationStartTime,
   isAnimating,
   animatedPositionsRef,
@@ -169,7 +166,6 @@ export function SchemaScene({
           <OrbitControls
             ref={(controls) => {
               orbitControlsRef.current = controls;
-              setOrbitControls(controls);
             }}
             enableDamping
             dampingFactor={0.05}

@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest";
 import {
   getBlogPlatformSchema,
   BLOG_PLATFORM_DRAWDB,
-  BLOG_PLATFORM_SQL,
   getSchemaFormat,
   getSchemaText,
   getRetailerSchema,
   getUniversitySchema,
 } from "@/schemas/utils/load-schemas";
+import { BLOG_PLATFORM_SQL } from "../../fixtures/blog-platform-sql";
 import { parseSqlSchema } from "@/schemas/parsers/sql-parser";
 
 describe("getBlogPlatformSchema (DrawDB)", () => {

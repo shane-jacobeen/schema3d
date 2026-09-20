@@ -8,17 +8,13 @@ import {
 } from "@/shared/ui-components/collapsible";
 import { Button } from "@/shared/ui-components/button";
 import { CategoryEditDialog } from "@/visualizer/ui/layout/category-edit-dialog";
-
-import { COLOR_PALETTE } from "@/shared/constants/colors";
-
-export { COLOR_PALETTE };
+import { findUnusedColor } from "@/shared/utils/category-colors";
 
 interface CategoryLegendProps {
   schema: DatabaseSchema;
   selectedCategories?: Set<string>;
   onCategoryToggle?: (category: string) => void;
   onSchemaChange: (schema: DatabaseSchema) => void;
-  onCategoryUpdate?: (schema: DatabaseSchema) => void;
 }
 
 export function CategoryLegend({
@@ -26,7 +22,6 @@ export function CategoryLegend({
   selectedCategories,
   onCategoryToggle,
   onSchemaChange,
-  onCategoryUpdate,
 }: CategoryLegendProps) {
   // Default to open on large screens, collapsed on mobile
   const [isLegendOpen, setIsLegendOpen] = useState(() => {
@@ -63,9 +58,7 @@ export function CategoryLegend({
     // If no General category exists, assign a new color
     if (!generalColor) {
       const usedColors = new Set(schema.tables.map((table) => table.color));
-      generalColor =
-        COLOR_PALETTE.find((color) => !usedColors.has(color)) ||
-        COLOR_PALETTE[usedColors.size % COLOR_PALETTE.length]!;
+      generalColor = findUnusedColor(usedColors);
     }
 
     // Update tables: move deleted category's tables to "General"
@@ -98,12 +91,7 @@ export function CategoryLegend({
       }),
     };
 
-    // Use onCategoryUpdate if available
-    if (onCategoryUpdate) {
-      onCategoryUpdate(updatedSchema);
-    } else {
-      onSchemaChange(updatedSchema);
-    }
+    onSchemaChange(updatedSchema);
     setEditingCategory(null);
     setIsNewCategory(false);
   };
@@ -146,17 +134,11 @@ export function CategoryLegend({
         isNewCategory &&
         !existingCategoryColorMap.has(capitalizedCategoryName)
       ) {
-        // Assign a color from the palette that's not already used
         const usedColors = new Set(existingCategoryColorMap.values());
-        let newColor = COLOR_PALETTE.find((color) => !usedColors.has(color));
-        if (!newColor) {
-          // If all colors are used, cycle through the palette
-          newColor =
-            COLOR_PALETTE[
-              existingCategoryColorMap.size % COLOR_PALETTE.length
-            ]!;
-        }
-        existingCategoryColorMap.set(capitalizedCategoryName, newColor);
+        existingCategoryColorMap.set(
+          capitalizedCategoryName,
+          findUnusedColor(usedColors)
+        );
       } else if (
         !isNewCategory &&
         editingCategory !== capitalizedCategoryName
@@ -241,13 +223,7 @@ export function CategoryLegend({
       return;
     }
 
-    // Use onCategoryUpdate if available (direct update without animation)
-    // Otherwise fall back to onSchemaChange (with animation)
-    if (onCategoryUpdate) {
-      onCategoryUpdate(updatedSchema);
-    } else {
-      onSchemaChange(updatedSchema);
-    }
+    onSchemaChange(updatedSchema);
     setEditingCategory(null);
     setIsNewCategory(false);
   };

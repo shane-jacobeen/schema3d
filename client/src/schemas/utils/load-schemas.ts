@@ -6,7 +6,6 @@ import type { DrawdbDiagram } from "../parsers/drawdb";
 
 // Import SQL files as raw text
 import retailerSql from "../sample-schemas/retailer.sql?raw";
-import blogPlatformSql from "../sample-schemas/blog-platform.sql?raw";
 
 // Import Mermaid files as raw text
 import universityMermaid from "../sample-schemas/university.mmd?raw";
@@ -21,8 +20,6 @@ let universitySchemaCache: DatabaseSchema | null = null;
 
 // Store original text for each schema
 export const RETAILER_SQL = retailerSql;
-/** SQL regression fixture — Blog Platform in-app sample uses DrawDB JSON */
-export const BLOG_PLATFORM_SQL = blogPlatformSql;
 export const UNIVERSITY_MERMAID = universityMermaid;
 /** DrawDB diagram JSON used by the Blog Platform sample */
 export const BLOG_PLATFORM_DRAWDB = blogPlatformDrawdb as DrawdbDiagram;

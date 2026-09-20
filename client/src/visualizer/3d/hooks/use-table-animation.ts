@@ -3,7 +3,6 @@ import type { DatabaseSchema } from "@/shared/types/schema";
 
 interface UseTableAnimationReturn {
   targetPositions: Map<string, [number, number, number]>;
-  animatedPositions: Map<string, [number, number, number]>;
   animationStartTime: number | null;
   isAnimating: boolean;
   animatedPositionsRef: React.MutableRefObject<
@@ -26,9 +25,6 @@ export function useTableAnimation(
   const [isAnimatingState, setIsAnimatingState] = useState(false);
 
   const [targetPositions, setTargetPositions] = useState<
-    Map<string, [number, number, number]>
-  >(new Map());
-  const [animatedPositions, setAnimatedPositions] = useState<
     Map<string, [number, number, number]>
   >(new Map());
   const animationStartTimeRef = useRef<number | null>(null);
@@ -86,7 +82,6 @@ export function useTableAnimation(
         });
 
         animatedPositionsRef.current = initialPositions;
-        setAnimatedPositions(new Map(initialPositions));
 
         // Set target positions from the new layout
         const newTargetPositions = new Map<string, [number, number, number]>();
@@ -114,7 +109,6 @@ export function useTableAnimation(
               // Now safe to clear - schema should be updated and RelationshipLines will use table.position
               isAnimatingRef.current = false;
               animatedPositionsRef.current.clear();
-              setAnimatedPositions(new Map());
               setAnimationStartTimeState(null);
               setIsAnimatingState(false);
               animationTimeoutRef.current = null;
@@ -137,7 +131,6 @@ export function useTableAnimation(
 
   return {
     targetPositions,
-    animatedPositions,
     animationStartTime: animationStartTimeState,
     isAnimating: isAnimatingState,
     animatedPositionsRef,

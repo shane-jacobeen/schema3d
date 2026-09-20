@@ -11,7 +11,7 @@ import {
   getInitialCategories,
   updateCategoriesForSchema,
   initializeCategories,
-} from "../utils/schema-state-utils";
+} from "../utils/category-state-utils";
 import { getPendingViewState } from "../utils/view-state-store";
 
 interface UseFilterStateReturn {

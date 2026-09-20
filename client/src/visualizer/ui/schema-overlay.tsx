@@ -14,34 +14,7 @@ import { RelationshipInfo } from "@/visualizer/ui/panels/relationship-info";
 import { useCollectViewState } from "@/visualizer/state/hooks/use-collect-view-state";
 import { WelcomeOverlay } from "@/visualizer/ui/welcome-overlay";
 import { hasSchemaInUrl } from "@/shared/utils/url-state";
-import type { DatabaseSchema, Table } from "@/shared/types/schema";
-import type { Relationship } from "@/visualizer/3d/types";
-import type { LayoutType } from "@/visualizer/ui/layout/layout-controls";
-
-interface SchemaOverlayProps {
-  schema: DatabaseSchema;
-  selectedTable: Table | null;
-  selectedRelationship: Relationship | null;
-  currentLayout: LayoutType;
-  viewMode: "2D" | "3D";
-  selectedCategories: Set<string>;
-  persistedSchemaRef: React.MutableRefObject<DatabaseSchema>;
-  glCanvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
-  detailsPanelRef: React.RefObject<HTMLDivElement>;
-  onSchemaChange: (newSchema: DatabaseSchema) => void;
-  onSchemaChangeFromSelector: (
-    newSchema: DatabaseSchema,
-    onCategoriesReset?: (schema: DatabaseSchema) => void
-  ) => void;
-  onCategoryUpdate?: (newSchema: DatabaseSchema) => void;
-  onLayoutChange: (layout: LayoutType) => void;
-  onViewModeChange: (mode: "2D" | "3D") => void;
-  onCategoryToggle: (category: string) => void;
-  onFilter: (matched: Set<string>, related: Set<string>) => void;
-  onRecenter: () => void;
-  onTableClose: () => void;
-  onRelationshipClose: () => void;
-}
+import { useVisualizerStateContext } from "@/visualizer/3d/context/visualizer-state-context";
 
 const WELCOME_DISMISSED_STORAGE_KEY = "schema3d-welcome-dismissed";
 
@@ -63,36 +36,31 @@ function shouldShowWelcomeOverlay(): boolean {
   }
 }
 
-export function SchemaOverlay({
-  schema,
-  selectedTable,
-  selectedRelationship,
-  currentLayout,
-  viewMode,
-  selectedCategories,
-  persistedSchemaRef,
-  glCanvasRef,
-  detailsPanelRef,
-  onSchemaChange,
-  onSchemaChangeFromSelector,
-  onCategoryUpdate,
-  onLayoutChange,
-  onViewModeChange,
-  onCategoryToggle,
-  onFilter,
-  onRecenter,
-  onTableClose,
-  onRelationshipClose,
-}: SchemaOverlayProps) {
+export function SchemaOverlay() {
+  const {
+    schemaState,
+    selectionState,
+    layoutState,
+    filterState,
+    cameraState,
+    glCanvasRef,
+    detailsPanelRef,
+    handleTableClose,
+    handleRelationshipClose,
+  } = useVisualizerStateContext();
+
+  const schema = schemaState.currentSchema;
+  const selectedTable = selectionState.selectedTable;
+  const selectedRelationship = selectionState.selectedRelationship;
+
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(
     shouldShowWelcomeOverlay
   );
 
-  // Collect view state including custom categories
   const viewState = useCollectViewState(
-    selectedCategories,
-    currentLayout,
-    viewMode,
+    filterState.selectedCategories,
+    layoutState.currentLayout,
+    layoutState.viewMode,
     schema
   );
 
@@ -112,7 +80,6 @@ export function SchemaOverlay({
         <WelcomeOverlay onDismiss={dismissWelcomeOverlay} />
       )}
 
-      {/* About button */}
       <div className="absolute right-2 sm:top-4 sm:right-4 top-2 z-10">
         <Link to="/about">
           <Button
@@ -126,12 +93,13 @@ export function SchemaOverlay({
         </Link>
       </div>
 
-      {/* Search bar */}
       <div className="absolute top-2 right-[96px] sm:top-4 sm:right-16 sm:w-64">
-        <SearchFilter tables={schema.tables} onFilter={onFilter} />
+        <SearchFilter
+          tables={schema.tables}
+          onFilter={filterState.handleFilter}
+        />
       </div>
 
-      {/* Overview card at top-left */}
       <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
         <Card className="bg-slate-900/70 border-slate-700 text-white backdrop-blur-sm p-2 sm:p-4 min-w-[164px] sm:min-w-[200px] pb-2 sm:pb-3">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
@@ -140,8 +108,12 @@ export function SchemaOverlay({
             </h2>
             <SchemaSelector
               currentSchema={schema}
-              onSchemaChange={onSchemaChangeFromSelector}
-              persistedSchemaRef={persistedSchemaRef}
+              onSchemaChange={(newSchema) =>
+                schemaState.handleSchemaChangeFromSelector(newSchema, (s) =>
+                  filterState.resetCategories(s)
+                )
+              }
+              persistedSchemaRef={schemaState.persistedSchemaRef}
             />
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mb-0">
@@ -153,23 +125,20 @@ export function SchemaOverlay({
         </Card>
       </div>
 
-      {/* Legend and layout controls */}
       <LayoutControls
         schema={schema}
-        onSchemaChange={onSchemaChange}
-        onCategoryUpdate={onCategoryUpdate}
-        currentLayout={currentLayout}
-        onLayoutChange={onLayoutChange}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-        selectedCategories={selectedCategories}
-        onCategoryToggle={onCategoryToggle}
+        onSchemaChange={schemaState.setCurrentSchema}
+        currentLayout={layoutState.currentLayout}
+        onLayoutChange={layoutState.handleLayoutChange}
+        viewMode={layoutState.viewMode}
+        onViewModeChange={layoutState.setViewMode}
+        selectedCategories={filterState.selectedCategories}
+        onCategoryToggle={filterState.handleCategoryToggle}
       />
 
-      {/* Re-center button */}
       <div className="absolute top-2 right-[52px] bottom-auto left-auto sm:right-auto sm:bottom-safe-bottom-lg sm:left-1/2 sm:-translate-x-1/2 sm:top-auto z-10">
         <Button
-          onClick={onRecenter}
+          onClick={cameraState.handleRecenter}
           variant="outline"
           size="icon"
           className="w-9 h-9 sm:w-10 sm:h-10"
@@ -179,26 +148,20 @@ export function SchemaOverlay({
         </Button>
       </div>
 
-      {/* Share and Export controls */}
       <div className="absolute bottom-safe-bottom right-2 sm:bottom-safe-bottom-lg sm:right-4 flex flex-col gap-2">
-        {/* Share button */}
         <ShareButton
-          // Always encode the live schema — never prefer sample fixtures by name
           schemaText={schemaToFormat(schema)}
           format={schema.format}
           viewState={viewState}
           variant="outline"
           size="sm"
         />
-
-        {/* Export controls */}
         <ExportControls schema={schema} canvasRef={glCanvasRef} />
       </div>
 
-      {/* Detail panels for elected table / relationship */}
       {selectedTable && (
         <div ref={detailsPanelRef}>
-          <TableInfo table={selectedTable} onClose={onTableClose} />
+          <TableInfo table={selectedTable} onClose={handleTableClose} />
         </div>
       )}
 
@@ -206,7 +169,7 @@ export function SchemaOverlay({
         <div ref={detailsPanelRef}>
           <RelationshipInfo
             relationship={selectedRelationship}
-            onClose={onRelationshipClose}
+            onClose={handleRelationshipClose}
           />
         </div>
       )}

@@ -1,8 +1,8 @@
 import type { Table, Column } from "@/shared/types/schema";
 import {
-  COLOR_PALETTE,
   guessCategory,
   calculatePosition,
+  getOrAssignCategoryColor,
 } from "../parser-utils";
 import { REGEX } from "./regex";
 import { findTableInSchema, findPrimaryKeyColumn } from "./helpers";
@@ -18,15 +18,7 @@ export function convertParsedTableToTable(
   categoryMap: Map<string, string>
 ): Table {
   const category = guessCategory(table.name);
-
-  if (!categoryMap.has(category)) {
-    categoryMap.set(
-      category,
-      COLOR_PALETTE[categoryMap.size % COLOR_PALETTE.length] as string
-    );
-  }
-
-  const color = categoryMap.get(category)!;
+  const color = getOrAssignCategoryColor(categoryMap, category);
   const position = calculatePosition(index, totalTables);
 
   const columns: Column[] = table.columns.map(
@@ -61,15 +53,7 @@ export function convertParsedViewToTable(
   schemaTablesList: Table[]
 ): Table {
   const category = "View";
-
-  if (!categoryMap.has(category)) {
-    categoryMap.set(
-      category,
-      COLOR_PALETTE[categoryMap.size % COLOR_PALETTE.length] as string
-    );
-  }
-
-  const color = categoryMap.get(category)!;
+  const color = getOrAssignCategoryColor(categoryMap, category);
   const position = calculatePosition(index, totalTables);
 
   // Use parsed columns from the view definition

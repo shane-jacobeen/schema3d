@@ -1,5 +1,5 @@
 import type { DatabaseSchema } from "@/shared/types/schema";
-import { computeForceDirectedLayout } from "../utils/force-layout-core";
+import { computeForceDirectedLayout } from "../force-layout-core";
 
 interface ForceLayoutMessage {
   schema: DatabaseSchema;

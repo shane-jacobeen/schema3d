@@ -38,7 +38,6 @@ export function useVisualizerState() {
     schemaState.currentSchema,
     schemaState.setCurrentSchema,
     filterState.visibleTables,
-    filterState.selectedCategories,
     animationState.startTableAnimation,
     cameraState.frameCameraForViewMode
   );

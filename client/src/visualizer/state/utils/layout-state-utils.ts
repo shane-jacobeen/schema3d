@@ -3,11 +3,26 @@ import type { LayoutType } from "@/visualizer/state/initial-state";
 import {
   applyHierarchicalLayout,
   applyCircularLayout,
-} from "@/visualizer/3d/utils/layout-algorithm";
-import { runForceDirectedLayout } from "@/visualizer/3d/utils/run-force-layout";
+} from "@/visualizer/layout/layout-algorithm";
+import { computeForceDirectedLayout } from "@/visualizer/layout/force-layout-core";
+import {
+  FORCE_LAYOUT_WORKER_THRESHOLD,
+  runForceDirectedLayout,
+} from "@/visualizer/layout/run-force-layout";
 
 /**
- * Apply a layout algorithm to a schema (synchronous except force layout on large schemas).
+ * Whether force layout should run off the main thread (worker).
+ */
+export function shouldApplyLayoutAsync(
+  tableCount: number,
+  layout: LayoutType
+): boolean {
+  return layout === "force" && tableCount >= FORCE_LAYOUT_WORKER_THRESHOLD;
+}
+
+/**
+ * Apply a layout algorithm synchronously (always main-thread for force).
+ * Prefer applyLayoutToSchemaAsync when shouldApplyLayoutAsync is true.
  */
 export function applyLayoutToSchema(
   schema: DatabaseSchema,
@@ -15,15 +30,8 @@ export function applyLayoutToSchema(
   viewMode: "2D" | "3D" = "2D"
 ): DatabaseSchema {
   switch (layout) {
-    case "force": {
-      const result = runForceDirectedLayout(schema, viewMode);
-      if (result instanceof Promise) {
-        throw new Error(
-          "Large force-directed layouts must use applyLayoutToSchemaAsync"
-        );
-      }
-      return result;
-    }
+    case "force":
+      return computeForceDirectedLayout(schema, viewMode);
     case "hierarchical":
       return applyHierarchicalLayout(schema, viewMode);
     case "circular":

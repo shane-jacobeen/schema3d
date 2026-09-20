@@ -24,7 +24,6 @@ export function useLayoutManagement(
   currentSchema: DatabaseSchema,
   setCurrentSchema: React.Dispatch<React.SetStateAction<DatabaseSchema>>,
   visibleTables: DatabaseSchema["tables"],
-  selectedCategories: Set<string>,
   startTableAnimation: (schema: DatabaseSchema) => void,
   frameCameraForViewMode: (
     mode: "2D" | "3D",
