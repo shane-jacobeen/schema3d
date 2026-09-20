@@ -11,6 +11,10 @@ import {
   WEBGL_CONTEXT_ATTRIBUTES,
 } from "@/visualizer/3d/utils/webgl-support";
 import { CameraController } from "@/visualizer/3d/controls/camera-controller";
+import {
+  CAMERA_FOV_DEGREES,
+  MAX_POLAR_ANGLE_2D,
+} from "@/visualizer/3d/utils/camera-utils";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
 import { shouldDimTable, isTableInRelationship } from "@/visualizer/3d/index";
@@ -41,6 +45,7 @@ interface SchemaSceneProps {
     Map<string, [number, number, number]>
   >;
   maxCameraDistance: number;
+  viewMode: "2D" | "3D";
   isCameraAnimating: boolean;
   isDraggingTable: boolean;
   shouldRecenter: boolean;
@@ -89,6 +94,7 @@ export function SchemaScene({
   isAnimating,
   animatedPositionsRef,
   maxCameraDistance,
+  viewMode,
   isCameraAnimating,
   isDraggingTable,
   shouldRecenter,
@@ -130,7 +136,11 @@ export function SchemaScene({
         }}
         onPointerMissed={onPointerMissed}
       >
-        <PerspectiveCamera makeDefault position={[0, 12, 35]} fov={60} />
+        <PerspectiveCamera
+          makeDefault
+          position={[0, 12, 35]}
+          fov={CAMERA_FOV_DEGREES}
+        />
         <OrbitControlsProvider controlsRef={orbitControlsRef}>
           <OrbitControls
             ref={(controls) => {
@@ -141,6 +151,7 @@ export function SchemaScene({
             dampingFactor={0.05}
             minDistance={10}
             maxDistance={maxCameraDistance}
+            maxPolarAngle={viewMode === "2D" ? MAX_POLAR_ANGLE_2D : Math.PI}
             enabled={!isCameraAnimating && !isDraggingTable}
           />
 

@@ -50,6 +50,7 @@ export function SchemaVisualizer() {
           isAnimating={animationState.isAnimating}
           animatedPositionsRef={animationState.animatedPositionsRef}
           maxCameraDistance={cameraState.maxCameraDistance}
+          viewMode={layoutState.viewMode}
           isCameraAnimating={cameraState.isCameraAnimating}
           isDraggingTable={interactionHandlers.isDraggingTable}
           shouldRecenter={cameraState.shouldRecenter}

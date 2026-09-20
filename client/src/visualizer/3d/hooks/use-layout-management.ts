@@ -25,7 +25,11 @@ export function useLayoutManagement(
   setCurrentSchema: React.Dispatch<React.SetStateAction<DatabaseSchema>>,
   visibleTables: DatabaseSchema["tables"],
   selectedCategories: Set<string>,
-  startTableAnimation: (schema: DatabaseSchema) => void
+  startTableAnimation: (schema: DatabaseSchema) => void,
+  frameCameraForViewMode: (
+    mode: "2D" | "3D",
+    tables: DatabaseSchema["tables"]
+  ) => void
 ): UseLayoutManagementReturn {
   // Check for view state from URL on first render (before it's consumed)
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => {
@@ -56,6 +60,13 @@ export function useLayoutManagement(
       prevVisibleTableNamesRef.current = new Set(
         visibleTables.map((t) => t.name)
       );
+      // A schema that loads directly in 2D (shared link or persisted state)
+      // needs the same top-down framing the toggle applies; otherwise the
+      // camera mounts at its default 3D angle and shows the flattened tables
+      // edge-on as a thin line.
+      if (viewMode === "2D" && visibleTables.length > 0) {
+        frameCameraForViewMode(viewMode, visibleTables);
+      }
       return;
     }
 
@@ -81,6 +92,17 @@ export function useLayoutManagement(
       (layoutChanged || viewModeChanged || visibleTablesChanged) &&
       visibleTables.length > 0
     ) {
+      // On a view-mode switch, reframe the camera to fit the new layout. Only
+      // the visible tables matter; hidden ones keep their old positions in the
+      // merged schema and would skew the bounds.
+      const reframeCameraForViewMode = (tables: DatabaseSchema["tables"]) => {
+        if (!viewModeChanged) return;
+        frameCameraForViewMode(
+          viewMode,
+          tables.filter((table) => currentVisibleNames.has(table.name))
+        );
+      };
+
       if (shouldUseAsyncForceLayout(visibleTables.length, currentLayout)) {
         setCurrentSchema((prevSchema) => {
           void applyLayoutToFilteredSchemaAsync(
@@ -88,9 +110,16 @@ export function useLayoutManagement(
             visibleTables,
             currentLayout,
             viewMode
-          ).then((updatedSchema) => {
-            startTableAnimation(updatedSchema);
-          });
+          )
+            .then((updatedSchema) => {
+              startTableAnimation(updatedSchema);
+              reframeCameraForViewMode(updatedSchema.tables);
+            })
+            .catch((error) => {
+              // A failed worker leaves the tables at their old positions.
+              // Log it so the rejection is not swallowed silently.
+              console.error("Async layout calculation failed:", error);
+            });
           return prevSchema;
         });
         return;
@@ -105,6 +134,7 @@ export function useLayoutManagement(
         );
 
         startTableAnimation(updatedSchema);
+        reframeCameraForViewMode(updatedSchema.tables);
         return prevSchema;
       });
     }
@@ -114,6 +144,7 @@ export function useLayoutManagement(
     visibleTables,
     setCurrentSchema,
     startTableAnimation,
+    frameCameraForViewMode,
   ]);
 
   const handleLayoutChange = useCallback((layout: LayoutType) => {

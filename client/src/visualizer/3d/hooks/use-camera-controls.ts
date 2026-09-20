@@ -11,6 +11,7 @@ import {
   calculateMaxCameraDistance,
   animateCameraZoom,
   getDefaultCameraPosition,
+  getTopDownCameraPosition,
 } from "../utils/camera-utils";
 import { getOrbitControls } from "../context/orbit-controls-context";
 import type { Table } from "@/shared/types/schema";
@@ -29,6 +30,10 @@ interface UseCameraControlsReturn {
   setRecenterTranslateOnly: React.Dispatch<React.SetStateAction<boolean>>;
   setIsCameraAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   handleRecenter: () => void;
+  frameCameraForViewMode: (
+    mode: "2D" | "3D",
+    tables: Array<{ position: [number, number, number] }>
+  ) => void;
 }
 
 export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
@@ -120,6 +125,27 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     setShouldRecenter(true);
   }, []);
 
+  // Reframe the camera when the view mode switches. 2D flattens every table
+  // onto the y=0 plane, so the camera moves overhead and looks straight down;
+  // 3D returns to the default angled position.
+  const frameCameraForViewMode = useCallback(
+    (
+      mode: "2D" | "3D",
+      tables: Array<{ position: [number, number, number] }>
+    ) => {
+      if (mode === "2D") {
+        setRecenterTarget(getTopDownCameraPosition(tables));
+        setRecenterLookAt(new THREE.Vector3(0, 0, 0));
+      } else {
+        setRecenterTarget(null);
+        setRecenterLookAt(null);
+      }
+      setRecenterTranslateOnly(false);
+      setShouldRecenter(true);
+    },
+    []
+  );
+
   return {
     shouldRecenter,
     recenterTarget,
@@ -134,5 +160,6 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     setRecenterTranslateOnly,
     setIsCameraAnimating,
     handleRecenter,
+    frameCameraForViewMode,
   };
 }

@@ -1,6 +1,19 @@
 import * as THREE from "three";
 import { getOrbitControls } from "@/visualizer/3d/context/orbit-controls-context";
 
+/**
+ * Vertical field of view of the scene camera, in degrees.
+ * Kept here so top-down framing math stays in sync with the camera.
+ */
+export const CAMERA_FOV_DEGREES = 60;
+
+/**
+ * Maximum orbit polar angle allowed in 2D mode.
+ * Keeps the flattened schema readable from above and stops the camera from
+ * tilting to an edge-on view where every table collapses to a line.
+ */
+export const MAX_POLAR_ANGLE_2D = Math.PI / 3;
+
 export function calculateCameraPositionForRecenter(
   targetPoint: THREE.Vector3
 ): { position: THREE.Vector3; lookAt: THREE.Vector3 } {
@@ -56,6 +69,30 @@ export function getDefaultCameraPosition(maxDistance: number): THREE.Vector3 {
   // Maintain the default viewing angle (similar to original 0, 8, 20)
   const distance = Math.max(20, maxDistance * 0.5);
   return new THREE.Vector3(0, distance * 0.4, distance);
+}
+
+/**
+ * Calculate a top-down camera position that frames the flattened 2D layout.
+ * Tables in 2D sit on the y=0 plane, so the camera looks straight down the
+ * Y axis at the origin from a height that fits the widest table span.
+ * @param tables - Array of tables with positions
+ * @returns Top-down camera position
+ */
+export function getTopDownCameraPosition(
+  tables: Array<{ position: [number, number, number] }>
+): THREE.Vector3 {
+  let halfExtent = 0;
+  tables.forEach((table) => {
+    const [x, , z] = table.position;
+    halfExtent = Math.max(halfExtent, Math.abs(x), Math.abs(z));
+  });
+
+  const fovRadians = (CAMERA_FOV_DEGREES * Math.PI) / 180;
+  // Height so the widest half-span fits inside the vertical FOV, plus padding.
+  const height = Math.max(20, (halfExtent * 1.4) / Math.tan(fovRadians / 2));
+
+  // A tiny Z offset avoids the OrbitControls gimbal lock at exact vertical.
+  return new THREE.Vector3(0, height, 0.001);
 }
 
 /**
