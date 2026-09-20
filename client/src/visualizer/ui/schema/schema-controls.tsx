@@ -31,9 +31,10 @@ import { SchemaEditor } from "./schema-editor";
 import { SampleSchemaSelector } from "./sample-schema-selector";
 import { FileUploadButton } from "./file-upload-button";
 import { EditInDrawdbButton } from "./edit-in-drawdb-button";
-
-const EDITOR_SCROLLBAR_CLASS =
-  "[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-slate-400/70 [scrollbar-width:thin] [scrollbar-color:rgb(100,116,139,0.5)_transparent]";
+import {
+  noteSchemaInputRoute,
+  type SchemaInputRoute,
+} from "@/shared/analytics";
 
 function formatBadgeLabel(format: SchemaFormat): string {
   if (format === "mermaid") return "Mermaid";
@@ -70,10 +71,12 @@ export function SchemaSelector({
   const [isFetchingShare, setIsFetchingShare] = useState(false);
   const { toast } = useToast();
   const shareFetchRef = useRef<string | null>(null);
+  const inputRouteRef = useRef<SchemaInputRoute>("paste");
 
   // Initialize dialog when it opens
   useEffect(() => {
     if (isOpen) {
+      inputRouteRef.current = "paste";
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const schema = persistedSchemaRef.current || currentSchema;
@@ -149,6 +152,7 @@ export function SchemaSelector({
   }, [scriptInput, currentFormat]);
 
   const handleSampleSelect = (schema: DatabaseSchema) => {
+    inputRouteRef.current = "sample";
     const format = resolveSchemaFormat(schema);
     const migrated: DatabaseSchema = { ...schema, format };
     persistedSchemaRef.current = migrated;
@@ -172,6 +176,7 @@ export function SchemaSelector({
     setIsFetchingShare(true);
     try {
       const json = await fetchDrawdbShareJson(trimmed);
+      inputRouteRef.current = "paste";
       setScriptInput(json);
       setCurrentFormat("drawdb");
       toast.success("Loaded schema from DrawDB share");
@@ -201,6 +206,7 @@ export function SchemaSelector({
       };
 
       persistedSchemaRef.current = schemaWithName;
+      noteSchemaInputRoute(inputRouteRef.current);
       onSchemaChange(schemaWithName);
       setIsOpen(false);
     } else {
@@ -211,6 +217,7 @@ export function SchemaSelector({
   };
 
   const handleFileLoad = (content: string, detectedFormat: SchemaFormat) => {
+    inputRouteRef.current = "upload";
     setScriptInput(content);
     setCurrentFormat(detectedFormat);
     // Try parsing with the detected format first, then fall back to auto-detect
@@ -307,9 +314,10 @@ export function SchemaSelector({
               value={scriptInput}
               format={currentFormat}
               onChange={(newValue) => {
+                inputRouteRef.current = "paste";
                 setScriptInput(newValue);
               }}
-              className={`h-full min-h-[120px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${EDITOR_SCROLLBAR_CLASS}`}
+              className="h-full min-h-[120px] border border-slate-700 rounded-md bg-slate-800 text-white font-mono text-xs sm:text-sm px-3 pt-8 pb-2 pr-16 whitespace-pre-wrap overflow-hidden focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500"
             />
             <LocalToastContainer />
             <div className="absolute bottom-2 right-2 flex flex-col gap-2">

@@ -107,6 +107,8 @@ function RelationshipLine({
   const textRef = useRef<THREE.Group>(null);
   const lineRef = useRef<ComponentRef<typeof DreiLine> | null>(null);
   const labelOffsetRef = useRef(0.3);
+  const labelHoverScaleRef = useRef(1);
+  const currentLineWidthRef = useRef(lineWidth);
   const { camera } = useThree();
 
   // Initial points for DreiLine (only computed once per relationship)
@@ -192,6 +194,23 @@ function RelationshipLine({
 
   // Update line points dynamically based on animated table positions
   useFrame(() => {
+    // Smooth line-width transition (milder "shape" hover)
+    currentLineWidthRef.current = THREE.MathUtils.lerp(
+      currentLineWidthRef.current,
+      lineWidth,
+      0.15
+    );
+    if (lineRef.current) {
+      const material = (
+        lineRef.current as unknown as {
+          material?: { linewidth?: number };
+        }
+      ).material;
+      if (material) {
+        material.linewidth = currentLineWidthRef.current;
+      }
+    }
+
     // Use lookup map instead of find() for better performance
     const fromTable = tableLookupRef.current.get(relationship.fromTable);
     const toTable = tableLookupRef.current.get(relationship.toTable);
@@ -299,6 +318,15 @@ function RelationshipLine({
           midpointRef.current.z
         );
         textRef.current.lookAt(camera.position);
+
+        // Label scales more than the line, with the same smooth hover as tables
+        const targetLabelScale = isHovered ? 1.5 : isSelected ? 1.2 : 1;
+        labelHoverScaleRef.current = THREE.MathUtils.lerp(
+          labelHoverScaleRef.current,
+          targetLabelScale,
+          0.15
+        );
+        textRef.current.scale.setScalar(labelHoverScaleRef.current);
       }
     }
   });
@@ -368,12 +396,12 @@ function RelationshipLine({
         <meshBasicMaterial visible={false} />
       </mesh>
 
-      {/* Visible line */}
+      {/* Visible line — width is animated in useFrame for smooth hover */}
       <DreiLine
         ref={lineRef}
         points={initialPoints}
         color={lineColor}
-        lineWidth={lineWidth}
+        lineWidth={2.5}
         transparent
         opacity={lineOpacity}
       />
@@ -383,7 +411,7 @@ function RelationshipLine({
         <group ref={textRef}>
           <Text
             position={[0, 0, 0]}
-            fontSize={isHovered ? 0.25 : isSelected ? 0.18 : 0.15}
+            fontSize={0.15}
             color={isSelected ? "#ffffff" : isHovered ? "#ffffff" : "#94a3b8"}
             anchorX="center"
             anchorY="middle"

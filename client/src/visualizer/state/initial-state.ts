@@ -9,6 +9,7 @@ import { getRetailerSchema } from "@/schemas/utils/load-schemas";
 import { applyLayoutToSchema } from "@/visualizer/state/utils/schema-utils";
 import { parseSchema } from "@/schemas/parsers";
 import { getSchemaFromHash } from "@/shared/utils/url-state";
+import { noteSchemaInputRoute } from "@/shared/analytics";
 import { setPendingViewState } from "./utils/view-state-store";
 
 // ============================================
@@ -103,6 +104,7 @@ export function getInitialSchema(): DatabaseSchema {
         const layout = viewState?.layoutAlgorithm || DEFAULT_LAYOUT;
         const viewMode = viewState?.viewMode || DEFAULT_VIEW_MODE;
 
+        noteSchemaInputRoute("url");
         return applyLayoutToSchema(schemaWithCategories, layout, viewMode);
       }
       // If parsing fails, fall through to default schema
@@ -114,6 +116,7 @@ export function getInitialSchema(): DatabaseSchema {
   }
 
   // Default: load retailer schema
+  noteSchemaInputRoute("sample");
   const baseSchema = getDefaultBaseSchema();
   return applyLayoutToSchema(baseSchema, DEFAULT_LAYOUT, DEFAULT_VIEW_MODE);
 }

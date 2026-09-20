@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import type { SchemaFormat } from "@/schemas/parsers";
 import { identifyValidBlocks } from "@/schemas/parsers";
 
@@ -9,8 +9,16 @@ interface SchemaEditorProps {
   className?: string;
 }
 
+interface HighlightSegment {
+  key: string;
+  text: string;
+  color: string;
+}
+
 /**
- * ContentEditable text editor with format-aware syntax highlighting
+ * Syntax-highlighted schema editor. Highlight spans are React children in a
+ * mirror layer; typing goes through a textarea so React never sees innerHTML
+ * writes or third-party DOM rewrites under a contentEditable node.
  */
 export function SchemaEditor({
   value,
@@ -18,160 +26,100 @@ export function SchemaEditor({
   onChange,
   className = "",
 }: SchemaEditorProps) {
-  const editableRef = useRef<HTMLDivElement>(null);
-  const isUpdatingRef = useRef(false);
-  const isPastingRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLPreElement>(null);
+  const pendingCaretRef = useRef<number | null>(null);
 
-  // Update highlighting when value or format changes
-  useEffect(() => {
-    if (!editableRef.current) return;
-    if (isUpdatingRef.current) return;
+  const segments = useMemo(
+    () => getHighlightSegments(value, format),
+    [value, format]
+  );
 
-    const frameId = requestAnimationFrame(() => {
-      if (!editableRef.current || isUpdatingRef.current) return;
+  useLayoutEffect(() => {
+    const caret = pendingCaretRef.current;
+    const textarea = textareaRef.current;
+    if (caret === null || !textarea) return;
+    pendingCaretRef.current = null;
+    textarea.selectionStart = caret;
+    textarea.selectionEnd = caret;
+  }, [value]);
 
-      // Save cursor position
-      const selection = window.getSelection();
-      let cursorOffset = 0;
-      if (
-        selection &&
-        selection.rangeCount > 0 &&
-        editableRef.current.contains(selection.anchorNode)
-      ) {
-        const range = selection.getRangeAt(0);
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(editableRef.current);
-        preCaretRange.setEnd(range.startContainer, range.startOffset);
-        cursorOffset = preCaretRange.toString().length;
-      }
-
-      // Build HTML with syntax highlighting
-      const blocks = identifyValidBlocks(value, format);
-      const htmlParts: string[] = [];
-
-      if (blocks.length === 0 && value.length > 0) {
-        // All invalid
-        const escaped = escapeHtml(value);
-        htmlParts.push(`<span style="color: #64748b">${escaped}</span>`);
-      } else if (value.length === 0) {
-        htmlParts.push("");
-      } else {
-        blocks.forEach((block) => {
-          const text = value.substring(block.start, block.end);
-          const color = block.isValid ? "white" : "#64748b";
-          const escaped = escapeHtml(text);
-          htmlParts.push(`<span style="color: ${color}">${escaped}</span>`);
-        });
-      }
-
-      // Update content
-      isUpdatingRef.current = true;
-      editableRef.current.innerHTML = htmlParts.join("");
-
-      // Restore cursor
-      if (cursorOffset > 0 && selection) {
-        restoreCursor(editableRef.current, cursorOffset, selection);
-      }
-
-      isUpdatingRef.current = false;
-    });
-
-    return () => cancelAnimationFrame(frameId);
-  }, [value, format]);
-
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    if (isUpdatingRef.current || isPastingRef.current) return;
-    const newValue = e.currentTarget.textContent || "";
-    onChange(newValue);
+  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(event.target.value);
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    isPastingRef.current = true;
-    const text = e.clipboardData.getData("text/plain");
-    const selection = window.getSelection();
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    event.preventDefault();
+    const pasted = event.clipboardData.getData("text/plain");
+    const { selectionStart, selectionEnd } = event.currentTarget;
+    pendingCaretRef.current = selectionStart + pasted.length;
+    onChange(
+      value.slice(0, selectionStart) + pasted + value.slice(selectionEnd)
+    );
+  };
 
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      const textNode = document.createTextNode(text);
-      range.insertNode(textNode);
-      range.setStartAfter(textNode);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-
-    requestAnimationFrame(() => {
-      const newValue = editableRef.current?.textContent || "";
-
-      // Format will be auto-detected by the live validation in SchemaControls
-      onChange(newValue);
-      setTimeout(() => {
-        isPastingRef.current = false;
-      }, 0);
-    });
+  const handleScroll = () => {
+    const textarea = textareaRef.current;
+    const highlight = highlightRef.current;
+    if (!textarea || !highlight) return;
+    highlight.scrollTop = textarea.scrollTop;
+    highlight.scrollLeft = textarea.scrollLeft;
   };
 
   return (
-    <div
-      ref={editableRef}
-      contentEditable
-      suppressContentEditableWarning
-      className={className}
-      style={{
-        caretColor: "white",
-        lineHeight: "1.5",
-      }}
-      onInput={handleInput}
-      onPaste={handlePaste}
-    />
+    <div className={`relative ${className}`} translate="no">
+      <pre
+        ref={highlightRef}
+        aria-hidden
+        className={`${EDITOR_LAYER_CLASS} overflow-hidden pointer-events-none text-inherit`}
+      >
+        {segments.map((segment) => (
+          <span key={segment.key} style={{ color: segment.color }}>
+            {segment.text}
+          </span>
+        ))}
+        {"\n"}
+      </pre>
+      <textarea
+        ref={textareaRef}
+        value={value}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoCorrect="off"
+        translate="no"
+        aria-label="Schema source"
+        className={`${EDITOR_LAYER_CLASS} ${EDITOR_SCROLLBAR_CLASS} resize-none overflow-auto border-0 text-transparent caret-white outline-none`}
+        style={{ caretColor: "white" }}
+        onChange={handleChange}
+        onPaste={handlePaste}
+        onScroll={handleScroll}
+      />
+    </div>
   );
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
+const EDITOR_LAYER_CLASS =
+  "absolute inset-0 box-border m-0 whitespace-pre-wrap break-words bg-transparent p-[inherit] font-[inherit] text-[length:inherit] leading-[inherit] [scrollbar-gutter:stable]";
 
-function restoreCursor(
-  element: HTMLElement,
-  offset: number,
-  selection: Selection
-): void {
-  try {
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_TEXT,
-      null
-    );
-    let currentOffset = 0;
-    let targetNode: Node | null = null;
-    let targetOffset = 0;
+const EDITOR_SCROLLBAR_CLASS =
+  "[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-slate-400/70 [scrollbar-width:thin] [scrollbar-color:rgb(100,116,139,0.5)_transparent]";
 
-    while (walker.nextNode()) {
-      const node = walker.currentNode;
-      const nodeText = node.textContent || "";
-      const nodeLength = nodeText.length;
-
-      if (currentOffset + nodeLength >= offset) {
-        targetNode = node;
-        targetOffset = Math.min(offset - currentOffset, nodeLength);
-        break;
-      }
-      currentOffset += nodeLength;
-    }
-
-    if (targetNode) {
-      const range = document.createRange();
-      range.setStart(targetNode, targetOffset);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  } catch (_e) {
-    // Ignore cursor restoration errors
+function getHighlightSegments(
+  value: string,
+  format?: SchemaFormat
+): HighlightSegment[] {
+  if (value.length === 0) {
+    return [];
   }
+
+  const blocks = identifyValidBlocks(value, format);
+  if (blocks.length === 0) {
+    return [{ key: "all", text: value, color: "#64748b" }];
+  }
+
+  return blocks.map((block) => ({
+    key: `${block.start}-${block.end}`,
+    text: value.substring(block.start, block.end),
+    color: block.isValid ? "white" : "#64748b",
+  }));
 }

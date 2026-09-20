@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { waitFor } from "@testing-library/react";
-import { render } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, fireEvent } from "@testing-library/react";
 import { SchemaEditor } from "@/visualizer/ui/schema/schema-editor";
 
-// Mock the parser functions
 vi.mock("@/schemas/parsers", () => ({
   identifyValidBlocks: vi.fn((text: string) => {
     if (text.includes("CREATE TABLE")) {
@@ -14,13 +11,25 @@ vi.mock("@/schemas/parsers", () => ({
   }),
 }));
 
+function getEditor(container: HTMLElement): HTMLTextAreaElement {
+  return container.querySelector("textarea") as HTMLTextAreaElement;
+}
+
+function pasteEvent(text: string): {
+  clipboardData: { getData: (format: string) => string };
+} {
+  return {
+    clipboardData: {
+      getData: (format: string) => (format === "text/plain" ? text : ""),
+    },
+  };
+}
+
 describe("SchemaEditor", () => {
   const mockOnChange = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock contentEditable element
-    HTMLElement.prototype.contentEditable = "true";
   });
 
   it("should render the editor", () => {
@@ -28,55 +37,36 @@ describe("SchemaEditor", () => {
       <SchemaEditor value="" format="sql" onChange={mockOnChange} />
     );
 
-    // contentEditable div doesn't have a role="textbox" by default
-    const editor = container.querySelector('[contenteditable="true"]');
-    expect(editor).toBeInTheDocument();
+    expect(getEditor(container)).toBeInTheDocument();
   });
 
-  it("should call onChange when user types", async () => {
-    const _user = userEvent.setup();
-
+  it("should call onChange when user types", () => {
     const { container } = render(
       <SchemaEditor value="" format="sql" onChange={mockOnChange} />
     );
 
-    const editor = container.querySelector(
-      '[contenteditable="true"]'
-    ) as HTMLElement;
-    expect(editor).toBeInTheDocument();
-
-    // Simulate typing
-    editor.textContent = "CREATE TABLE";
-    editor.dispatchEvent(new Event("input", { bubbles: true }));
-
-    // The onChange should be called
-    await waitFor(
-      () => {
-        expect(mockOnChange).toHaveBeenCalled();
-      },
-      { timeout: 1000 }
-    );
-  });
-
-  it("should handle newline characters", async () => {
-    const { container } = render(
-      <SchemaEditor value="" format="sql" onChange={mockOnChange} />
-    );
-
-    const editor = container.querySelector(
-      '[contenteditable="true"]'
-    ) as HTMLElement;
-    editor.textContent = "CREATE TABLE users (\n  id INT\n);";
-    editor.dispatchEvent(new Event("input", { bubbles: true }));
-
-    await waitFor(() => {
-      expect(mockOnChange).toHaveBeenCalledWith(
-        expect.stringContaining("CREATE TABLE users")
-      );
+    fireEvent.change(getEditor(container), {
+      target: { value: "CREATE TABLE" },
     });
+
+    expect(mockOnChange).toHaveBeenCalledWith("CREATE TABLE");
   });
 
-  it("should apply syntax highlighting based on format", async () => {
+  it("should handle newline characters", () => {
+    const { container } = render(
+      <SchemaEditor value="" format="sql" onChange={mockOnChange} />
+    );
+
+    fireEvent.change(getEditor(container), {
+      target: { value: "CREATE TABLE users (\n  id INT\n);" },
+    });
+
+    expect(mockOnChange).toHaveBeenCalledWith(
+      expect.stringContaining("CREATE TABLE users")
+    );
+  });
+
+  it("should apply syntax highlighting based on format", () => {
     const { container } = render(
       <SchemaEditor
         value="CREATE TABLE users (id INT);"
@@ -85,61 +75,42 @@ describe("SchemaEditor", () => {
       />
     );
 
-    // The editor should apply highlighting
-    // This is tested indirectly through the rendered HTML
-    const editor = container.querySelector('[contenteditable="true"]');
-    expect(editor).toBeInTheDocument();
-
-    // Wait for highlighting to be applied (it's async via useEffect)
-    await waitFor(
-      () => {
-        expect(editor?.innerHTML).toContain("<span");
-      },
-      { timeout: 2000 }
-    );
+    const highlight = container.querySelector("pre");
+    expect(highlight?.querySelector("span")).toBeInTheDocument();
+    expect(highlight?.textContent).toContain("CREATE TABLE users (id INT);");
   });
 
-  it("should handle paste events", async () => {
+  it("should handle paste events", () => {
     const { container } = render(
       <SchemaEditor value="" format="sql" onChange={mockOnChange} />
     );
 
-    const editor = container.querySelector(
-      '[contenteditable="true"]'
-    ) as HTMLElement;
-
-    // Mock ClipboardEvent and DataTransfer for jsdom (they're not available natively)
-    class MockDataTransfer {
-      private data: Map<string, string> = new Map();
-      setData(format: string, data: string): void {
-        this.data.set(format, data);
-      }
-      getData(format: string): string {
-        return this.data.get(format) || "";
-      }
-    }
-
-    class MockClipboardEvent extends Event {
-      clipboardData: MockDataTransfer;
-      constructor(type: string, eventInitDict?: EventInit) {
-        super(type, eventInitDict);
-        this.clipboardData = new MockDataTransfer();
-      }
-    }
-
-    // Simulate paste event
-    const pasteEvent = new MockClipboardEvent("paste", {
-      bubbles: true,
-      cancelable: true,
-    });
-    pasteEvent.clipboardData.setData(
-      "text/plain",
-      "CREATE TABLE users (id INT);"
+    fireEvent.paste(
+      getEditor(container),
+      pasteEvent("CREATE TABLE users (id INT);")
     );
-    editor.dispatchEvent(pasteEvent);
 
-    // Note: Actual paste handling may be more complex
-    // This is a basic test structure
-    expect(editor).toBeInTheDocument();
+    expect(mockOnChange).toHaveBeenCalledWith("CREATE TABLE users (id INT);");
+  });
+
+  it("does not throw if unmounted after paste", () => {
+    const { container, unmount } = render(
+      <SchemaEditor value="" format="sql" onChange={mockOnChange} />
+    );
+
+    fireEvent.paste(
+      getEditor(container),
+      pasteEvent("CREATE TABLE users (id INT);")
+    );
+
+    expect(() => unmount()).not.toThrow();
+  });
+
+  it("opts the editor out of browser translation", () => {
+    const { container } = render(
+      <SchemaEditor value="" format="sql" onChange={mockOnChange} />
+    );
+
+    expect(container.firstElementChild).toHaveAttribute("translate", "no");
   });
 });

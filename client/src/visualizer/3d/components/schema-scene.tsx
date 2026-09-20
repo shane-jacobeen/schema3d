@@ -1,6 +1,13 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Stars } from "@react-three/drei";
-import { Suspense, useState, type MutableRefObject } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 import * as THREE from "three";
 import { Table3D } from "./tables/table-3d";
 import { RelationshipLines } from "./relationships/relationship-lines";
@@ -23,6 +30,7 @@ import {
   setOrbitControls,
   type OrbitControlsRef,
 } from "@/visualizer/3d/context/orbit-controls-context";
+import { captureSchemaVisualizedIfPending } from "@/shared/analytics";
 
 interface SchemaSceneProps {
   orbitControlsRef: MutableRefObject<OrbitControlsRef>;
@@ -120,6 +128,18 @@ export function SchemaScene({
   onPointerMissed,
 }: SchemaSceneProps) {
   const [support] = useState(detectWebGLSupport);
+  const canvasReadyRef = useRef(false);
+
+  const tryCaptureVisualized = useCallback(() => {
+    if (!canvasReadyRef.current) {
+      return;
+    }
+    captureSchemaVisualizedIfPending(schema.tables.length);
+  }, [schema]);
+
+  useEffect(() => {
+    tryCaptureVisualized();
+  }, [tryCaptureVisualized]);
 
   if (!support.supported) {
     const detail =
@@ -135,6 +155,8 @@ export function SchemaScene({
         gl={WEBGL_CONTEXT_ATTRIBUTES}
         onCreated={({ gl }) => {
           glCanvasRef.current = gl.domElement;
+          canvasReadyRef.current = true;
+          tryCaptureVisualized();
         }}
         onPointerMissed={onPointerMissed}
       >
