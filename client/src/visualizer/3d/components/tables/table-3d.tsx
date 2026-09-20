@@ -45,6 +45,7 @@ export const Table3D = memo(function Table3D({
   const groupRef = useRef<THREE.Group>(null);
   const textRef = useRef<THREE.Group>(null);
   const hoverScaleRef = useRef(1);
+  const labelHoverScaleRef = useRef(1);
   const initialLabelY = TABLE_HEIGHT / 2 + LABEL_BASE_OFFSET;
   const labelYRef = useRef(initialLabelY);
   const { camera, gl } = useThree();
@@ -219,15 +220,29 @@ export const Table3D = memo(function Table3D({
       }
     }
 
-    // Smooth hover scale transition
+    // Smooth hover scale transition — shape scales less than the label
     if (groupRef.current) {
-      const targetHoverScale = isHovered ? 1.15 : 1;
+      const targetShapeScale = isHovered ? 1.15 : 1;
       hoverScaleRef.current = THREE.MathUtils.lerp(
         hoverScaleRef.current,
-        targetHoverScale,
+        targetShapeScale,
         0.15
       );
       groupRef.current.scale.setScalar(hoverScaleRef.current);
+    }
+
+    // Label gets a stronger hover zoom (absolute world scale relative to shape)
+    if (textRef.current) {
+      const targetLabelScale = isHovered ? 1.5 : 1;
+      labelHoverScaleRef.current = THREE.MathUtils.lerp(
+        labelHoverScaleRef.current,
+        targetLabelScale,
+        0.15
+      );
+      // Compensate for parent group scale so label world scale = targetLabelScale
+      const relativeLabelScale =
+        labelHoverScaleRef.current / Math.max(hoverScaleRef.current, 0.001);
+      textRef.current.scale.setScalar(relativeLabelScale);
     }
 
     // Position label above or below based on camera perspective
