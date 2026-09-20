@@ -1,6 +1,61 @@
 import * as THREE from "three";
 import { getOrbitControls } from "@/visualizer/3d/context/orbit-controls-context";
 
+/**
+ * Vertical field of view of the scene camera, in degrees.
+ */
+export const CAMERA_FOV_DEGREES = 60;
+
+/**
+ * Minimum elevation above the graph plane for a readable 2D view, in radians.
+ * Shallower than this (including looking from below) triggers a rotation
+ * to a point directly above the current look-at.
+ */
+export const MIN_ELEVATION_2D = Math.PI / 4;
+
+/**
+ * Maximum orbit polar angle allowed in 2D mode, measured from +Y.
+ * Equal to 45° elevation so 2D cannot return to an edge-on view after untilt.
+ * Applied only after the camera is already within this range, to avoid a snap.
+ */
+export const MAX_POLAR_ANGLE_2D = Math.PI / 2 - MIN_ELEVATION_2D;
+
+/**
+ * Polar angle used for a 2D top-down view, in radians from +Y.
+ * Small enough to read a flattened layout, large enough to avoid
+ * OrbitControls gimbal lock at exact vertical.
+ */
+export const TOP_DOWN_POLAR_ANGLE = 0.25;
+
+/**
+ * Elevation of the camera above the look-at's XZ plane, in radians.
+ * Positive is above the graph, zero is edge-on, negative is from below.
+ */
+export function getCameraElevationRadians(
+  currentPosition: THREE.Vector3,
+  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0)
+): number {
+  const offset = currentPosition.clone().sub(lookAt);
+  const distance = offset.length();
+  if (distance < 1e-6) {
+    return Math.PI / 2;
+  }
+  return Math.asin(THREE.MathUtils.clamp(offset.y / distance, -1, 1));
+}
+
+/**
+ * True when a 2D toggle should rotate the camera above the graph:
+ * the current view is shallower than 45° elevation, including from below.
+ */
+export function shouldRotateToTopDownFor2D(
+  currentPosition: THREE.Vector3,
+  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0)
+): boolean {
+  return (
+    getCameraElevationRadians(currentPosition, lookAt) < MIN_ELEVATION_2D - 1e-6
+  );
+}
+
 export function calculateCameraPositionForRecenter(
   targetPoint: THREE.Vector3
 ): { position: THREE.Vector3; lookAt: THREE.Vector3 } {
@@ -59,9 +114,47 @@ export function getDefaultCameraPosition(maxDistance: number): THREE.Vector3 {
 }
 
 /**
+ * Point above the current look-at on the same azimuth.
+ * Optionally untilts to a top-down polar angle and/or zooms out to fitDistance.
+ */
+export function getTopDownCameraPosition(
+  currentPosition: THREE.Vector3,
+  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0),
+  options: { fitDistance?: number; untilt?: boolean } = {}
+): THREE.Vector3 {
+  const { fitDistance = 0, untilt = true } = options;
+  const offset = currentPosition.clone().sub(lookAt);
+  const spherical = new THREE.Spherical().setFromVector3(offset);
+  spherical.radius = Math.max(spherical.radius, fitDistance, 20);
+  if (untilt) {
+    spherical.phi = TOP_DOWN_POLAR_ANGLE;
+  }
+  spherical.makeSafe();
+  return lookAt.clone().add(new THREE.Vector3().setFromSpherical(spherical));
+}
+
+/**
+ * Orbit distance that fits the flattened schema in the camera's vertical FOV.
+ * Measured from lookAt across the XZ plane, with padding.
+ */
+export function getTopDownFitDistance(
+  tables: Array<{ position: [number, number, number] }>,
+  lookAt: THREE.Vector3 = new THREE.Vector3(0, 0, 0)
+): number {
+  let halfExtent = 0;
+  tables.forEach((table) => {
+    const [x, , z] = table.position;
+    halfExtent = Math.max(halfExtent, Math.hypot(x - lookAt.x, z - lookAt.z));
+  });
+
+  const fovRadians = (CAMERA_FOV_DEGREES * Math.PI) / 180;
+  return Math.max(20, (halfExtent * 1.4) / Math.tan(fovRadians / 2));
+}
+
+/**
  * Calculate max camera distance based on schema extent
  * @param tables - Array of tables with positions
- * @returns Max camera distance (clamped between 50 and 200)
+ * @returns Max camera distance (clamped between 50 and 400)
  */
 export function calculateMaxCameraDistance(
   tables: Array<{ position: [number, number, number] }>
@@ -83,9 +176,12 @@ export function calculateMaxCameraDistance(
     }
   });
 
-  // Set maxDistance to 2x the furthest distance, with minimum of 50 and maximum of 400
-  // This allows zooming out enough to see the entire schema plus some extra space
-  return Math.max(50, Math.min(400, maxDistance * 2));
+  // Allow zooming out to the 2D FOV fit, not only 2x furthest table distance.
+  const framingDistance = Math.max(
+    maxDistance * 2,
+    getTopDownFitDistance(tables, center)
+  );
+  return Math.max(50, Math.min(400, framingDistance));
 }
 
 /**

@@ -39,7 +39,8 @@ export function useVisualizerState() {
     schemaState.setCurrentSchema,
     filterState.visibleTables,
     filterState.selectedCategories,
-    animationState.startTableAnimation
+    animationState.startTableAnimation,
+    cameraState.frameCameraForViewMode
   );
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export function useVisualizerState() {
       setRecenterTarget: cameraState.setRecenterTarget,
       setRecenterLookAt: cameraState.setRecenterLookAt,
       setRecenterTranslateOnly: cameraState.setRecenterTranslateOnly,
+      setRecenterOrbitOnly: cameraState.setRecenterOrbitOnly,
       setShouldRecenter: cameraState.setShouldRecenter,
     },
     schemaState.currentSchema,
@@ -93,7 +95,11 @@ export function useVisualizerState() {
 
   const handleRecenterComplete = useCallback(() => {
     cameraState.setShouldRecenter(false);
-  }, [cameraState]);
+    cameraState.setRecenterOrbitOnly(false);
+    if (layoutState.viewMode === "2D") {
+      cameraState.setRestrictPolarAngle(true);
+    }
+  }, [cameraState, layoutState.viewMode]);
 
   const handleTableClose = useCallback(() => {
     selectionState.setSelectedTable(null);

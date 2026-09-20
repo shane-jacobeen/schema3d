@@ -7,6 +7,7 @@ import {
 } from "@/shared/ui-components/toggle-group";
 import { CustomToggleGroupItem } from "@/shared/ui-components/custom-toggle-group-item";
 import { useState } from "react";
+import { usePostHog } from "posthog-js/react";
 import { CategoryLegend } from "@/visualizer/ui/layout/category-legend";
 import {
   DEFAULT_LAYOUT,
@@ -89,6 +90,7 @@ export function LayoutControls({
   onCategoryToggle,
 }: LayoutControlsProps) {
   const [hoveredButton, setHoveredButton] = useState<LayoutType | null>(null);
+  const posthog = usePostHog();
 
   return (
     <div className="absolute bottom-safe-bottom left-2 sm:bottom-safe-bottom-lg sm:left-4">
@@ -110,6 +112,10 @@ export function LayoutControls({
             value={viewMode}
             onValueChange={(value: string | undefined) => {
               if (value && onViewModeChange) {
+                posthog?.capture("view_mode_changed", {
+                  view_mode: value,
+                  previous_view_mode: viewMode,
+                });
                 onViewModeChange(value as "2D" | "3D");
               }
             }}

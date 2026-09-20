@@ -11,6 +11,10 @@ import {
   WEBGL_CONTEXT_ATTRIBUTES,
 } from "@/visualizer/3d/utils/webgl-support";
 import { CameraController } from "@/visualizer/3d/controls/camera-controller";
+import {
+  CAMERA_FOV_DEGREES,
+  MAX_POLAR_ANGLE_2D,
+} from "@/visualizer/3d/utils/camera-utils";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
 import { shouldDimTable, isTableInRelationship } from "@/visualizer/3d/index";
@@ -48,6 +52,8 @@ interface SchemaSceneProps {
   recenterTarget: THREE.Vector3 | null;
   recenterLookAt: THREE.Vector3 | null;
   recenterTranslateOnly: boolean;
+  recenterOrbitOnly: boolean;
+  restrictPolarAngle: boolean;
   onTableSelect: (table: Table | null) => void;
   onTableHover: (table: Table | null) => void;
   onTableLongPress: (table: Table) => void;
@@ -96,6 +102,8 @@ export function SchemaScene({
   recenterTarget,
   recenterLookAt,
   recenterTranslateOnly,
+  recenterOrbitOnly,
+  restrictPolarAngle,
   onTableSelect,
   onTableHover,
   onTableLongPress,
@@ -130,7 +138,11 @@ export function SchemaScene({
         }}
         onPointerMissed={onPointerMissed}
       >
-        <PerspectiveCamera makeDefault position={[0, 12, 35]} fov={60} />
+        <PerspectiveCamera
+          makeDefault
+          position={[0, 12, 35]}
+          fov={CAMERA_FOV_DEGREES}
+        />
         <OrbitControlsProvider controlsRef={orbitControlsRef}>
           <OrbitControls
             ref={(controls) => {
@@ -141,6 +153,7 @@ export function SchemaScene({
             dampingFactor={0.05}
             minDistance={10}
             maxDistance={maxCameraDistance}
+            maxPolarAngle={restrictPolarAngle ? MAX_POLAR_ANGLE_2D : Math.PI}
             enabled={!isCameraAnimating && !isDraggingTable}
           />
 
@@ -165,6 +178,7 @@ export function SchemaScene({
             recenterTarget={recenterTarget}
             recenterLookAt={recenterLookAt}
             translateOnly={recenterTranslateOnly}
+            orbitOnly={recenterOrbitOnly}
             onRecenterComplete={onRecenterComplete}
             onAnimatingChange={onAnimatingChange}
           />

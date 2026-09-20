@@ -57,6 +57,8 @@ export function SchemaVisualizer() {
           recenterTarget={cameraState.recenterTarget}
           recenterLookAt={cameraState.recenterLookAt}
           recenterTranslateOnly={cameraState.recenterTranslateOnly}
+          recenterOrbitOnly={cameraState.recenterOrbitOnly}
+          restrictPolarAngle={cameraState.restrictPolarAngle}
           onTableSelect={selectionState.handleTableSelect}
           onTableHover={selectionState.setHoveredTable}
           onTableLongPress={interactionHandlers.handleTableLongPress}

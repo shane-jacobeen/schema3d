@@ -16,6 +16,7 @@ interface CameraState {
   setRecenterTarget: (target: THREE.Vector3 | null) => void;
   setRecenterLookAt: (lookAt: THREE.Vector3 | null) => void;
   setRecenterTranslateOnly: (translateOnly: boolean) => void;
+  setRecenterOrbitOnly: (orbitOnly: boolean) => void;
   setShouldRecenter: (should: boolean) => void;
 }
 
@@ -132,6 +133,7 @@ export function useInteractionHandlers(
       cameraState.setRecenterTarget(position);
       cameraState.setRecenterLookAt(lookAt);
       cameraState.setRecenterTranslateOnly(true); // Long press should only translate
+      cameraState.setRecenterOrbitOnly(false);
       cameraState.setShouldRecenter(true);
     },
     [setLongPressFlag, selectionState, cameraState]
@@ -168,6 +170,7 @@ export function useInteractionHandlers(
 
         cameraState.setRecenterTarget(position);
         cameraState.setRecenterLookAt(lookAt);
+        cameraState.setRecenterOrbitOnly(false);
         cameraState.setShouldRecenter(true);
       }
     },
