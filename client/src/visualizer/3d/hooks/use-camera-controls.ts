@@ -12,6 +12,7 @@ import {
   animateCameraZoom,
   getDefaultCameraPosition,
   getTopDownCameraPosition,
+  shouldRotateToTopDownFor2D,
 } from "../utils/camera-utils";
 import { getOrbitControls } from "../context/orbit-controls-context";
 import type { Table } from "@/shared/types/schema";
@@ -21,6 +22,8 @@ interface UseCameraControlsReturn {
   recenterTarget: THREE.Vector3 | null;
   recenterLookAt: THREE.Vector3 | null;
   recenterTranslateOnly: boolean;
+  recenterOrbitOnly: boolean;
+  restrictPolarAngle: boolean;
   defaultCameraPosition: THREE.Vector3;
   isCameraAnimating: boolean;
   maxCameraDistance: number;
@@ -28,12 +31,11 @@ interface UseCameraControlsReturn {
   setRecenterTarget: React.Dispatch<React.SetStateAction<THREE.Vector3 | null>>;
   setRecenterLookAt: React.Dispatch<React.SetStateAction<THREE.Vector3 | null>>;
   setRecenterTranslateOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  setRecenterOrbitOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  setRestrictPolarAngle: React.Dispatch<React.SetStateAction<boolean>>;
   setIsCameraAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   handleRecenter: () => void;
-  frameCameraForViewMode: (
-    mode: "2D" | "3D",
-    tables: Array<{ position: [number, number, number] }>
-  ) => void;
+  frameCameraForViewMode: (mode: "2D" | "3D") => void;
 }
 
 export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
@@ -45,6 +47,8 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     null
   );
   const [recenterTranslateOnly, setRecenterTranslateOnly] = useState(false);
+  const [recenterOrbitOnly, setRecenterOrbitOnly] = useState(false);
+  const [restrictPolarAngle, setRestrictPolarAngle] = useState(false);
   const [isCameraAnimating, setIsCameraAnimating] = useState(false);
 
   // Calculate desired max camera distance based on schema extent
@@ -122,35 +126,50 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     setRecenterTarget(null);
     setRecenterLookAt(null);
     setRecenterTranslateOnly(false); // Recenter button should rotate
+    setRecenterOrbitOnly(false);
     setShouldRecenter(true);
   }, []);
 
-  // Reframe the camera when the view mode switches. 2D flattens every table
-  // onto the y=0 plane, so the camera moves overhead and looks straight down;
-  // 3D returns to the default angled position.
-  const frameCameraForViewMode = useCallback(
-    (
-      mode: "2D" | "3D",
-      tables: Array<{ position: [number, number, number] }>
-    ) => {
-      if (mode === "2D") {
-        setRecenterTarget(getTopDownCameraPosition(tables));
-        setRecenterLookAt(new THREE.Vector3(0, 0, 0));
-      } else {
-        setRecenterTarget(null);
-        setRecenterLookAt(null);
-      }
-      setRecenterTranslateOnly(false);
-      setShouldRecenter(true);
-    },
-    []
-  );
+  const defaultCameraPositionRef = useRef(defaultCameraPosition);
+  useEffect(() => {
+    defaultCameraPositionRef.current = defaultCameraPosition;
+  }, [defaultCameraPosition]);
+
+  // 2D flattens tables onto y=0. Only rotate when the current view is
+  // shallower than 45° (including from below); keep look-at and distance.
+  const frameCameraForViewMode = useCallback((mode: "2D" | "3D") => {
+    if (mode !== "2D") {
+      setRestrictPolarAngle(false);
+      return;
+    }
+
+    const orbitControls = getOrbitControls();
+    const lookAt = orbitControls?.target.clone() ?? new THREE.Vector3(0, 0, 0);
+    const from =
+      orbitControls?.object.position.clone() ??
+      defaultCameraPositionRef.current.clone();
+
+    if (!shouldRotateToTopDownFor2D(from, lookAt)) {
+      setRestrictPolarAngle(true);
+      return;
+    }
+
+    setRecenterTarget(getTopDownCameraPosition(from, lookAt));
+    setRecenterLookAt(lookAt);
+    setRecenterTranslateOnly(false);
+    setRecenterOrbitOnly(true);
+    setRestrictPolarAngle(false);
+    setIsCameraAnimating(true);
+    setShouldRecenter(true);
+  }, []);
 
   return {
     shouldRecenter,
     recenterTarget,
     recenterLookAt,
     recenterTranslateOnly,
+    recenterOrbitOnly,
+    restrictPolarAngle,
     defaultCameraPosition,
     isCameraAnimating,
     maxCameraDistance,
@@ -158,6 +177,8 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     setRecenterTarget,
     setRecenterLookAt,
     setRecenterTranslateOnly,
+    setRecenterOrbitOnly,
+    setRestrictPolarAngle,
     setIsCameraAnimating,
     handleRecenter,
     frameCameraForViewMode,

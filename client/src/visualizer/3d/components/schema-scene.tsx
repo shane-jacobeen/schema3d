@@ -45,7 +45,6 @@ interface SchemaSceneProps {
     Map<string, [number, number, number]>
   >;
   maxCameraDistance: number;
-  viewMode: "2D" | "3D";
   isCameraAnimating: boolean;
   isDraggingTable: boolean;
   shouldRecenter: boolean;
@@ -53,6 +52,8 @@ interface SchemaSceneProps {
   recenterTarget: THREE.Vector3 | null;
   recenterLookAt: THREE.Vector3 | null;
   recenterTranslateOnly: boolean;
+  recenterOrbitOnly: boolean;
+  restrictPolarAngle: boolean;
   onTableSelect: (table: Table | null) => void;
   onTableHover: (table: Table | null) => void;
   onTableLongPress: (table: Table) => void;
@@ -94,7 +95,6 @@ export function SchemaScene({
   isAnimating,
   animatedPositionsRef,
   maxCameraDistance,
-  viewMode,
   isCameraAnimating,
   isDraggingTable,
   shouldRecenter,
@@ -102,6 +102,8 @@ export function SchemaScene({
   recenterTarget,
   recenterLookAt,
   recenterTranslateOnly,
+  recenterOrbitOnly,
+  restrictPolarAngle,
   onTableSelect,
   onTableHover,
   onTableLongPress,
@@ -151,7 +153,7 @@ export function SchemaScene({
             dampingFactor={0.05}
             minDistance={10}
             maxDistance={maxCameraDistance}
-            maxPolarAngle={viewMode === "2D" ? MAX_POLAR_ANGLE_2D : Math.PI}
+            maxPolarAngle={restrictPolarAngle ? MAX_POLAR_ANGLE_2D : Math.PI}
             enabled={!isCameraAnimating && !isDraggingTable}
           />
 
@@ -176,6 +178,7 @@ export function SchemaScene({
             recenterTarget={recenterTarget}
             recenterLookAt={recenterLookAt}
             translateOnly={recenterTranslateOnly}
+            orbitOnly={recenterOrbitOnly}
             onRecenterComplete={onRecenterComplete}
             onAnimatingChange={onAnimatingChange}
           />

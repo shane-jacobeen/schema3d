@@ -26,10 +26,7 @@ export function useLayoutManagement(
   visibleTables: DatabaseSchema["tables"],
   selectedCategories: Set<string>,
   startTableAnimation: (schema: DatabaseSchema) => void,
-  frameCameraForViewMode: (
-    mode: "2D" | "3D",
-    tables: DatabaseSchema["tables"]
-  ) => void
+  frameCameraForViewMode: (mode: "2D" | "3D") => void
 ): UseLayoutManagementReturn {
   // Check for view state from URL on first render (before it's consumed)
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => {
@@ -61,11 +58,9 @@ export function useLayoutManagement(
         visibleTables.map((t) => t.name)
       );
       // A schema that loads directly in 2D (shared link or persisted state)
-      // needs the same top-down framing the toggle applies; otherwise the
-      // camera mounts at its default 3D angle and shows the flattened tables
-      // edge-on as a thin line.
-      if (viewMode === "2D" && visibleTables.length > 0) {
-        frameCameraForViewMode(viewMode, visibleTables);
+      // uses the same 45° elevation check as the toggle.
+      if (viewMode === "2D") {
+        frameCameraForViewMode(viewMode);
       }
       return;
     }
@@ -87,22 +82,17 @@ export function useLayoutManagement(
     prevViewModeRef.current = viewMode;
     prevVisibleTableNamesRef.current = currentVisibleNames;
 
+    // Rotate above the graph only when 2D is toggled from a shallow angle.
+    // Returning to 3D leaves the camera where it is.
+    if (viewModeChanged) {
+      frameCameraForViewMode(viewMode);
+    }
+
     // If any layout-affecting property changed, recalculate and animate
     if (
       (layoutChanged || viewModeChanged || visibleTablesChanged) &&
       visibleTables.length > 0
     ) {
-      // On a view-mode switch, reframe the camera to fit the new layout. Only
-      // the visible tables matter; hidden ones keep their old positions in the
-      // merged schema and would skew the bounds.
-      const reframeCameraForViewMode = (tables: DatabaseSchema["tables"]) => {
-        if (!viewModeChanged) return;
-        frameCameraForViewMode(
-          viewMode,
-          tables.filter((table) => currentVisibleNames.has(table.name))
-        );
-      };
-
       if (shouldUseAsyncForceLayout(visibleTables.length, currentLayout)) {
         setCurrentSchema((prevSchema) => {
           void applyLayoutToFilteredSchemaAsync(
@@ -113,7 +103,6 @@ export function useLayoutManagement(
           )
             .then((updatedSchema) => {
               startTableAnimation(updatedSchema);
-              reframeCameraForViewMode(updatedSchema.tables);
             })
             .catch((error) => {
               // A failed worker leaves the tables at their old positions.
@@ -134,7 +123,6 @@ export function useLayoutManagement(
         );
 
         startTableAnimation(updatedSchema);
-        reframeCameraForViewMode(updatedSchema.tables);
         return prevSchema;
       });
     }

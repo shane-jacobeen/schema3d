@@ -50,7 +50,6 @@ export function SchemaVisualizer() {
           isAnimating={animationState.isAnimating}
           animatedPositionsRef={animationState.animatedPositionsRef}
           maxCameraDistance={cameraState.maxCameraDistance}
-          viewMode={layoutState.viewMode}
           isCameraAnimating={cameraState.isCameraAnimating}
           isDraggingTable={interactionHandlers.isDraggingTable}
           shouldRecenter={cameraState.shouldRecenter}
@@ -58,6 +57,8 @@ export function SchemaVisualizer() {
           recenterTarget={cameraState.recenterTarget}
           recenterLookAt={cameraState.recenterLookAt}
           recenterTranslateOnly={cameraState.recenterTranslateOnly}
+          recenterOrbitOnly={cameraState.recenterOrbitOnly}
+          restrictPolarAngle={cameraState.restrictPolarAngle}
           onTableSelect={selectionState.handleTableSelect}
           onTableHover={selectionState.setHoveredTable}
           onTableLongPress={interactionHandlers.handleTableLongPress}

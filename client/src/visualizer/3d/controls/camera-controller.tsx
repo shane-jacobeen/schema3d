@@ -17,6 +17,7 @@ interface CameraControllerProps {
   recenterLookAt?: THREE.Vector3 | null;
   defaultPosition?: THREE.Vector3; // Calculated default position based on schema
   translateOnly?: boolean; // If true, only translate camera, don't rotate
+  orbitOnly?: boolean; // If true, rotate around look-at without translating or reframing
   onRecenterComplete?: () => void;
   onAnimatingChange?: (isAnimating: boolean) => void;
 }
@@ -27,6 +28,7 @@ export function CameraController({
   recenterLookAt = null,
   defaultPosition,
   translateOnly = false,
+  orbitOnly = false,
   onRecenterComplete,
   onAnimatingChange,
 }: CameraControllerProps) {
@@ -106,6 +108,48 @@ export function CameraController({
     }
 
     const isMovingToTarget = recenterTarget !== null;
+
+    if (orbitOnly && isMovingToTarget) {
+      const lookAt = targetLookAt.current;
+      const currentSpherical = new THREE.Spherical().setFromVector3(
+        new THREE.Vector3().subVectors(camera.position, lookAt)
+      );
+      const targetSpherical = new THREE.Spherical().setFromVector3(
+        new THREE.Vector3().subVectors(targetPosition.current, lookAt)
+      );
+
+      const phiDelta = targetSpherical.phi - currentSpherical.phi;
+      const radiusDelta = targetSpherical.radius - currentSpherical.radius;
+      if (
+        Math.abs(phiDelta) <= ROTATION_THRESHOLD &&
+        Math.abs(radiusDelta) <= POSITION_THRESHOLD
+      ) {
+        completeAnimation();
+        return;
+      }
+
+      const phiStep =
+        Math.sign(phiDelta) *
+        Math.min(Math.abs(phiDelta), ROTATION_SPEED * delta);
+      currentSpherical.phi += phiStep;
+      currentSpherical.radius = THREE.MathUtils.lerp(
+        currentSpherical.radius,
+        targetSpherical.radius,
+        MOVE_SPEED
+      );
+      currentSpherical.makeSafe();
+
+      camera.position
+        .copy(lookAt)
+        .add(new THREE.Vector3().setFromSpherical(currentSpherical));
+      camera.lookAt(lookAt);
+
+      const orbitControls = getOrbitControls();
+      if (orbitControls) {
+        orbitControls.target.copy(lookAt);
+      }
+      return;
+    }
 
     if (isMovingToTarget) {
       const positionDistance = camera.position.distanceTo(
