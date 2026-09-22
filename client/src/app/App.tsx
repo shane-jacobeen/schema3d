@@ -13,6 +13,9 @@ const SchemaVisualizer = lazy(() =>
   }))
 );
 const About = lazy(() => import("../pages/about"));
+const SqlTopic = lazy(() => import("../pages/topics/sql"));
+const MermaidTopic = lazy(() => import("../pages/topics/mermaid"));
+const DrawDbTopic = lazy(() => import("../pages/topics/drawdb"));
 const NotFound = lazy(() => import("../pages/not-found"));
 
 function App() {
@@ -36,6 +39,9 @@ function App() {
             <Routes>
               <Route path="/" element={<SchemaVisualizer />} />
               <Route path="/about" element={<About />} />
+              <Route path="/topics/sql" element={<SqlTopic />} />
+              <Route path="/topics/mermaid" element={<MermaidTopic />} />
+              <Route path="/topics/drawdb" element={<DrawDbTopic />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

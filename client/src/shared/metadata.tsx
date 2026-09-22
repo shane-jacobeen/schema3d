@@ -148,6 +148,127 @@ export function AboutPageMetadata() {
 }
 
 /**
+ * SQL Topic Page metadata
+ */
+export function SqlTopicMetadata() {
+  return (
+    <Helmet>
+      <title>
+        SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D
+      </title>
+      <meta
+        name="description"
+        content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
+      />
+      <link rel="canonical" href="https://schema3d.com/topics/sql" />
+      <meta
+        property="og:title"
+        content="SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D"
+      />
+      <meta
+        property="og:description"
+        content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
+      />
+      <meta property="og:url" content="https://schema3d.com/topics/sql" />
+      <meta property="og:image" content={previewImageUrl} />
+      <meta
+        property="og:image:alt"
+        content="Schema3D SQL schema visualizer preview"
+      />
+      <meta
+        name="twitter:title"
+        content="SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D"
+      />
+      <meta
+        name="twitter:description"
+        content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
+      />
+      <meta name="twitter:image" content={previewImageUrl} />
+    </Helmet>
+  );
+}
+
+/**
+ * Mermaid Topic Page metadata
+ */
+export function MermaidTopicMetadata() {
+  return (
+    <Helmet>
+      <title>
+        Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D
+      </title>
+      <meta
+        name="description"
+        content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
+      />
+      <link rel="canonical" href="https://schema3d.com/topics/mermaid" />
+      <meta
+        property="og:title"
+        content="Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D"
+      />
+      <meta
+        property="og:description"
+        content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
+      />
+      <meta property="og:url" content="https://schema3d.com/topics/mermaid" />
+      <meta property="og:image" content={previewImageUrl} />
+      <meta
+        property="og:image:alt"
+        content="Schema3D Mermaid ER diagram visualizer preview"
+      />
+      <meta
+        name="twitter:title"
+        content="Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D"
+      />
+      <meta
+        name="twitter:description"
+        content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
+      />
+      <meta name="twitter:image" content={previewImageUrl} />
+    </Helmet>
+  );
+}
+
+/**
+ * DrawDB Topic Page metadata
+ */
+export function DrawDbTopicMetadata() {
+  return (
+    <Helmet>
+      <title>Visualize DrawDB Schemas in 3D | Schema3D</title>
+      <meta
+        name="description"
+        content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
+      />
+      <link rel="canonical" href="https://schema3d.com/topics/drawdb" />
+      <meta
+        property="og:title"
+        content="Visualize DrawDB Schemas in 3D | Schema3D"
+      />
+      <meta
+        property="og:description"
+        content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
+      />
+      <meta property="og:url" content="https://schema3d.com/topics/drawdb" />
+      <meta property="og:image" content={previewImageUrl} />
+      <meta
+        property="og:image:alt"
+        content="Schema3D DrawDB schema visualizer preview"
+      />
+      <meta
+        name="twitter:title"
+        content="Visualize DrawDB Schemas in 3D | Schema3D"
+      />
+      <meta
+        name="twitter:description"
+        content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
+      />
+      <meta name="twitter:image" content={previewImageUrl} />
+    </Helmet>
+  );
+}
+
+/**
  * 404 Not Found page metadata
  */
 export function NotFoundMetadata() {
