@@ -100,7 +100,7 @@ export function SchemaOverlay() {
         />
       </div>
 
-      <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex flex-col gap-2">
         <Card className="bg-slate-900/70 border-slate-700 text-white backdrop-blur-sm p-2 sm:p-4 min-w-[164px] sm:min-w-[200px] pb-2 sm:pb-3">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <h2 className="text-sm sm:text-lg font-bold truncate max-w-[150px] sm:max-w-none">
@@ -123,6 +123,28 @@ export function SchemaOverlay() {
             )}
           </p>
         </Card>
+        <div className="text-[10px] sm:text-xs text-slate-400 px-1 flex gap-2">
+          <Link
+            to="/topics/sql"
+            className="hover:text-blue-300 transition-colors"
+          >
+            SQL
+          </Link>
+          <span>•</span>
+          <Link
+            to="/topics/mermaid"
+            className="hover:text-blue-300 transition-colors"
+          >
+            Mermaid
+          </Link>
+          <span>•</span>
+          <Link
+            to="/topics/drawdb"
+            className="hover:text-blue-300 transition-colors"
+          >
+            DrawDB
+          </Link>
+        </div>
       </div>
 
       <LayoutControls
