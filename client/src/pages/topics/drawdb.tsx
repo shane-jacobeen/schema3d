@@ -1,12 +1,12 @@
 import { DrawDbTopicMetadata } from "@/shared/metadata";
-import { ContentPageShell } from "@/shared/layouts/content-page-shell";
+import { InfoPageShell } from "@/shared/layouts/info-page-shell";
 import { Separator } from "@/shared/ui-components/separator";
 import { Box, FileJson, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function DrawDbTopic() {
   return (
-    <ContentPageShell
+    <InfoPageShell
       metadata={<DrawDbTopicMetadata />}
       title="Explore DrawDB schemas in 3D"
       subtitle="Parse DrawDB JSON, .ddb files, and share links"
@@ -145,6 +145,6 @@ export default function DrawDbTopic() {
           </a>
         </p>
       </div>
-    </ContentPageShell>
+    </InfoPageShell>
   );
 }

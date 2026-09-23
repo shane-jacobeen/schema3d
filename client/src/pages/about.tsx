@@ -1,5 +1,5 @@
 import { AboutPageMetadata } from "@/shared/metadata";
-import { ContentPageShell } from "@/shared/layouts/content-page-shell";
+import { InfoPageShell } from "@/shared/layouts/info-page-shell";
 import {
   Tabs,
   TabsContent,
@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 
 export default function About() {
   return (
-    <ContentPageShell
+    <InfoPageShell
       metadata={<AboutPageMetadata />}
       title="Schema3D"
       subtitle="Experimental database visualization tool for 3D schema exploration and relationship mapping"
@@ -423,6 +423,6 @@ export default function About() {
           </p>
         </div>
       </div>
-    </ContentPageShell>
+    </InfoPageShell>
   );
 }

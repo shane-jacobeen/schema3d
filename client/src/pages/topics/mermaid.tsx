@@ -1,12 +1,12 @@
 import { MermaidTopicMetadata } from "@/shared/metadata";
-import { ContentPageShell } from "@/shared/layouts/content-page-shell";
+import { InfoPageShell } from "@/shared/layouts/info-page-shell";
 import { Separator } from "@/shared/ui-components/separator";
 import { Network, FileCode, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function MermaidTopic() {
   return (
-    <ContentPageShell
+    <InfoPageShell
       metadata={<MermaidTopicMetadata />}
       title="Explore Mermaid ER diagrams in 3D"
       subtitle="Parse erDiagram syntax in your browser"
@@ -130,6 +130,6 @@ export default function MermaidTopic() {
           </a>
         </p>
       </div>
-    </ContentPageShell>
+    </InfoPageShell>
   );
 }

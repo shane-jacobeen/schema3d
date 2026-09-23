@@ -1,12 +1,12 @@
 import { SqlTopicMetadata } from "@/shared/metadata";
-import { ContentPageShell } from "@/shared/layouts/content-page-shell";
+import { InfoPageShell } from "@/shared/layouts/info-page-shell";
 import { Separator } from "@/shared/ui-components/separator";
 import { Database, FileCode, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function SqlTopic() {
   return (
-    <ContentPageShell
+    <InfoPageShell
       metadata={<SqlTopicMetadata />}
       title="Explore SQL and T-SQL schemas in 3D"
       subtitle="Parse CREATE TABLE, foreign keys, and views in your browser"
@@ -129,6 +129,6 @@ export default function SqlTopic() {
           </a>
         </p>
       </div>
-    </ContentPageShell>
+    </InfoPageShell>
   );
 }

@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui-components/button";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-interface ContentPageShellProps {
+interface InfoPageShellProps {
   metadata: ReactNode;
   logoSrc?: string;
   logoAlt?: string;
@@ -15,7 +15,7 @@ interface ContentPageShellProps {
   backButtonHref?: string;
 }
 
-export function ContentPageShell({
+export function InfoPageShell({
   metadata,
   logoSrc = "/images/Schema3D Logo.png",
   logoAlt = "Schema3D Logo",
@@ -24,7 +24,7 @@ export function ContentPageShell({
   children,
   backButtonText = "Back to Visualizer",
   backButtonHref = "/",
-}: ContentPageShellProps) {
+}: InfoPageShellProps) {
   return (
     <>
       {metadata}
