@@ -66,8 +66,26 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
           </p>
 
           <p className="text-center text-sm italic text-slate-400">
-            SQL schema visualizer <span aria-hidden="true">•</span> Mermaid ER
-            diagrams <span aria-hidden="true">•</span> DrawDB JSON{" "}
+            <Link
+              to="/topics/sql"
+              className="transition-colors hover:text-blue-300"
+            >
+              SQL schema visualizer
+            </Link>{" "}
+            <span aria-hidden="true">•</span>{" "}
+            <Link
+              to="/topics/mermaid"
+              className="transition-colors hover:text-blue-300"
+            >
+              Mermaid ER diagrams
+            </Link>{" "}
+            <span aria-hidden="true">•</span>{" "}
+            <Link
+              to="/topics/drawdb"
+              className="transition-colors hover:text-blue-300"
+            >
+              DrawDB JSON
+            </Link>{" "}
             <span aria-hidden="true">•</span> Browser-only
           </p>
 
