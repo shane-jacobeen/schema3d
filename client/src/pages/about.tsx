@@ -30,12 +30,33 @@ export default function About() {
           relationships in an intuitive spatial environment.
         </p>
         <p className="text-slate-300 leading-relaxed">
-          Import schemas from SQL scripts, Mermaid ER diagrams, or DrawDB JSON,
-          organize tables with custom categories, and share visualizations with
-          your team. Schema3D provides everything you need to understand and
-          document complex database structures. Explore the features below to
-          see how Schema3D can enhance your workflow, learn about the technology
-          that powers it, and discover how to get involved with the project.
+          Import schemas from{" "}
+          <Link
+            to="/topics/sql"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            SQL scripts
+          </Link>
+          ,{" "}
+          <Link
+            to="/topics/mermaid"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Mermaid ER diagrams
+          </Link>
+          , or{" "}
+          <Link
+            to="/topics/drawdb"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            DrawDB JSON
+          </Link>
+          , organize tables with custom categories, and share visualizations
+          with your team. Schema3D provides everything you need to understand
+          and document complex database structures. Explore the features below
+          to see how Schema3D can enhance your workflow, learn about the
+          technology that powers it, and discover how to get involved with the
+          project.
         </p>
       </div>
 
@@ -48,11 +69,31 @@ export default function About() {
         </h2>
 
         <Tabs defaultValue="visualization" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
-            <TabsTrigger value="visualization">Visualization</TabsTrigger>
-            <TabsTrigger value="import">Import</TabsTrigger>
-            <TabsTrigger value="sharing">Sharing</TabsTrigger>
-            <TabsTrigger value="organization">Organization</TabsTrigger>
+          <TabsList className="mb-4 grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4">
+            <TabsTrigger
+              value="visualization"
+              className="w-full px-2 text-xs sm:px-3 sm:text-sm"
+            >
+              Visualization
+            </TabsTrigger>
+            <TabsTrigger
+              value="import"
+              className="w-full px-2 text-xs sm:px-3 sm:text-sm"
+            >
+              Import
+            </TabsTrigger>
+            <TabsTrigger
+              value="sharing"
+              className="w-full px-2 text-xs sm:px-3 sm:text-sm"
+            >
+              Sharing
+            </TabsTrigger>
+            <TabsTrigger
+              value="organization"
+              className="w-full px-2 text-xs sm:px-3 sm:text-sm"
+            >
+              Organization
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="visualization" className="space-y-2">

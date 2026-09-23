@@ -1,7 +1,6 @@
 import { DrawDbTopicMetadata } from "@/shared/metadata";
 import { ContentPageShell } from "@/shared/layouts/content-page-shell";
 import { Separator } from "@/shared/ui-components/separator";
-import { Button } from "@/shared/ui-components/button";
 import { Box, FileJson, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -111,49 +110,40 @@ export default function DrawDbTopic() {
 
       <Separator className="bg-slate-700" />
 
-      <div className="space-y-4">
-        <div>
-          <Link to="/">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-              Open Schema3D
-            </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+        <p>
+          Other formats:{" "}
+          <Link
+            to="/topics/sql"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            SQL
           </Link>
-        </div>
-        <div className="text-sm text-slate-400">
-          <p className="mb-2">
-            Other formats:{" "}
-            <Link
-              to="/topics/sql"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              SQL
-            </Link>
-            {" • "}
-            <Link
-              to="/topics/mermaid"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Mermaid
-            </Link>
-          </p>
-          <p>
-            <Link
-              to="/about"
-              className="text-slate-400 hover:text-blue-300 transition-colors"
-            >
-              About
-            </Link>
-            {" • "}
-            <a
-              href="https://github.com/shane-jacobeen/schema3d/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-400 hover:text-blue-300 transition-colors"
-            >
-              GitHub
-            </a>
-          </p>
-        </div>
+          {" • "}
+          <Link
+            to="/topics/mermaid"
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Mermaid
+          </Link>
+        </p>
+        <p>
+          <Link
+            to="/about"
+            className="text-slate-400 hover:text-blue-300 transition-colors"
+          >
+            About
+          </Link>
+          {" • "}
+          <a
+            href="https://github.com/shane-jacobeen/schema3d/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-400 hover:text-blue-300 transition-colors"
+          >
+            GitHub
+          </a>
+        </p>
       </div>
     </ContentPageShell>
   );
