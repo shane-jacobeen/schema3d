@@ -83,6 +83,84 @@ export default function MermaidTopic() {
 
       <div>
         <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+          <FileCode className="h-5 w-5 text-blue-400" />
+          Mermaid ER diagram syntax example
+        </h2>
+        <p className="text-slate-300 leading-relaxed mb-3">
+          Here is a quick Mermaid erDiagram example showing entities,
+          attributes, and relationships:
+        </p>
+        <pre className="bg-slate-900 border border-slate-700 rounded-md p-4 text-sm text-slate-200 overflow-x-auto mb-3">
+          {`erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    CUSTOMER {
+        int customer_id PK
+        string name
+        string email
+    }
+    ORDER ||--|{ ORDER_ITEM : contains
+    ORDER {
+        int order_id PK
+        int customer_id FK
+        date order_date
+    }
+    PRODUCT ||--o{ ORDER_ITEM : "ordered in"
+    PRODUCT {
+        int product_id PK
+        string name
+        decimal price
+    }
+    ORDER_ITEM {
+        int order_item_id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+    }`}
+        </pre>
+        <p className="text-slate-300 leading-relaxed mb-3">
+          Relationship cardinality notation:
+        </p>
+        <ul className="space-y-2 text-slate-300 mb-4">
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-1">•</span>
+            <span>
+              <code className="text-slate-200">||--o&#123;</code> one to zero or
+              more
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-1">•</span>
+            <span>
+              <code className="text-slate-200">||--||</code> one to exactly one
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-400 mt-1">•</span>
+            <span>
+              <code className="text-slate-200">&#125;o--||</code> zero or more
+              to one
+            </span>
+          </li>
+        </ul>
+        <p className="text-slate-300 leading-relaxed">
+          <strong className="text-white">
+            Paste your Mermaid ERD into Schema3D
+          </strong>{" "}
+          to explore it in 3D.{" "}
+          <Link
+            to="/"
+            className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
+          >
+            Open the visualizer
+          </Link>{" "}
+          and paste Mermaid ER syntax directly into the editor.
+        </p>
+      </div>
+
+      <Separator className="bg-slate-700" />
+
+      <div>
+        <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
           <Info className="h-5 w-5 text-blue-400" />
           What Schema3D is
         </h2>

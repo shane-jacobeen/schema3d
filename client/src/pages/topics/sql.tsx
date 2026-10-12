@@ -19,9 +19,9 @@ export default function SqlTopic() {
         <p className="text-slate-300 leading-relaxed">
           Scanning hundreds of lines of CREATE TABLE statements to trace foreign
           keys and understand table relationships is tedious and error-prone.
-          Schema3D parses SQL and T-SQL schema definitions and renders tables,
-          columns, primary keys, and foreign key relationships as an interactive
-          3D visualization.
+          Schema3D is a database schema visualizer that parses SQL and T-SQL
+          definitions and renders tables, columns, primary keys, and foreign key
+          relationships as an interactive 3D visualization.
         </p>
       </div>
 
