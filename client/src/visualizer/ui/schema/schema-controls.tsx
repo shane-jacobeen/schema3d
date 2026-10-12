@@ -1,6 +1,5 @@
 import { useState, useEffect, startTransition, useRef } from "react";
 import { Pencil, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/shared/ui-components/button";
 import { Badge } from "@/shared/ui-components/badge";
 import { Input } from "@/shared/ui-components/input";
@@ -256,30 +255,6 @@ export function SchemaSelector({
           <DialogTitle className="text-white text-base sm:text-lg">
             Select or Import Database Schema
           </DialogTitle>
-          <p className="text-xs text-slate-400 pt-1">
-            Learn more about{" "}
-            <Link
-              to="/topics/sql"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              SQL
-            </Link>
-            {", "}
-            <Link
-              to="/topics/mermaid"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Mermaid
-            </Link>
-            {", or "}
-            <Link
-              to="/topics/drawdb"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              DrawDB
-            </Link>
-            {" formats"}
-          </p>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-4 sm:gap-6">
