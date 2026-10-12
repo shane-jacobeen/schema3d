@@ -36,8 +36,8 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
                 </h1>
               </div>
               <p className="text-lg text-slate-300">
-                Open-source database visualization tool for 3D schema
-                exploration and relationship mapping
+                Open-source database schema visualizer for 3D exploration and
+                relationship mapping
               </p>
             </div>
             <Button

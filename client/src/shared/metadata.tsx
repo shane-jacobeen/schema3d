@@ -38,19 +38,19 @@ export function SchemaMetadata() {
 export function AboutPageMetadata() {
   return (
     <Helmet>
-      <title>About Schema3D: The Open-Source Schema Visualizer</title>
+      <title>About Schema3D: Interactive 3D Database Schema Visualizer</title>
       <meta
         name="description"
-        content="How Schema3D works as a browser-only, interactive 3D schema visualizer. Supports SQL, T-SQL, Mermaid ER, and DrawDB. Built for exploring relationships without a live database."
+        content="Schema3D is an interactive 3D database schema visualizer for SQL, Mermaid ER diagrams, and DrawDB JSON. Explore tables, relationships, and foreign keys in your browser without a database connection."
       />
       <link rel="canonical" href="https://schema3d.com/about" />
       <meta
         property="og:title"
-        content="About Schema3D: The Open-Source Schema Visualizer"
+        content="About Schema3D: Interactive 3D Database Schema Visualizer"
       />
       <meta
         property="og:description"
-        content="How Schema3D works as a browser-only, interactive 3D schema visualizer. Supports SQL, T-SQL, Mermaid ER, and DrawDB. Built for exploring relationships without a live database."
+        content="Schema3D is an interactive 3D database schema visualizer for SQL, Mermaid ER diagrams, and DrawDB JSON. Explore tables, relationships, and foreign keys in your browser without a database connection."
       />
       <meta property="og:url" content="https://schema3d.com/about" />
       <meta property="og:image" content={previewImageUrl} />
@@ -60,11 +60,11 @@ export function AboutPageMetadata() {
       />
       <meta
         name="twitter:title"
-        content="About Schema3D: The Open-Source Schema Visualizer"
+        content="About Schema3D: Interactive 3D Database Schema Visualizer"
       />
       <meta
         name="twitter:description"
-        content="How Schema3D works as a browser-only, interactive 3D schema visualizer. Supports SQL, T-SQL, Mermaid ER, and DrawDB. Built for exploring relationships without a live database."
+        content="Schema3D is an interactive 3D database schema visualizer for SQL, Mermaid ER diagrams, and DrawDB JSON. Explore tables, relationships, and foreign keys in your browser without a database connection."
       />
       <meta name="twitter:image" content={previewImageUrl} />
       <script type="application/ld+json">

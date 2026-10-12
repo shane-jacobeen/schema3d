@@ -98,6 +98,65 @@ export default function DrawDbTopic() {
 
       <div>
         <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+          <FileJson className="h-5 w-5 text-blue-400" />
+          How to import a DrawDB export into Schema3D
+        </h2>
+        <p className="text-slate-300 leading-relaxed mb-3">
+          Follow these steps to import your DrawDB diagram:
+        </p>
+        <ol className="space-y-3 text-slate-300 mb-3">
+          <li className="flex items-start gap-3">
+            <span className="text-blue-400 font-semibold mt-0.5 flex-shrink-0">
+              1.
+            </span>
+            <span>
+              <strong className="text-white">Export from DrawDB:</strong> In
+              DrawDB, click the menu icon, select "Export", and choose "JSON"
+              format. Copy the exported JSON to your clipboard or save it as a
+              file.
+            </span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="text-blue-400 font-semibold mt-0.5 flex-shrink-0">
+              2.
+            </span>
+            <span>
+              <strong className="text-white">Open Schema3D:</strong>{" "}
+              <Link
+                to="/"
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Go to the visualizer
+              </Link>{" "}
+              and paste the DrawDB JSON directly into the text editor, or click
+              "Upload File" and select your{" "}
+              <code className="text-slate-200">.json</code> or{" "}
+              <code className="text-slate-200">.ddb</code> file.
+            </span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="text-blue-400 font-semibold mt-0.5 flex-shrink-0">
+              3.
+            </span>
+            <span>
+              <strong className="text-white">Explore in 3D:</strong> Schema3D
+              automatically detects the DrawDB JSON format, parses tables and
+              relationships, and renders them in the 3D visualizer. Use the
+              layout controls to adjust the view.
+            </span>
+          </li>
+        </ol>
+        <p className="text-slate-300 leading-relaxed">
+          <strong className="text-white">Tip:</strong> You can also paste a
+          DrawDB share link or GitHub Gist ID directly into the editor. Schema3D
+          will fetch the diagram from GitHub Gists and parse it automatically.
+        </p>
+      </div>
+
+      <Separator className="bg-slate-700" />
+
+      <div>
+        <h2 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
           <Info className="h-5 w-5 text-blue-400" />
           What Schema3D is
         </h2>
