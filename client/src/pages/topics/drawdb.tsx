@@ -106,7 +106,7 @@ export default function DrawDbTopic() {
         </p>
         <ol className="space-y-3 text-slate-300 mb-3">
           <li className="flex items-start gap-3">
-            <span className="text-blue-400 font-semibold mt-0.5 flex-shrink-0">
+            <span className="text-blue-400 font-semibold flex-shrink-0">
               1.
             </span>
             <span>
@@ -117,7 +117,7 @@ export default function DrawDbTopic() {
             </span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="text-blue-400 font-semibold mt-0.5 flex-shrink-0">
+            <span className="text-blue-400 font-semibold flex-shrink-0">
               2.
             </span>
             <span>
@@ -135,7 +135,7 @@ export default function DrawDbTopic() {
             </span>
           </li>
           <li className="flex items-start gap-3">
-            <span className="text-blue-400 font-semibold mt-0.5 flex-shrink-0">
+            <span className="text-blue-400 font-semibold flex-shrink-0">
               3.
             </span>
             <span>
