@@ -14,6 +14,7 @@ export function SchemaMetadata() {
         content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
       />
       <link rel="canonical" href="https://schema3d.com/" />
+      <meta property="og:url" content="https://schema3d.com/" />
       <meta
         property="og:title"
         content="Schema3D: Interactive Open-Source Schema Visualizer"
@@ -23,11 +24,35 @@ export function SchemaMetadata() {
         content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
       />
       <meta property="og:image" content={previewImageUrl} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta
         property="og:image:alt"
         content="Schema3D 3D database schema visualizer preview"
       />
+      <meta
+        name="twitter:title"
+        content="Schema3D: Interactive Open-Source Schema Visualizer"
+      />
+      <meta
+        name="twitter:description"
+        content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
+      />
       <meta name="twitter:image" content={previewImageUrl} />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Home",
+              item: "https://schema3d.com",
+            },
+          ],
+        })}
+      </script>
     </Helmet>
   );
 }
@@ -54,6 +79,8 @@ export function AboutPageMetadata() {
       />
       <meta property="og:url" content="https://schema3d.com/about" />
       <meta property="og:image" content={previewImageUrl} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta
         property="og:image:alt"
         content="Schema3D 3D database schema visualizer preview"
@@ -161,6 +188,7 @@ export function SqlTopicMetadata() {
         content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
       />
       <link rel="canonical" href="https://schema3d.com/topics/sql" />
+      <meta property="og:url" content="https://schema3d.com/topics/sql" />
       <meta
         property="og:title"
         content="SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D"
@@ -169,8 +197,9 @@ export function SqlTopicMetadata() {
         property="og:description"
         content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
       />
-      <meta property="og:url" content="https://schema3d.com/topics/sql" />
       <meta property="og:image" content={previewImageUrl} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta
         property="og:image:alt"
         content="Schema3D SQL schema visualizer preview"
@@ -202,6 +231,7 @@ export function MermaidTopicMetadata() {
         content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
       />
       <link rel="canonical" href="https://schema3d.com/topics/mermaid" />
+      <meta property="og:url" content="https://schema3d.com/topics/mermaid" />
       <meta
         property="og:title"
         content="Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D"
@@ -210,8 +240,9 @@ export function MermaidTopicMetadata() {
         property="og:description"
         content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
       />
-      <meta property="og:url" content="https://schema3d.com/topics/mermaid" />
       <meta property="og:image" content={previewImageUrl} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta
         property="og:image:alt"
         content="Schema3D Mermaid ER diagram visualizer preview"
@@ -241,6 +272,7 @@ export function DrawDbTopicMetadata() {
         content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
       />
       <link rel="canonical" href="https://schema3d.com/topics/drawdb" />
+      <meta property="og:url" content="https://schema3d.com/topics/drawdb" />
       <meta
         property="og:title"
         content="Visualize DrawDB Schemas in 3D | Schema3D"
@@ -249,8 +281,9 @@ export function DrawDbTopicMetadata() {
         property="og:description"
         content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
       />
-      <meta property="og:url" content="https://schema3d.com/topics/drawdb" />
       <meta property="og:image" content={previewImageUrl} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta
         property="og:image:alt"
         content="Schema3D DrawDB schema visualizer preview"
