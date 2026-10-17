@@ -14,6 +14,7 @@ import type {
   RelationshipLineProps,
 } from "../../types";
 import {
+  CLICK_MOVE_TOLERANCE_PX,
   LONG_PRESS_DURATION,
   TABLE_RADIUS,
   RELATIONSHIP_LINE_Y_OFFSET,
@@ -165,13 +166,17 @@ function RelationshipLine({
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
-      // Only select if it wasn't a long press
-      if (!isLongPressRef.current && onSelect) {
-        onSelect(isSelected ? null : relationship);
+      // Only select if it wasn't a long press, drag, or orbit
+      if (
+        !isLongPressRef.current &&
+        e.delta <= CLICK_MOVE_TOLERANCE_PX &&
+        onSelect
+      ) {
+        onSelect(relationship);
       }
       isLongPressRef.current = false;
     },
-    [onSelect, isSelected, relationship]
+    [onSelect, relationship]
   );
 
   const handlePointerOver = useCallback(

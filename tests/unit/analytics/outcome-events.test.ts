@@ -4,12 +4,14 @@ import {
   captureSchemaExported,
   captureSchemaShared,
   captureSchemaVisualizedIfPending,
+  captureTableSelected,
   noteSchemaInputRoute,
   peekPendingSchemaInputRoute,
   resetPendingSchemaInputRoute,
   SCHEMA_EXPORTED_EVENT,
   SCHEMA_SHARED_EVENT,
   SCHEMA_VISUALIZED_EVENT,
+  TABLE_SELECTED_EVENT,
 } from "@/shared/analytics";
 import { getInitialSchema } from "@/visualizer/state/initial-state";
 import { encodeSchemaToUrl } from "@/shared/utils/url-encoding";
@@ -67,6 +69,14 @@ describe("outcome events", () => {
     });
     expect(posthog.capture).toHaveBeenNthCalledWith(3, SCHEMA_EXPORTED_EVENT, {
       export_type: "csv",
+    });
+  });
+
+  it("emits table_selected with only the view mode", () => {
+    captureTableSelected("2D");
+
+    expect(posthog.capture).toHaveBeenCalledWith(TABLE_SELECTED_EVENT, {
+      view_mode: "2D",
     });
   });
 
