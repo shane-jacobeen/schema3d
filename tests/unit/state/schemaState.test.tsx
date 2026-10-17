@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import { useSchemaState } from "@/visualizer/state/hooks/use-schema-state";
+import {
+  peekPendingSchemaInputRoute,
+  resetPendingSchemaInputRoute,
+} from "@/shared/analytics";
 
 const mockApplyLayoutToSchema = vi.fn();
 const mockApplyLayoutToSchemaAsync = vi.fn();
@@ -88,5 +92,21 @@ describe("useSchemaState", () => {
     expect(clearAllSelections).toHaveBeenCalled();
     expect(handleRecenter).toHaveBeenCalled();
     expect(onCategoriesReset).toHaveBeenCalledWith(largeSchema);
+  });
+
+  it("notes the initial schema route only on mount, not on re-render", () => {
+    const { result, rerender } = renderHook(() =>
+      useSchemaState(vi.fn(), vi.fn(), () => "3D")
+    );
+    expect(peekPendingSchemaInputRoute()).toBe("sample");
+    expect(result.current.persistedSchemaRef.current).toBe(
+      result.current.currentSchema
+    );
+
+    resetPendingSchemaInputRoute();
+    rerender();
+    rerender();
+
+    expect(peekPendingSchemaInputRoute()).toBeNull();
   });
 });
