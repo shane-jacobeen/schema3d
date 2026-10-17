@@ -10,7 +10,7 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Table } from "@/shared/types/schema";
 import { useOrbitControlsRef } from "../../context/orbit-controls-context";
-import { LONG_PRESS_DURATION } from "../../constants";
+import { CLICK_MOVE_TOLERANCE_PX, LONG_PRESS_DURATION } from "../../constants";
 
 interface UseTableDragOptions {
   table: Table;
@@ -30,7 +30,7 @@ interface UseTableDragReturn {
   isDraggingRef: MutableRefObject<boolean>;
   isLongPressRef: MutableRefObject<boolean>;
   meshPointerHandlers: {
-    onClick: (e: { stopPropagation: () => void }) => void;
+    onClick: (e: { stopPropagation: () => void; delta: number }) => void;
     onPointerDown: (e: {
       stopPropagation: () => void;
       clientX: number;
@@ -198,11 +198,16 @@ export function useTableDrag({
   }, []);
 
   const meshPointerHandlers = {
-    onClick: (e: { stopPropagation: () => void }) => {
+    onClick: (e: { stopPropagation: () => void; delta: number }) => {
       e.stopPropagation();
-      if (!isLongPressRef.current && onSelect) {
-        onSelect(isSelected ? null : table);
+      if (
+        isLongPressRef.current ||
+        e.delta > CLICK_MOVE_TOLERANCE_PX ||
+        !onSelect
+      ) {
+        return;
       }
+      onSelect(table);
     },
     onPointerDown: (e: {
       stopPropagation: () => void;

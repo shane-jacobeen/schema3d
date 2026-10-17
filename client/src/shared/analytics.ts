@@ -29,6 +29,11 @@
  * schema_exported
  *   When: PNG blob or CSV download started.
  *   export_type: "png" | "csv"
+ *
+ * table_selected
+ *   When: a canvas click selects a table that was not already selected.
+ *   Not when: long press, drag/orbit, or a click on the selected table.
+ *   view_mode: "2D" | "3D"
  */
 
 import posthog from "posthog-js";
@@ -47,6 +52,7 @@ export type SchemaExportType = (typeof SCHEMA_EXPORT_TYPES)[number];
 export const SCHEMA_VISUALIZED_EVENT = "schema_visualized";
 export const SCHEMA_SHARED_EVENT = "schema_shared";
 export const SCHEMA_EXPORTED_EVENT = "schema_exported";
+export const TABLE_SELECTED_EVENT = "table_selected";
 
 let pendingInputRoute: SchemaInputRoute | null = null;
 
@@ -98,4 +104,8 @@ export function captureSchemaShared(): void {
 
 export function captureSchemaExported(exportType: SchemaExportType): void {
   capture(SCHEMA_EXPORTED_EVENT, { export_type: exportType });
+}
+
+export function captureTableSelected(viewMode: "2D" | "3D"): void {
+  capture(TABLE_SELECTED_EVENT, { view_mode: viewMode });
 }
