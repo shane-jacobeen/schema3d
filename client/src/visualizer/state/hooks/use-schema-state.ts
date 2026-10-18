@@ -60,7 +60,7 @@ export function useSchemaState(
 ): UseSchemaStateReturn {
   const [currentSchema, setCurrentSchema] =
     useState<DatabaseSchema>(getInitialSchema);
-  const persistedSchemaRef = useRef<DatabaseSchema>(getInitialSchema());
+  const persistedSchemaRef = useRef<DatabaseSchema>(currentSchema);
   const { toast } = useToast();
 
   // Clean up URL hash and pending view state after initial schema load
