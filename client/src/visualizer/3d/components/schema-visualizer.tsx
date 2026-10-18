@@ -19,6 +19,7 @@ export function SchemaVisualizer() {
     connectedTables,
     isFiltering,
     handleRecenterComplete,
+    handleTableSelect,
   } = state;
 
   return (
@@ -65,7 +66,7 @@ export function SchemaVisualizer() {
           }}
           handlers={{
             isDraggingTable: interactionHandlers.isDraggingTable,
-            onTableSelect: selectionState.handleTableSelect,
+            onTableSelect: handleTableSelect,
             onTableHover: selectionState.setHoveredTable,
             onTableLongPress: interactionHandlers.handleTableLongPress,
             onTablePositionChange: (table, newPosition) =>

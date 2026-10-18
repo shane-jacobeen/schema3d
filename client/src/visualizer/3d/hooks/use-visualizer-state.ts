@@ -8,6 +8,8 @@ import { useCameraControls } from "../hooks/use-camera-controls";
 import { useInteractionHandlers } from "../hooks/use-interaction-handlers";
 import { getConnectedTables } from "../index";
 import { orbitControlsRefHolder } from "../context/orbit-controls-context";
+import { captureTableSelected } from "@/shared/analytics";
+import type { Table } from "@/shared/types/schema";
 
 /**
  * Consolidates visualizer hook orchestration and resolves circular dependencies
@@ -100,6 +102,16 @@ export function useVisualizerState() {
     }
   }, [cameraState, layoutState.viewMode]);
 
+  const handleTableSelect = useCallback(
+    (table: Table | null) => {
+      if (table && table.name !== selectionState.selectedTable?.name) {
+        captureTableSelected(layoutState.viewMode);
+      }
+      selectionState.handleTableSelect(table);
+    },
+    [selectionState, layoutState.viewMode]
+  );
+
   const handleTableClose = useCallback(() => {
     selectionState.setSelectedTable(null);
   }, [selectionState]);
@@ -123,6 +135,7 @@ export function useVisualizerState() {
     connectedTables,
     isFiltering,
     handleRecenterComplete,
+    handleTableSelect,
     handleTableClose,
     handleRelationshipClose,
   };

@@ -1,16 +1,10 @@
-import {
-  useRef,
-  useEffect,
-  useCallback,
-  type ComponentRef,
-  type MutableRefObject,
-} from "react";
+import { useRef, useEffect, useCallback, type ComponentRef } from "react";
 import { useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Table } from "@/shared/types/schema";
 import { useOrbitControlsRef } from "../../context/orbit-controls-context";
-import { LONG_PRESS_DURATION } from "../../constants";
+import { usePressGesture } from "../../hooks/use-press-gesture";
 
 interface UseTableDragOptions {
   table: Table;
@@ -27,18 +21,10 @@ interface UseTableDragOptions {
 }
 
 interface UseTableDragReturn {
-  isDraggingRef: MutableRefObject<boolean>;
-  isLongPressRef: MutableRefObject<boolean>;
   meshPointerHandlers: {
     onClick: (e: { stopPropagation: () => void }) => void;
     onPointerDown: (e: {
       stopPropagation: () => void;
-      clientX: number;
-      clientY: number;
-    }) => void;
-    onPointerMove: (e: {
-      stopPropagation: () => void;
-      buttons: number;
       clientX: number;
       clientY: number;
     }) => void;
@@ -67,19 +53,23 @@ export function useTableDrag({
   const orbitControlsRef = useRef<ComponentRef<typeof OrbitControls> | null>(
     null
   );
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressRef = useRef(false);
 
   useEffect(() => {
     orbitControlsRef.current = orbitControlsContextRef.current;
   }, [orbitControlsContextRef]);
 
   const onPositionChangeRef = useRef(onPositionChange);
+  const onDragStartRef = useRef(onDragStart);
   const onDragEndRef = useRef(onDragEnd);
+  const onLongPressRef = useRef(onLongPress);
+  const isSelectedRef = useRef(isSelected);
   const tableRef = useRef(table);
   useEffect(() => {
     onPositionChangeRef.current = onPositionChange;
+    onDragStartRef.current = onDragStart;
     onDragEndRef.current = onDragEnd;
+    onLongPressRef.current = onLongPress;
+    isSelectedRef.current = isSelected;
     tableRef.current = table;
   });
 
@@ -115,12 +105,9 @@ export function useTableDrag({
     document.body.style.cursor = "default";
   }, [enableOrbitControls]);
 
-  const attachGlobalDragListeners = useCallback(() => {
-    if (globalMoveRef.current) return;
-
-    const handleGlobalPointerMove = (e: PointerEvent) => {
+  const applyDragMovement = useCallback(
+    (clientX: number, clientY: number) => {
       if (
-        !isDraggingRef.current ||
         !onPositionChangeRef.current ||
         !dragStartPositionRef.current ||
         !dragStartPointerRef.current
@@ -128,16 +115,10 @@ export function useTableDrag({
         return;
       }
 
-      if (e.buttons === 0) {
-        endDrag();
-        detachGlobalDragListeners();
-        return;
-      }
-
       const rect = gl.domElement.getBoundingClientRect();
       const currentPointer = new THREE.Vector2(
-        ((e.clientX - rect.left) / rect.width) * 2 - 1,
-        -((e.clientY - rect.top) / rect.height) * 2 + 1
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1
       );
 
       const deltaX = currentPointer.x - dragStartPointerRef.current.x;
@@ -163,6 +144,25 @@ export function useTableDrag({
         newPosition.y,
         newPosition.z,
       ]);
+    },
+    [camera, gl]
+  );
+
+  const attachGlobalDragListeners = useCallback(() => {
+    if (globalMoveRef.current) return;
+
+    const handleGlobalPointerMove = (event: PointerEvent) => {
+      if (!isDraggingRef.current) {
+        return;
+      }
+
+      if (event.buttons === 0) {
+        endDrag();
+        detachGlobalDragListeners();
+        return;
+      }
+
+      applyDragMovement(event.clientX, event.clientY);
     };
 
     const handleGlobalPointerUp = () => {
@@ -174,7 +174,31 @@ export function useTableDrag({
     globalUpRef.current = handleGlobalPointerUp;
     window.addEventListener("pointermove", handleGlobalPointerMove);
     window.addEventListener("pointerup", handleGlobalPointerUp);
-  }, [camera, gl, detachGlobalDragListeners, endDrag]);
+  }, [applyDragMovement, detachGlobalDragListeners, endDrag]);
+
+  const startTableDrag = useCallback(
+    (event: PointerEvent) => {
+      if (
+        !isSelectedRef.current ||
+        !onPositionChangeRef.current ||
+        !dragStartPositionRef.current ||
+        !dragStartPointerRef.current ||
+        isDraggingRef.current
+      ) {
+        return;
+      }
+
+      isDraggingRef.current = true;
+      if (orbitControlsRef.current) {
+        orbitControlsRef.current.enabled = false;
+      }
+      attachGlobalDragListeners();
+      onDragStartRef.current?.();
+      document.body.style.cursor = "grabbing";
+      applyDragMovement(event.clientX, event.clientY);
+    },
+    [applyDragMovement, attachGlobalDragListeners]
+  );
 
   useEffect(() => {
     return () => {
@@ -182,27 +206,20 @@ export function useTableDrag({
     };
   }, [detachGlobalDragListeners]);
 
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-    };
-  }, []);
-
-  const clearLongPressTimer = useCallback(() => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  }, []);
+  const { begin, isClick } = usePressGesture({
+    onLongPress: () => {
+      onLongPressRef.current?.(tableRef.current);
+    },
+    onDrag: startTableDrag,
+  });
 
   const meshPointerHandlers = {
     onClick: (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
-      if (!isLongPressRef.current && onSelect) {
-        onSelect(isSelected ? null : table);
+      if (!isClick() || !onSelect) {
+        return;
       }
+      onSelect(table);
     },
     onPointerDown: (e: {
       stopPropagation: () => void;
@@ -210,7 +227,6 @@ export function useTableDrag({
       clientY: number;
     }) => {
       e.stopPropagation();
-      isLongPressRef.current = false;
 
       if (isSelected && onPositionChange) {
         const rect = gl.domElement.getBoundingClientRect();
@@ -219,113 +235,19 @@ export function useTableDrag({
           -((e.clientY - rect.top) / rect.height) * 2 + 1
         );
         dragStartPositionRef.current = new THREE.Vector3(...table.position);
+      } else {
+        dragStartPointerRef.current = null;
+        dragStartPositionRef.current = null;
       }
 
-      if (onLongPress) {
-        longPressTimerRef.current = setTimeout(() => {
-          isLongPressRef.current = true;
-          onLongPress(table);
-          if (isDraggingRef.current) {
-            isDraggingRef.current = false;
-            enableOrbitControls();
-            onDragEnd?.();
-            document.body.style.cursor = "default";
-          }
-        }, LONG_PRESS_DURATION);
-      }
-    },
-    onPointerMove: (e: {
-      stopPropagation: () => void;
-      buttons: number;
-      clientX: number;
-      clientY: number;
-    }) => {
-      if (e.buttons === 0) {
-        if (isDraggingRef.current) {
-          endDrag();
-        }
-        return;
-      }
-
-      if (
-        !onPositionChange ||
-        !dragStartPositionRef.current ||
-        !dragStartPointerRef.current ||
-        !isSelected ||
-        isLongPressRef.current
-      ) {
-        return;
-      }
-
-      e.stopPropagation();
-
-      const rect = gl.domElement.getBoundingClientRect();
-      const currentPointer = new THREE.Vector2(
-        ((e.clientX - rect.left) / rect.width) * 2 - 1,
-        -((e.clientY - rect.top) / rect.height) * 2 + 1
-      );
-
-      const deltaX = currentPointer.x - dragStartPointerRef.current.x;
-      const deltaY = currentPointer.y - dragStartPointerRef.current.y;
-
-      const movementThreshold = 0.01;
-      const hasMoved =
-        Math.abs(deltaX) > movementThreshold ||
-        Math.abs(deltaY) > movementThreshold;
-
-      if (!isDraggingRef.current && hasMoved) {
-        isDraggingRef.current = true;
-        clearLongPressTimer();
-        isLongPressRef.current = false;
-
-        if (orbitControlsRef.current) {
-          orbitControlsRef.current.enabled = false;
-        }
-
-        attachGlobalDragListeners();
-        onDragStart?.();
-        document.body.style.cursor = "grabbing";
-      }
-
-      if (!isDraggingRef.current) {
-        return;
-      }
-
-      const cameraDirection = new THREE.Vector3();
-      camera.getWorldDirection(cameraDirection);
-
-      const cameraRight = new THREE.Vector3();
-      cameraRight.crossVectors(cameraDirection, camera.up).normalize();
-      const cameraUp = camera.up.clone().normalize();
-
-      const distance = camera.position.distanceTo(dragStartPositionRef.current);
-      const scale = distance * 0.5;
-
-      const movement = new THREE.Vector3()
-        .addScaledVector(cameraRight, deltaX * scale)
-        .addScaledVector(cameraUp, deltaY * scale);
-
-      const newPosition = dragStartPositionRef.current.clone().add(movement);
-      onPositionChange(table, [newPosition.x, newPosition.y, newPosition.z]);
+      begin(e);
     },
     onPointerUp: (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
-      clearLongPressTimer();
-
-      if (isLongPressRef.current) {
-        setTimeout(() => {
-          isLongPressRef.current = false;
-        }, 200);
-      } else {
-        isLongPressRef.current = false;
-      }
-
       endDrag();
     },
     onPointerCancel: (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
-      clearLongPressTimer();
-      isLongPressRef.current = false;
       endDrag();
     },
     onPointerOver: (e: { stopPropagation: () => void }) => {
@@ -341,14 +263,10 @@ export function useTableDrag({
       if (!isDraggingRef.current) {
         document.body.style.cursor = "default";
       }
-      clearLongPressTimer();
-      isLongPressRef.current = false;
     },
   };
 
   return {
-    isDraggingRef,
-    isLongPressRef,
     meshPointerHandlers,
   };
 }
