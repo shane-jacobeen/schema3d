@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import * as THREE from "three";
 import type { Table } from "@/shared/types/schema";
 import type { DatabaseSchema } from "@/shared/types/schema";
@@ -45,12 +45,36 @@ export function useInteractionHandlers(
 ): UseInteractionHandlersReturn {
   const justLongPressedRef = useRef(false);
   const [isDraggingTable, setIsDraggingTable] = useState(false);
+  const removeLongPressListenersRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      removeLongPressListenersRef.current?.();
+    };
+  }, []);
 
   const setLongPressFlag = useCallback(() => {
     justLongPressedRef.current = true;
-    setTimeout(() => {
-      justLongPressedRef.current = false;
-    }, 100);
+    removeLongPressListenersRef.current?.();
+
+    // The camera starts moving while the pointer is still down. Hold the guard
+    // through pointerup, then past the click that follows it. A short timer
+    // from the start of the press expires before that release.
+    const endGesture = () => {
+      removeLongPressListenersRef.current?.();
+      removeLongPressListenersRef.current = null;
+      setTimeout(() => {
+        justLongPressedRef.current = false;
+      }, 0);
+    };
+
+    const removeListeners = () => {
+      window.removeEventListener("pointerup", endGesture, true);
+      window.removeEventListener("pointercancel", endGesture, true);
+    };
+    removeLongPressListenersRef.current = removeListeners;
+    window.addEventListener("pointerup", endGesture, true);
+    window.addEventListener("pointercancel", endGesture, true);
   }, []);
 
   const shouldClosePanels = useCallback(

@@ -13,12 +13,8 @@ import type {
   RelationshipLinesProps,
   RelationshipLineProps,
 } from "../../types";
-import {
-  DRAG_MOVEMENT_THRESHOLD_PX,
-  LONG_PRESS_DURATION,
-  TABLE_RADIUS,
-  RELATIONSHIP_LINE_Y_OFFSET,
-} from "../../constants";
+import { TABLE_RADIUS, RELATIONSHIP_LINE_Y_OFFSET } from "../../constants";
+import { usePressGesture } from "../../hooks/use-press-gesture";
 import {
   getLineStyle,
   getTableSurfacePoint,
@@ -141,10 +137,6 @@ function RelationshipLine({
   const toPosRef = useRef(new THREE.Vector3());
   const midpointRef = useRef(new THREE.Vector3());
 
-  // Long-press detection
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressRef = useRef(false);
-
   // Create a tube geometry along the curve for click detection
   // Use useMemo to avoid recreating geometry on every render
   const tubeGeometry = useMemo(
@@ -153,30 +145,27 @@ function RelationshipLine({
     [relationship.curve]
   );
 
-  // Cleanup geometry and timer on unmount
+  // Cleanup geometry on unmount
   useEffect(() => {
     return () => {
       tubeGeometry.dispose();
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
     };
   }, [tubeGeometry]);
+
+  const { begin, isClick } = usePressGesture({
+    onLongPress: () => {
+      onLongPress?.(relationship);
+    },
+  });
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       e.stopPropagation();
-      // Only select if it wasn't a long press, drag, or orbit
-      if (
-        !isLongPressRef.current &&
-        e.delta <= DRAG_MOVEMENT_THRESHOLD_PX &&
-        onSelect
-      ) {
+      if (isClick() && onSelect) {
         onSelect(relationship);
       }
-      isLongPressRef.current = false;
     },
-    [onSelect, relationship]
+    [isClick, onSelect, relationship]
   );
 
   const handlePointerOver = useCallback(
@@ -345,58 +334,16 @@ function RelationshipLine({
         onClick={handleClick}
         onPointerDown={(e) => {
           e.stopPropagation();
-          // Prevent OrbitControls from interfering by stopping propagation at native event level
-          if (e.nativeEvent) {
-            e.nativeEvent.stopPropagation();
-            e.nativeEvent.preventDefault();
-          }
-          isLongPressRef.current = false;
-          // Start long-press timer
-          if (onLongPress) {
-            longPressTimerRef.current = setTimeout(() => {
-              isLongPressRef.current = true;
-              onLongPress(relationship);
-            }, LONG_PRESS_DURATION);
-          }
+          begin(e);
         }}
         onPointerUp={(e) => {
           e.stopPropagation();
-          // Clear long-press timer if pointer is released before duration
-          if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-          }
-          // If it was a long press, keep the flag true for a bit longer
-          // to prevent the subsequent click from deselecting
-          if (isLongPressRef.current) {
-            // Keep flag true for a short time to prevent click handler from firing
-            setTimeout(() => {
-              isLongPressRef.current = false;
-            }, 200);
-          } else {
-            // Reset long press flag immediately if it wasn't a long press
-            isLongPressRef.current = false;
-          }
         }}
         onPointerCancel={(e) => {
           e.stopPropagation();
-          // Clear long-press timer if pointer is cancelled
-          if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-          }
-          isLongPressRef.current = false;
         }}
         onPointerOver={handlePointerOver}
-        onPointerOut={() => {
-          handlePointerOut();
-          // Clear long-press timer if pointer leaves
-          if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-          }
-          isLongPressRef.current = false;
-        }}
+        onPointerOut={handlePointerOut}
       >
         <meshBasicMaterial visible={false} />
       </mesh>
