@@ -194,6 +194,7 @@ export function useInteractionHandlers(
 
         cameraState.setRecenterTarget(position);
         cameraState.setRecenterLookAt(lookAt);
+        cameraState.setRecenterTranslateOnly(true);
         cameraState.setRecenterOrbitOnly(false);
         cameraState.setShouldRecenter(true);
       }

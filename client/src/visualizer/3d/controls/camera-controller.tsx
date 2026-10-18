@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { getOrbitControls } from "@/visualizer/3d/context/orbit-controls-context";
+import { longPressRepositionAlpha } from "@/visualizer/3d/utils/camera-utils";
 
 // Constants
 const POSITION_THRESHOLD = 0.1;
@@ -35,6 +36,9 @@ export function CameraController({
   const { camera } = useThree();
   const targetPosition = useRef(new THREE.Vector3(0, 8, 20));
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
+  const translateFromPosition = useRef(new THREE.Vector3());
+  const translateFromLookAt = useRef(new THREE.Vector3());
+  const translateElapsed = useRef(0);
   const isAnimating = useRef(false);
 
   useEffect(() => {
@@ -46,6 +50,14 @@ export function CameraController({
         // Use calculated default position or fallback
         targetPosition.current.copy(defaultPosition || FALLBACK_POSITION);
         targetLookAt.current.copy(DEFAULT_LOOK_AT);
+      }
+      if (translateOnly && recenterTarget) {
+        translateFromPosition.current.copy(camera.position);
+        const orbitControls = getOrbitControls();
+        translateFromLookAt.current.copy(
+          orbitControls?.target ?? targetLookAt.current
+        );
+        translateElapsed.current = 0;
       }
       isAnimating.current = true;
       onAnimatingChange?.(true);
@@ -59,6 +71,8 @@ export function CameraController({
     recenterLookAt,
     defaultPosition,
     onAnimatingChange,
+    translateOnly,
+    camera,
   ]);
 
   // Helper function to sync OrbitControls with camera position
@@ -151,6 +165,46 @@ export function CameraController({
       return;
     }
 
+    if (isMovingToTarget && translateOnly) {
+      const orbitControls = getOrbitControls();
+      const lookAtGap = orbitControls
+        ? translateFromLookAt.current.distanceTo(targetLookAt.current)
+        : 0;
+      // Already framed. Skip the pan so the settle curve is not cut off later.
+      if (
+        translateFromPosition.current.distanceTo(targetPosition.current) <=
+          POSITION_THRESHOLD &&
+        lookAtGap <= POSITION_THRESHOLD
+      ) {
+        completeAnimation();
+        return;
+      }
+
+      translateElapsed.current += delta;
+      const alpha = longPressRepositionAlpha(translateElapsed.current);
+      camera.position.lerpVectors(
+        translateFromPosition.current,
+        targetPosition.current,
+        alpha
+      );
+
+      if (orbitControls) {
+        orbitControls.target.lerpVectors(
+          translateFromLookAt.current,
+          targetLookAt.current,
+          alpha
+        );
+        orbitControls.update();
+      } else {
+        camera.lookAt(targetLookAt.current);
+      }
+
+      if (alpha >= 1) {
+        completeAnimation();
+      }
+      return;
+    }
+
     if (isMovingToTarget) {
       const positionDistance = camera.position.distanceTo(
         targetPosition.current
@@ -163,71 +217,50 @@ export function CameraController({
         camera.position.copy(targetPosition.current);
       }
 
-      if (translateOnly) {
-        const orbitControls = getOrbitControls();
-        if (orbitControls) {
-          orbitControls.target.lerp(targetLookAt.current, MOVE_SPEED);
-          orbitControls.update();
+      // Rotate camera to look at target
+      const currentDirection = new THREE.Vector3();
+      camera.getWorldDirection(currentDirection);
+
+      const targetDirection = new THREE.Vector3()
+        .subVectors(targetLookAt.current, camera.position)
+        .normalize();
+
+      const angle = currentDirection.angleTo(targetDirection);
+
+      if (angle > ROTATION_THRESHOLD) {
+        const maxRotation = ROTATION_SPEED * delta;
+        const rotationAmount = Math.min(angle, maxRotation);
+
+        const rotationAxis = new THREE.Vector3()
+          .crossVectors(currentDirection, targetDirection)
+          .normalize();
+
+        if (rotationAxis.length() < 0.001) {
+          rotationAxis.set(0, 1, 0);
         }
 
-        // Check if we're done
+        const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(
+          rotationAxis,
+          rotationAmount
+        );
+
+        const newDirection = currentDirection
+          .applyQuaternion(rotationQuaternion)
+          .normalize();
+
+        const newLookAt = new THREE.Vector3()
+          .copy(camera.position)
+          .add(newDirection.multiplyScalar(10));
+
+        camera.lookAt(newLookAt);
+      } else {
+        camera.lookAt(targetLookAt.current);
+
         const finalPositionDistance = camera.position.distanceTo(
           targetPosition.current
         );
-        const targetDistance =
-          orbitControls?.target.distanceTo(targetLookAt.current) || 0;
-        if (
-          finalPositionDistance <= POSITION_THRESHOLD &&
-          targetDistance <= POSITION_THRESHOLD
-        ) {
+        if (finalPositionDistance <= POSITION_THRESHOLD) {
           completeAnimation();
-        }
-      } else {
-        // Rotate camera to look at target
-        const currentDirection = new THREE.Vector3();
-        camera.getWorldDirection(currentDirection);
-
-        const targetDirection = new THREE.Vector3()
-          .subVectors(targetLookAt.current, camera.position)
-          .normalize();
-
-        const angle = currentDirection.angleTo(targetDirection);
-
-        if (angle > ROTATION_THRESHOLD) {
-          const maxRotation = ROTATION_SPEED * delta;
-          const rotationAmount = Math.min(angle, maxRotation);
-
-          const rotationAxis = new THREE.Vector3()
-            .crossVectors(currentDirection, targetDirection)
-            .normalize();
-
-          if (rotationAxis.length() < 0.001) {
-            rotationAxis.set(0, 1, 0);
-          }
-
-          const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(
-            rotationAxis,
-            rotationAmount
-          );
-
-          const newDirection = currentDirection
-            .applyQuaternion(rotationQuaternion)
-            .normalize();
-
-          const newLookAt = new THREE.Vector3()
-            .copy(camera.position)
-            .add(newDirection.multiplyScalar(10));
-
-          camera.lookAt(newLookAt);
-        } else {
-          camera.lookAt(targetLookAt.current);
-
-          const finalPositionDistance = camera.position.distanceTo(
-            targetPosition.current
-          );
-          if (finalPositionDistance <= POSITION_THRESHOLD) {
-            completeAnimation();
-          }
         }
       }
     } else {

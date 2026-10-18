@@ -102,6 +102,32 @@ export function easeInOutCubic(progress: number): number {
 }
 
 /**
+ * Ease-in-out quartic. Zero velocity, acceleration, and jerk at both ends,
+ * so the pan eases into motion and settles more gently than the cubic curve.
+ */
+export function easeInOutQuart(progress: number): number {
+  const t = Math.min(Math.max(progress, 0), 1);
+  return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+}
+
+/**
+ * Long-press camera pan length. Orbit stays locked until this finishes.
+ */
+export const LONG_PRESS_REPOSITION_SECONDS = 0.28;
+
+/**
+ * 0 at the start of a long-press pan, 1 once LONG_PRESS_REPOSITION_SECONDS
+ * has elapsed. Ease-in-out quartic: slow start, fast middle, gentle settle.
+ */
+export function longPressRepositionAlpha(elapsedSeconds: number): number {
+  const progress = Math.min(
+    Math.max(elapsedSeconds / LONG_PRESS_REPOSITION_SECONDS, 0),
+    1
+  );
+  return easeInOutQuart(progress);
+}
+
+/**
  * Calculate default camera position based on max camera distance
  * @param maxDistance - Maximum camera distance (from calculateMaxCameraDistance)
  * @returns Default camera position for schema viewing
