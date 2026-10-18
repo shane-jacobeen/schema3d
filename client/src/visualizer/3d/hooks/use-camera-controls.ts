@@ -39,8 +39,10 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
   const [restrictPolarAngle, setRestrictPolarAngle] = useState(false);
   const cameraMoveRef = useRef<CameraMove | null>(null);
   const pendingMaxDistanceRef = useRef<number | null>(null);
+  const framedDistanceRef = useRef<number | null>(null);
 
   const desiredMaxCameraDistance = calculateMaxCameraDistance(tables);
+  const prevDesiredRef = useRef(desiredMaxCameraDistance);
 
   const [maxCameraDistance, setMaxCameraDistance] = useState(() =>
     calculateMaxCameraDistance(tables)
@@ -69,6 +71,9 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
   }, [requestCameraMove]);
 
   useEffect(() => {
+    const previousDesired = prevDesiredRef.current;
+    prevDesiredRef.current = desiredMaxCameraDistance;
+
     const orbitControls = getOrbitControls();
     if (!orbitControls) {
       startTransition(() => {
@@ -85,17 +90,29 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
     const currentDistance = orbitControls.object.position.distanceTo(
       orbitControls.target
     );
+    const desiredDecreased = desiredMaxCameraDistance < previousDesired - 0.5;
+    const holdingFrame =
+      framedDistanceRef.current != null &&
+      currentDistance <= framedDistanceRef.current + 0.5;
+    if (holdingFrame && desiredDecreased) {
+      framedDistanceRef.current = null;
+    }
+
     const needsDolly =
-      desiredMaxCameraDistance < maxCameraDistance &&
-      currentDistance > desiredMaxCameraDistance;
+      desiredDecreased &&
+      !holdingFrame &&
+      currentDistance > desiredMaxCameraDistance + 0.5;
 
     if (!needsDolly) {
       if (active?.motion === "dolly") {
         return;
       }
-      startTransition(() => {
-        setMaxCameraDistance(desiredMaxCameraDistance);
-      });
+      const nextMax = Math.max(desiredMaxCameraDistance, currentDistance);
+      if (maxCameraDistance !== nextMax) {
+        startTransition(() => {
+          setMaxCameraDistance(nextMax);
+        });
+      }
       return;
     }
 
@@ -151,6 +168,7 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
       tables: Array<{ position: [number, number, number] }> = []
     ) => {
       if (mode !== "2D") {
+        framedDistanceRef.current = null;
         setRestrictPolarAngle(false);
         return;
       }
@@ -172,11 +190,15 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
         return;
       }
 
+      const position = getTopDownCameraPosition(from, lookAt, {
+        fitDistance,
+        untilt,
+      });
+      const framedDistance = position.distanceTo(lookAt);
+      framedDistanceRef.current = framedDistance;
+      setMaxCameraDistance((current) => Math.max(current, framedDistance));
       requestCameraMove({
-        position: getTopDownCameraPosition(from, lookAt, {
-          fitDistance,
-          untilt,
-        }),
+        position,
         lookAt,
         motion: "orbit",
       });
