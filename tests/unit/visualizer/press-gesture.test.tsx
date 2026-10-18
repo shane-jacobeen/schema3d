@@ -1,13 +1,21 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { act, cleanup, renderHook } from "@testing-library/react";
-import { usePressGesture } from "@/visualizer/3d/hooks/use-press-gesture";
+import {
+  consumeFollowingClick,
+  usePressGesture,
+} from "@/visualizer/3d/hooks/use-press-gesture";
 import {
   DRAG_MOVEMENT_THRESHOLD_PX,
   LONG_PRESS_DURATION,
 } from "@/visualizer/3d/constants";
 
-function pointer(type: string, x: number, y: number) {
-  return new PointerEvent(type, { clientX: x, clientY: y, bubbles: true });
+function pointer(type: string, x: number, y: number, buttons = 1) {
+  return new PointerEvent(type, {
+    clientX: x,
+    clientY: y,
+    buttons,
+    bubbles: true,
+  });
 }
 
 describe("usePressGesture", () => {
@@ -19,9 +27,9 @@ describe("usePressGesture", () => {
   it("selects on a release that stays within the drag threshold", () => {
     vi.useFakeTimers();
     const onLongPress = vi.fn();
-    const onDrag = vi.fn();
+    const onDragStart = vi.fn();
     const { result } = renderHook(() =>
-      usePressGesture({ onLongPress, onDrag })
+      usePressGesture({ onLongPress, onDragStart })
     );
 
     act(() => {
@@ -29,11 +37,12 @@ describe("usePressGesture", () => {
       window.dispatchEvent(
         pointer("pointermove", 10 + DRAG_MOVEMENT_THRESHOLD_PX, 10)
       );
-      window.dispatchEvent(pointer("pointerup", 10, 10));
+      window.dispatchEvent(pointer("pointerup", 10, 10, 0));
     });
 
-    expect(onDrag).not.toHaveBeenCalled();
+    expect(onDragStart).not.toHaveBeenCalled();
     expect(result.current.isClick()).toBe(true);
+    expect(consumeFollowingClick()).toBe(false);
 
     act(() => {
       vi.advanceTimersByTime(LONG_PRESS_DURATION);
@@ -42,12 +51,14 @@ describe("usePressGesture", () => {
     expect(onLongPress).not.toHaveBeenCalled();
   });
 
-  it("drops the long-press timer once the pointer drags", () => {
+  it("reports drag start, move, and end on one window subscription", () => {
     vi.useFakeTimers();
     const onLongPress = vi.fn();
-    const onDrag = vi.fn();
+    const onDragStart = vi.fn();
+    const onDragMove = vi.fn();
+    const onDragEnd = vi.fn();
     const { result } = renderHook(() =>
-      usePressGesture({ onLongPress, onDrag })
+      usePressGesture({ onLongPress, onDragStart, onDragMove, onDragEnd })
     );
 
     act(() => {
@@ -55,17 +66,22 @@ describe("usePressGesture", () => {
       window.dispatchEvent(
         pointer("pointermove", DRAG_MOVEMENT_THRESHOLD_PX + 1, 0)
       );
+      window.dispatchEvent(
+        pointer("pointermove", DRAG_MOVEMENT_THRESHOLD_PX + 12, 4)
+      );
     });
 
-    expect(onDrag).toHaveBeenCalledOnce();
+    expect(onDragStart).toHaveBeenCalledOnce();
+    expect(onDragMove).toHaveBeenCalledOnce();
     expect(result.current.isClick()).toBe(false);
 
     act(() => {
       vi.advanceTimersByTime(LONG_PRESS_DURATION);
-      window.dispatchEvent(pointer("pointerup", 40, 0));
+      window.dispatchEvent(pointer("pointerup", 40, 0, 0));
     });
 
     expect(onLongPress).not.toHaveBeenCalled();
+    expect(onDragEnd).toHaveBeenCalledOnce();
     expect(result.current.isClick()).toBe(false);
   });
 
@@ -80,11 +96,19 @@ describe("usePressGesture", () => {
     });
 
     expect(onLongPress).toHaveBeenCalledOnce();
+    expect(consumeFollowingClick()).toBe(true);
 
     act(() => {
-      window.dispatchEvent(pointer("pointerup", 5, 5));
+      window.dispatchEvent(pointer("pointerup", 5, 5, 0));
     });
 
     expect(result.current.isClick()).toBe(false);
+    expect(consumeFollowingClick()).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(0);
+    });
+
+    expect(consumeFollowingClick()).toBe(false);
   });
 });

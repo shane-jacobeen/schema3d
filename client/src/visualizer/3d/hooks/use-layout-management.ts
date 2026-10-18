@@ -84,9 +84,9 @@ export function useLayoutManagement(
     prevViewModeRef.current = viewMode;
     prevVisibleTableNamesRef.current = currentVisibleNames;
 
-    // Untilt immediately on a shallow 2D toggle so the camera does not wait
-    // for layout. Fit distance is applied once the new positions exist.
-    if (viewModeChanged) {
+    // 3D only clears the polar lock. 2D untilts and fits in one move, using
+    // the layout positions below, so a second zoom does not run later.
+    if (viewModeChanged && viewMode !== "2D") {
       frameCameraForViewMode(viewMode);
     }
 
@@ -95,7 +95,7 @@ export function useLayoutManagement(
       (layoutChanged || viewModeChanged || visibleTablesChanged) &&
       visibleTables.length > 0
     ) {
-      const fitCameraAfterLayout = (tables: DatabaseSchema["tables"]) => {
+      const frameLaidOutCamera = (tables: DatabaseSchema["tables"]) => {
         if (viewMode !== "2D") return;
         frameCameraForViewMode(
           viewMode,
@@ -113,7 +113,7 @@ export function useLayoutManagement(
           )
             .then((updatedSchema) => {
               startTableAnimation(updatedSchema);
-              fitCameraAfterLayout(updatedSchema.tables);
+              frameLaidOutCamera(updatedSchema.tables);
             })
             .catch((error) => {
               // A failed worker leaves the tables at their old positions.
@@ -134,7 +134,7 @@ export function useLayoutManagement(
         );
 
         startTableAnimation(updatedSchema);
-        fitCameraAfterLayout(updatedSchema.tables);
+        frameLaidOutCamera(updatedSchema.tables);
         return prevSchema;
       });
     }

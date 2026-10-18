@@ -64,11 +64,7 @@ export function useVisualizerState() {
       setSelectedRelationship: selectionState.setSelectedRelationship,
     },
     {
-      setRecenterTarget: cameraState.setRecenterTarget,
-      setRecenterLookAt: cameraState.setRecenterLookAt,
-      setRecenterTranslateOnly: cameraState.setRecenterTranslateOnly,
-      setRecenterOrbitOnly: cameraState.setRecenterOrbitOnly,
-      setShouldRecenter: cameraState.setShouldRecenter,
+      requestCameraMove: cameraState.requestCameraMove,
     },
     schemaState.currentSchema,
     detailsPanelRef
@@ -94,9 +90,8 @@ export function useVisualizerState() {
     [filterState.filteredTables.size, filterState.relatedTables.size]
   );
 
-  const handleRecenterComplete = useCallback(() => {
-    cameraState.setShouldRecenter(false);
-    cameraState.setRecenterOrbitOnly(false);
+  const handleMoveComplete = useCallback(() => {
+    cameraState.completeCameraMove();
     if (layoutState.viewMode === "2D") {
       cameraState.setRestrictPolarAngle(true);
     }
@@ -134,7 +129,7 @@ export function useVisualizerState() {
     interactionHandlers,
     connectedTables,
     isFiltering,
-    handleRecenterComplete,
+    handleMoveComplete,
     handleTableSelect,
     handleTableClose,
     handleRelationshipClose,

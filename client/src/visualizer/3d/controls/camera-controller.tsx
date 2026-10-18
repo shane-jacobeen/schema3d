@@ -1,96 +1,72 @@
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { getOrbitControls } from "@/visualizer/3d/context/orbit-controls-context";
-import { longPressRepositionAlpha } from "@/visualizer/3d/utils/camera-utils";
+import {
+  DOLLY_SECONDS,
+  easeInOutCubic,
+  longPressRepositionAlpha,
+  type CameraMove,
+} from "@/visualizer/3d/utils/camera-utils";
 
-// Constants
 const POSITION_THRESHOLD = 0.1;
 const ROTATION_THRESHOLD = 0.01;
 const MOVE_SPEED = 0.05;
 const ROTATION_SPEED = 1.5; // radians per second
-const FALLBACK_POSITION = new THREE.Vector3(0, 8, 20);
-const DEFAULT_LOOK_AT = new THREE.Vector3(0, 0, 0);
 
 interface CameraControllerProps {
-  shouldRecenter?: boolean;
-  recenterTarget?: THREE.Vector3 | null;
-  recenterLookAt?: THREE.Vector3 | null;
-  defaultPosition?: THREE.Vector3; // Calculated default position based on schema
-  translateOnly?: boolean; // If true, only translate camera, don't rotate
-  orbitOnly?: boolean; // If true, rotate around look-at without translating or reframing
-  onRecenterComplete?: () => void;
-  onAnimatingChange?: (isAnimating: boolean) => void;
+  move?: CameraMove | null;
+  onMoveComplete?: () => void;
 }
 
 export function CameraController({
-  shouldRecenter = false,
-  recenterTarget = null,
-  recenterLookAt = null,
-  defaultPosition,
-  translateOnly = false,
-  orbitOnly = false,
-  onRecenterComplete,
-  onAnimatingChange,
+  move = null,
+  onMoveComplete,
 }: CameraControllerProps) {
   const { camera } = useThree();
-  const targetPosition = useRef(new THREE.Vector3(0, 8, 20));
-  const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
-  const translateFromPosition = useRef(new THREE.Vector3());
-  const translateFromLookAt = useRef(new THREE.Vector3());
-  const translateElapsed = useRef(0);
+  const targetPosition = useRef(new THREE.Vector3());
+  const targetLookAt = useRef(new THREE.Vector3());
+  const fromPosition = useRef(new THREE.Vector3());
+  const fromLookAt = useRef(new THREE.Vector3());
+  const elapsed = useRef(0);
+  const motionRef = useRef<CameraMove["motion"] | null>(null);
   const isAnimating = useRef(false);
+  const onMoveCompleteRef = useRef(onMoveComplete);
 
   useEffect(() => {
-    if (shouldRecenter) {
-      if (recenterTarget) {
-        targetPosition.current.copy(recenterTarget);
-        targetLookAt.current.copy(recenterLookAt || recenterTarget);
-      } else {
-        // Use calculated default position or fallback
-        targetPosition.current.copy(defaultPosition || FALLBACK_POSITION);
-        targetLookAt.current.copy(DEFAULT_LOOK_AT);
-      }
-      if (translateOnly && recenterTarget) {
-        translateFromPosition.current.copy(camera.position);
-        const orbitControls = getOrbitControls();
-        translateFromLookAt.current.copy(
-          orbitControls?.target ?? targetLookAt.current
-        );
-        translateElapsed.current = 0;
-      }
-      isAnimating.current = true;
-      onAnimatingChange?.(true);
-    } else {
-      isAnimating.current = false;
-      onAnimatingChange?.(false);
-    }
-  }, [
-    shouldRecenter,
-    recenterTarget,
-    recenterLookAt,
-    defaultPosition,
-    onAnimatingChange,
-    translateOnly,
-    camera,
-  ]);
+    onMoveCompleteRef.current = onMoveComplete;
+  });
 
-  // Helper function to sync OrbitControls with camera position
+  useEffect(() => {
+    if (!move) {
+      isAnimating.current = false;
+      motionRef.current = null;
+      return;
+    }
+
+    targetPosition.current.copy(move.position);
+    targetLookAt.current.copy(move.lookAt);
+    motionRef.current = move.motion;
+    if (move.motion === "pan" || move.motion === "dolly") {
+      fromPosition.current.copy(camera.position);
+      const orbitControls = getOrbitControls();
+      fromLookAt.current.copy(orbitControls?.target ?? move.lookAt);
+      elapsed.current = 0;
+    }
+    isAnimating.current = true;
+  }, [move, camera]);
+
   const syncOrbitControls = () => {
     const orbitControls = getOrbitControls();
     if (!orbitControls) return;
 
-    // Update OrbitControls target to match lookAt
     orbitControls.target.copy(targetLookAt.current);
 
-    // Calculate offset from camera to target
     const offset = new THREE.Vector3().subVectors(
       camera.position,
       orbitControls.target
     );
 
-    // Update spherical coordinates to match current camera position
-    // Note: spherical is an internal property of OrbitControls, so we use type assertion
     const controlsWithSpherical = orbitControls as typeof orbitControls & {
       spherical?: THREE.Spherical;
     };
@@ -98,188 +74,153 @@ export function CameraController({
       controlsWithSpherical.spherical.setFromVector3(offset);
     }
 
-    // Force update to apply changes
     orbitControls.update();
   };
 
-  // Helper function to complete animation
   const completeAnimation = () => {
     camera.position.copy(targetPosition.current);
     camera.lookAt(targetLookAt.current);
-
-    // Sync OrbitControls to prevent it from resetting the camera
     syncOrbitControls();
-
     isAnimating.current = false;
-    onAnimatingChange?.(false);
-    onRecenterComplete?.();
+    onMoveCompleteRef.current?.();
   };
 
-  useFrame((state, delta) => {
-    // Only animate when recentering
-    if (!isAnimating.current) {
+  const stepOrbit = (delta: number) => {
+    const lookAt = targetLookAt.current;
+    const currentSpherical = new THREE.Spherical().setFromVector3(
+      new THREE.Vector3().subVectors(camera.position, lookAt)
+    );
+    const targetSpherical = new THREE.Spherical().setFromVector3(
+      new THREE.Vector3().subVectors(targetPosition.current, lookAt)
+    );
+
+    const phiDelta = targetSpherical.phi - currentSpherical.phi;
+    const radiusDelta = targetSpherical.radius - currentSpherical.radius;
+    if (
+      Math.abs(phiDelta) <= ROTATION_THRESHOLD &&
+      Math.abs(radiusDelta) <= POSITION_THRESHOLD
+    ) {
+      completeAnimation();
       return;
     }
 
-    const isMovingToTarget = recenterTarget !== null;
+    const phiStep =
+      Math.sign(phiDelta) *
+      Math.min(Math.abs(phiDelta), ROTATION_SPEED * delta);
+    currentSpherical.phi += phiStep;
+    currentSpherical.radius = THREE.MathUtils.lerp(
+      currentSpherical.radius,
+      targetSpherical.radius,
+      MOVE_SPEED
+    );
+    currentSpherical.makeSafe();
 
-    if (orbitOnly && isMovingToTarget) {
-      const lookAt = targetLookAt.current;
-      const currentSpherical = new THREE.Spherical().setFromVector3(
-        new THREE.Vector3().subVectors(camera.position, lookAt)
-      );
-      const targetSpherical = new THREE.Spherical().setFromVector3(
-        new THREE.Vector3().subVectors(targetPosition.current, lookAt)
-      );
+    camera.position
+      .copy(lookAt)
+      .add(new THREE.Vector3().setFromSpherical(currentSpherical));
+    camera.lookAt(lookAt);
 
-      const phiDelta = targetSpherical.phi - currentSpherical.phi;
-      const radiusDelta = targetSpherical.radius - currentSpherical.radius;
-      if (
-        Math.abs(phiDelta) <= ROTATION_THRESHOLD &&
-        Math.abs(radiusDelta) <= POSITION_THRESHOLD
-      ) {
-        completeAnimation();
-        return;
-      }
+    const orbitControls = getOrbitControls();
+    if (orbitControls) {
+      orbitControls.target.copy(lookAt);
+    }
+  };
 
-      const phiStep =
-        Math.sign(phiDelta) *
-        Math.min(Math.abs(phiDelta), ROTATION_SPEED * delta);
-      currentSpherical.phi += phiStep;
-      currentSpherical.radius = THREE.MathUtils.lerp(
-        currentSpherical.radius,
-        targetSpherical.radius,
-        MOVE_SPEED
-      );
-      currentSpherical.makeSafe();
-
-      camera.position
-        .copy(lookAt)
-        .add(new THREE.Vector3().setFromSpherical(currentSpherical));
-      camera.lookAt(lookAt);
-
-      const orbitControls = getOrbitControls();
-      if (orbitControls) {
-        orbitControls.target.copy(lookAt);
-      }
+  const stepPan = (delta: number) => {
+    const orbitControls = getOrbitControls();
+    const lookAtGap = orbitControls
+      ? fromLookAt.current.distanceTo(targetLookAt.current)
+      : 0;
+    if (
+      fromPosition.current.distanceTo(targetPosition.current) <=
+        POSITION_THRESHOLD &&
+      lookAtGap <= POSITION_THRESHOLD
+    ) {
+      completeAnimation();
       return;
     }
 
-    if (isMovingToTarget && translateOnly) {
-      const orbitControls = getOrbitControls();
-      const lookAtGap = orbitControls
-        ? translateFromLookAt.current.distanceTo(targetLookAt.current)
-        : 0;
-      // Already framed. Skip the pan so the settle curve is not cut off later.
-      if (
-        translateFromPosition.current.distanceTo(targetPosition.current) <=
-          POSITION_THRESHOLD &&
-        lookAtGap <= POSITION_THRESHOLD
-      ) {
-        completeAnimation();
-        return;
-      }
+    elapsed.current += delta;
+    const alpha = longPressRepositionAlpha(elapsed.current);
+    camera.position.lerpVectors(
+      fromPosition.current,
+      targetPosition.current,
+      alpha
+    );
 
-      translateElapsed.current += delta;
-      const alpha = longPressRepositionAlpha(translateElapsed.current);
-      camera.position.lerpVectors(
-        translateFromPosition.current,
-        targetPosition.current,
+    if (orbitControls) {
+      orbitControls.target.lerpVectors(
+        fromLookAt.current,
+        targetLookAt.current,
         alpha
       );
+      orbitControls.update();
+    } else {
+      camera.lookAt(targetLookAt.current);
+    }
 
-      if (orbitControls) {
-        orbitControls.target.lerpVectors(
-          translateFromLookAt.current,
-          targetLookAt.current,
-          alpha
-        );
-        orbitControls.update();
-      } else {
-        camera.lookAt(targetLookAt.current);
-      }
+    if (alpha >= 1) {
+      completeAnimation();
+    }
+  };
 
-      if (alpha >= 1) {
-        completeAnimation();
-      }
+  const stepDolly = (delta: number) => {
+    elapsed.current += delta;
+    const alpha = easeInOutCubic(Math.min(elapsed.current / DOLLY_SECONDS, 1));
+    camera.position.lerpVectors(
+      fromPosition.current,
+      targetPosition.current,
+      alpha
+    );
+
+    const orbitControls = getOrbitControls();
+    if (orbitControls) {
+      orbitControls.target.copy(targetLookAt.current);
+      orbitControls.update();
+    } else {
+      camera.lookAt(targetLookAt.current);
+    }
+
+    if (alpha >= 1) {
+      completeAnimation();
+    }
+  };
+
+  const stepFrame = () => {
+    const positionDistance = camera.position.distanceTo(targetPosition.current);
+
+    if (positionDistance > POSITION_THRESHOLD) {
+      camera.position.lerp(targetPosition.current, MOVE_SPEED);
+
+      const currentLookAt = new THREE.Vector3();
+      camera.getWorldDirection(currentLookAt);
+      currentLookAt.multiplyScalar(10).add(camera.position);
+      currentLookAt.lerp(targetLookAt.current, MOVE_SPEED);
+      camera.lookAt(currentLookAt);
       return;
     }
 
-    if (isMovingToTarget) {
-      const positionDistance = camera.position.distanceTo(
-        targetPosition.current
-      );
+    completeAnimation();
+  };
 
-      // Move camera position smoothly
-      if (positionDistance > POSITION_THRESHOLD) {
-        camera.position.lerp(targetPosition.current, MOVE_SPEED);
-      } else {
-        camera.position.copy(targetPosition.current);
-      }
+  useFrame((_, delta) => {
+    if (!isAnimating.current || !motionRef.current) {
+      return;
+    }
 
-      // Rotate camera to look at target
-      const currentDirection = new THREE.Vector3();
-      camera.getWorldDirection(currentDirection);
-
-      const targetDirection = new THREE.Vector3()
-        .subVectors(targetLookAt.current, camera.position)
-        .normalize();
-
-      const angle = currentDirection.angleTo(targetDirection);
-
-      if (angle > ROTATION_THRESHOLD) {
-        const maxRotation = ROTATION_SPEED * delta;
-        const rotationAmount = Math.min(angle, maxRotation);
-
-        const rotationAxis = new THREE.Vector3()
-          .crossVectors(currentDirection, targetDirection)
-          .normalize();
-
-        if (rotationAxis.length() < 0.001) {
-          rotationAxis.set(0, 1, 0);
-        }
-
-        const rotationQuaternion = new THREE.Quaternion().setFromAxisAngle(
-          rotationAxis,
-          rotationAmount
-        );
-
-        const newDirection = currentDirection
-          .applyQuaternion(rotationQuaternion)
-          .normalize();
-
-        const newLookAt = new THREE.Vector3()
-          .copy(camera.position)
-          .add(newDirection.multiplyScalar(10));
-
-        camera.lookAt(newLookAt);
-      } else {
-        camera.lookAt(targetLookAt.current);
-
-        const finalPositionDistance = camera.position.distanceTo(
-          targetPosition.current
-        );
-        if (finalPositionDistance <= POSITION_THRESHOLD) {
-          completeAnimation();
-        }
-      }
-    } else {
-      // Move camera to default position (recenter button)
-      const positionDistance = camera.position.distanceTo(
-        targetPosition.current
-      );
-
-      if (positionDistance > POSITION_THRESHOLD) {
-        camera.position.lerp(targetPosition.current, MOVE_SPEED);
-
-        const currentLookAt = new THREE.Vector3();
-        camera.getWorldDirection(currentLookAt);
-        currentLookAt.multiplyScalar(10).add(camera.position);
-        currentLookAt.lerp(targetLookAt.current, MOVE_SPEED);
-        camera.lookAt(currentLookAt);
-      } else {
-        completeAnimation();
-      }
+    switch (motionRef.current) {
+      case "orbit":
+        stepOrbit(delta);
+        return;
+      case "pan":
+        stepPan(delta);
+        return;
+      case "dolly":
+        stepDolly(delta);
+        return;
+      case "frame":
+        stepFrame();
+        return;
     }
   });
 

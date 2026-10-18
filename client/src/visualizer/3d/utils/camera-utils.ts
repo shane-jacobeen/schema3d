@@ -110,10 +110,22 @@ export function easeInOutQuart(progress: number): number {
   return t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
 }
 
+export type CameraMotion = "pan" | "orbit" | "frame" | "dolly";
+
+/** One programmatic camera move. Null means the user is driving OrbitControls. */
+export interface CameraMove {
+  position: THREE.Vector3;
+  lookAt: THREE.Vector3;
+  motion: CameraMotion;
+}
+
 /**
  * Long-press camera pan length. Orbit stays locked until this finishes.
  */
 export const LONG_PRESS_REPOSITION_SECONDS = 0.28;
+
+/** Max-distance shrink length. Same clock as the other camera moves. */
+export const DOLLY_SECONDS = 0.8;
 
 /**
  * 0 at the start of a long-press pan, 1 once LONG_PRESS_REPOSITION_SECONDS
@@ -208,85 +220,4 @@ export function calculateMaxCameraDistance(
     getTopDownFitDistance(tables, center)
   );
   return Math.max(50, Math.min(400, framingDistance));
-}
-
-/**
- * Smoothly animate camera zoom to a target distance
- * @param orbitControls - The OrbitControls instance
- * @param startDistance - Starting zoom distance
- * @param targetDistance - Target zoom distance
- * @param duration - Animation duration in milliseconds
- * @param onComplete - Callback when animation completes
- * @returns Function to cancel the animation
- */
-export function animateCameraZoom(
-  orbitControls: {
-    object: THREE.Camera;
-    target: THREE.Vector3;
-    spherical?: { setFromVector3: (v: THREE.Vector3) => void };
-    update: () => void;
-  } | null,
-  startDistance: number,
-  targetDistance: number,
-  duration: number = 800,
-  onComplete?: () => void
-): () => void {
-  let isAnimating = true;
-  const startTime = Date.now();
-
-  const animate = () => {
-    if (!isAnimating || !orbitControls) {
-      return;
-    }
-
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-
-    // Ease-in-out cubic
-    const easedProgress = easeInOutCubic(progress);
-
-    const interpolatedDistance = THREE.MathUtils.lerp(
-      startDistance,
-      targetDistance,
-      easedProgress
-    );
-
-    // Get current direction to maintain orientation
-    const direction = new THREE.Vector3()
-      .subVectors(orbitControls.object.position, orbitControls.target)
-      .normalize();
-
-    // Calculate new position
-    const newPosition = new THREE.Vector3()
-      .copy(orbitControls.target)
-      .add(direction.multiplyScalar(interpolatedDistance));
-
-    // Update camera position
-    orbitControls.object.position.copy(newPosition);
-
-    // Update spherical coordinates to match
-    if (orbitControls.spherical) {
-      const offset = new THREE.Vector3().subVectors(
-        orbitControls.object.position,
-        orbitControls.target
-      );
-      orbitControls.spherical.setFromVector3(offset);
-    }
-    orbitControls.update();
-
-    if (progress >= 1) {
-      // Animation complete
-      isAnimating = false;
-      onComplete?.();
-    } else {
-      requestAnimationFrame(animate);
-    }
-  };
-
-  requestAnimationFrame(animate);
-
-  // Return cancel function
-  return () => {
-    isAnimating = false;
-  };
 }

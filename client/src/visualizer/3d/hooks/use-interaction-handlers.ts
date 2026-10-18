@@ -1,9 +1,11 @@
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import * as THREE from "three";
 import type { Table } from "@/shared/types/schema";
 import type { DatabaseSchema } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
+import type { CameraMove } from "../utils/camera-utils";
 import { calculateCameraPositionForRecenter } from "../utils/camera-utils";
+import { consumeFollowingClick } from "./use-press-gesture";
 
 interface SelectionState {
   selectedTable: Table | null;
@@ -13,11 +15,7 @@ interface SelectionState {
 }
 
 interface CameraState {
-  setRecenterTarget: (target: THREE.Vector3 | null) => void;
-  setRecenterLookAt: (lookAt: THREE.Vector3 | null) => void;
-  setRecenterTranslateOnly: (translateOnly: boolean) => void;
-  setRecenterOrbitOnly: (orbitOnly: boolean) => void;
-  setShouldRecenter: (should: boolean) => void;
+  requestCameraMove: (move: CameraMove) => void;
 }
 
 interface UseInteractionHandlersReturn {
@@ -30,10 +28,8 @@ interface UseInteractionHandlersReturn {
   ) => void;
   handleClickAway: React.MouseEventHandler<HTMLDivElement>;
   handlePointerMissed: () => void;
-  setLongPressFlag: () => void;
   isDraggingTable: boolean;
   setIsDraggingTable: (isDragging: boolean) => void;
-  justLongPressedRef: React.MutableRefObject<boolean>;
   detailsPanelRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -43,49 +39,24 @@ export function useInteractionHandlers(
   currentSchema: DatabaseSchema,
   detailsPanelRef: React.RefObject<HTMLDivElement>
 ): UseInteractionHandlersReturn {
-  const justLongPressedRef = useRef(false);
   const [isDraggingTable, setIsDraggingTable] = useState(false);
-  const removeLongPressListenersRef = useRef<(() => void) | null>(null);
+  const { requestCameraMove } = cameraState;
 
-  useEffect(() => {
-    return () => {
-      removeLongPressListenersRef.current?.();
-    };
-  }, []);
-
-  const setLongPressFlag = useCallback(() => {
-    justLongPressedRef.current = true;
-    removeLongPressListenersRef.current?.();
-
-    // The camera starts moving while the pointer is still down. Hold the guard
-    // through pointerup, then past the click that follows it. A short timer
-    // from the start of the press expires before that release.
-    const endGesture = () => {
-      removeLongPressListenersRef.current?.();
-      removeLongPressListenersRef.current = null;
-      setTimeout(() => {
-        justLongPressedRef.current = false;
-      }, 0);
-    };
-
-    const removeListeners = () => {
-      window.removeEventListener("pointerup", endGesture, true);
-      window.removeEventListener("pointercancel", endGesture, true);
-    };
-    removeLongPressListenersRef.current = removeListeners;
-    window.addEventListener("pointerup", endGesture, true);
-    window.addEventListener("pointercancel", endGesture, true);
-  }, []);
+  const panTo = useCallback(
+    (point: THREE.Vector3) => {
+      const { position, lookAt } = calculateCameraPositionForRecenter(point);
+      requestCameraMove({ position, lookAt, motion: "pan" });
+    },
+    [requestCameraMove]
+  );
 
   const shouldClosePanels = useCallback(
     (target: HTMLElement): boolean => {
-      // Don't close if clicking inside details panel
       const detailsPanel = detailsPanelRef.current;
       if (detailsPanel && detailsPanel.contains(target)) {
         return false;
       }
 
-      // Don't close if clicking on UI controls (search, buttons, etc.)
       const isUIControl = target.closest(
         'button, input, [role="button"], [role="combobox"], [role="menu"], a'
       );
@@ -93,12 +64,10 @@ export function useInteractionHandlers(
         return false;
       }
 
-      // Don't close if clicking on canvas (3D objects handle their own clicks)
       if (target.tagName === "CANVAS" || target.closest("canvas")) {
         return false;
       }
 
-      // Close panels when clicking on container background
       return !!(
         selectionState.selectedTable || selectionState.selectedRelationship
       );
@@ -112,12 +81,10 @@ export function useInteractionHandlers(
 
   const handleClickAway = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Don't close if we just did a long press (prevents interference)
-      if (justLongPressedRef.current) {
+      if (consumeFollowingClick()) {
         return;
       }
 
-      // Check the actual target element that was clicked, not the container
       const target = e.target as HTMLElement;
       if (shouldClosePanels(target)) {
         selectionState.setSelectedTable(null);
@@ -128,12 +95,10 @@ export function useInteractionHandlers(
   );
 
   const handlePointerMissed = useCallback(() => {
-    // Don't close if we just did a long press (prevents interference)
-    if (justLongPressedRef.current) {
+    if (consumeFollowingClick()) {
       return;
     }
 
-    // Close details panels when clicking on empty space in 3D scene
     if (selectionState.selectedTable || selectionState.selectedRelationship) {
       selectionState.setSelectedTable(null);
       selectionState.setSelectedRelationship(null);
@@ -142,37 +107,18 @@ export function useInteractionHandlers(
 
   const handleTableLongPress = useCallback(
     (table: Table) => {
-      // Set flag to prevent click-away from firing immediately after long press
-      setLongPressFlag();
-
-      // Select the table and clear relationship selection
       selectionState.setSelectedTable(table);
       selectionState.setSelectedRelationship(null);
-
-      // Re-center camera on the table (without rotating)
-      const targetPoint = new THREE.Vector3(...table.position);
-      const { position, lookAt } =
-        calculateCameraPositionForRecenter(targetPoint);
-
-      cameraState.setRecenterTarget(position);
-      cameraState.setRecenterLookAt(lookAt);
-      cameraState.setRecenterTranslateOnly(true); // Long press should only translate
-      cameraState.setRecenterOrbitOnly(false);
-      cameraState.setShouldRecenter(true);
+      panTo(new THREE.Vector3(...table.position));
     },
-    [setLongPressFlag, selectionState, cameraState]
+    [panTo, selectionState]
   );
 
   const handleRelationshipLongPress = useCallback(
     (relationship: Relationship) => {
-      // Set flag to prevent click-away from firing immediately after long press
-      setLongPressFlag();
-
-      // Select the relationship and clear table selection
       selectionState.setSelectedRelationship(relationship);
       selectionState.setSelectedTable(null);
 
-      // Find the two tables connected by this relationship
       const fromTable = currentSchema.tables.find(
         (t) => t.name === relationship.fromTable
       );
@@ -183,23 +129,13 @@ export function useInteractionHandlers(
       if (fromTable && toTable) {
         const fromPos = new THREE.Vector3(...fromTable.position);
         const toPos = new THREE.Vector3(...toTable.position);
-        // Calculate the midpoint between the two tables
         const centerPoint = new THREE.Vector3()
           .addVectors(fromPos, toPos)
           .multiplyScalar(0.5);
-
-        // Re-center camera on the relationship midpoint (without rotating)
-        const { position, lookAt } =
-          calculateCameraPositionForRecenter(centerPoint);
-
-        cameraState.setRecenterTarget(position);
-        cameraState.setRecenterLookAt(lookAt);
-        cameraState.setRecenterTranslateOnly(true);
-        cameraState.setRecenterOrbitOnly(false);
-        cameraState.setShouldRecenter(true);
+        panTo(centerPoint);
       }
     },
-    [currentSchema, setLongPressFlag, selectionState, cameraState]
+    [currentSchema, panTo, selectionState]
   );
 
   return {
@@ -219,10 +155,8 @@ export function useInteractionHandlers(
     },
     handleClickAway,
     handlePointerMissed,
-    setLongPressFlag,
     isDraggingTable,
     setIsDraggingTable,
-    justLongPressedRef,
     detailsPanelRef,
   };
 }
