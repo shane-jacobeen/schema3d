@@ -3,6 +3,7 @@ import { useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Table } from "@/shared/types/schema";
+import { DRAG_SENSITIVITY } from "../../constants";
 import { useOrbitControlsRef } from "../../context/orbit-controls-context";
 import { usePressGesture } from "../../hooks/use-press-gesture";
 
@@ -73,23 +74,9 @@ export function useTableDrag({
     tableRef.current = table;
   });
 
-  const globalMoveRef = useRef<((e: PointerEvent) => void) | null>(null);
-  const globalUpRef = useRef<(() => void) | null>(null);
-
   const enableOrbitControls = useCallback(() => {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enabled = true;
-    }
-  }, []);
-
-  const detachGlobalDragListeners = useCallback(() => {
-    if (globalMoveRef.current) {
-      window.removeEventListener("pointermove", globalMoveRef.current);
-      globalMoveRef.current = null;
-    }
-    if (globalUpRef.current) {
-      window.removeEventListener("pointerup", globalUpRef.current);
-      globalUpRef.current = null;
     }
   }, []);
 
@@ -132,7 +119,7 @@ export function useTableDrag({
       const cameraUp = camera.up.clone().normalize();
 
       const distance = camera.position.distanceTo(dragStartPositionRef.current);
-      const scale = distance * 0.5;
+      const scale = distance * DRAG_SENSITIVITY;
 
       const movement = new THREE.Vector3()
         .addScaledVector(cameraRight, deltaX * scale)
@@ -147,34 +134,6 @@ export function useTableDrag({
     },
     [camera, gl]
   );
-
-  const attachGlobalDragListeners = useCallback(() => {
-    if (globalMoveRef.current) return;
-
-    const handleGlobalPointerMove = (event: PointerEvent) => {
-      if (!isDraggingRef.current) {
-        return;
-      }
-
-      if (event.buttons === 0) {
-        endDrag();
-        detachGlobalDragListeners();
-        return;
-      }
-
-      applyDragMovement(event.clientX, event.clientY);
-    };
-
-    const handleGlobalPointerUp = () => {
-      endDrag();
-      detachGlobalDragListeners();
-    };
-
-    globalMoveRef.current = handleGlobalPointerMove;
-    globalUpRef.current = handleGlobalPointerUp;
-    window.addEventListener("pointermove", handleGlobalPointerMove);
-    window.addEventListener("pointerup", handleGlobalPointerUp);
-  }, [applyDragMovement, detachGlobalDragListeners, endDrag]);
 
   const startTableDrag = useCallback(
     (event: PointerEvent) => {
@@ -192,25 +151,25 @@ export function useTableDrag({
       if (orbitControlsRef.current) {
         orbitControlsRef.current.enabled = false;
       }
-      attachGlobalDragListeners();
       onDragStartRef.current?.();
       document.body.style.cursor = "grabbing";
       applyDragMovement(event.clientX, event.clientY);
     },
-    [applyDragMovement, attachGlobalDragListeners]
+    [applyDragMovement]
   );
-
-  useEffect(() => {
-    return () => {
-      detachGlobalDragListeners();
-    };
-  }, [detachGlobalDragListeners]);
 
   const { begin, isClick } = usePressGesture({
     onLongPress: () => {
       onLongPressRef.current?.(tableRef.current);
     },
-    onDrag: startTableDrag,
+    onDragStart: startTableDrag,
+    onDragMove: (event) => {
+      if (!isDraggingRef.current) {
+        return;
+      }
+      applyDragMovement(event.clientX, event.clientY);
+    },
+    onDragEnd: endDrag,
   });
 
   const meshPointerHandlers = {

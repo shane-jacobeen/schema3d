@@ -3,38 +3,30 @@ import {
   useEffect,
   useRef,
   useCallback,
-  startTransition,
   useMemo,
+  startTransition,
 } from "react";
 import * as THREE from "three";
 import {
   calculateMaxCameraDistance,
-  animateCameraZoom,
   getDefaultCameraPosition,
   getTopDownCameraPosition,
   getTopDownFitDistance,
   shouldRotateToTopDownFor2D,
+  type CameraMove,
 } from "../utils/camera-utils";
 import { getOrbitControls } from "../context/orbit-controls-context";
 import type { Table } from "@/shared/types/schema";
 
 interface UseCameraControlsReturn {
-  shouldRecenter: boolean;
-  recenterTarget: THREE.Vector3 | null;
-  recenterLookAt: THREE.Vector3 | null;
-  recenterTranslateOnly: boolean;
-  recenterOrbitOnly: boolean;
+  cameraMove: CameraMove | null;
   restrictPolarAngle: boolean;
   defaultCameraPosition: THREE.Vector3;
   isCameraAnimating: boolean;
   maxCameraDistance: number;
-  setShouldRecenter: React.Dispatch<React.SetStateAction<boolean>>;
-  setRecenterTarget: React.Dispatch<React.SetStateAction<THREE.Vector3 | null>>;
-  setRecenterLookAt: React.Dispatch<React.SetStateAction<THREE.Vector3 | null>>;
-  setRecenterTranslateOnly: React.Dispatch<React.SetStateAction<boolean>>;
-  setRecenterOrbitOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  requestCameraMove: (move: CameraMove | null) => void;
+  completeCameraMove: () => void;
   setRestrictPolarAngle: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsCameraAnimating: React.Dispatch<React.SetStateAction<boolean>>;
   handleRecenter: () => void;
   frameCameraForViewMode: (
     mode: "2D" | "3D",
@@ -43,35 +35,38 @@ interface UseCameraControlsReturn {
 }
 
 export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
-  const [shouldRecenter, setShouldRecenter] = useState(false);
-  const [recenterTarget, setRecenterTarget] = useState<THREE.Vector3 | null>(
-    null
-  );
-  const [recenterLookAt, setRecenterLookAt] = useState<THREE.Vector3 | null>(
-    null
-  );
-  const [recenterTranslateOnly, setRecenterTranslateOnly] = useState(false);
-  const [recenterOrbitOnly, setRecenterOrbitOnly] = useState(false);
+  const [cameraMove, setCameraMove] = useState<CameraMove | null>(null);
   const [restrictPolarAngle, setRestrictPolarAngle] = useState(false);
-  const [isCameraAnimating, setIsCameraAnimating] = useState(false);
+  const cameraMoveRef = useRef<CameraMove | null>(null);
+  const pendingMaxDistanceRef = useRef<number | null>(null);
 
-  // Calculate desired max camera distance based on schema extent
   const desiredMaxCameraDistance = calculateMaxCameraDistance(tables);
 
-  // State for actual maxDistance (will be updated after animation)
   const [maxCameraDistance, setMaxCameraDistance] = useState(() =>
     calculateMaxCameraDistance(tables)
   );
 
-  // Calculate default camera position based on max distance
-  // This reuses the same distance calculation for consistency
   const defaultCameraPosition = useMemo(
     () => getDefaultCameraPosition(desiredMaxCameraDistance),
     [desiredMaxCameraDistance]
   );
 
-  // Smoothly animate zoom when maxDistance needs to decrease
-  const zoomCancelRef = useRef<(() => void) | null>(null);
+  const requestCameraMove = useCallback((move: CameraMove | null) => {
+    if (move && move.motion !== "dolly") {
+      pendingMaxDistanceRef.current = null;
+    }
+    cameraMoveRef.current = move;
+    setCameraMove(move);
+  }, []);
+
+  const completeCameraMove = useCallback(() => {
+    const active = cameraMoveRef.current;
+    if (active?.motion === "dolly" && pendingMaxDistanceRef.current != null) {
+      setMaxCameraDistance(pendingMaxDistanceRef.current);
+      pendingMaxDistanceRef.current = null;
+    }
+    requestCameraMove(null);
+  }, [requestCameraMove]);
 
   useEffect(() => {
     const orbitControls = getOrbitControls();
@@ -82,62 +77,71 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
       return;
     }
 
+    const active = cameraMoveRef.current;
+    if (active && active.motion !== "dolly") {
+      return;
+    }
+
     const currentDistance = orbitControls.object.position.distanceTo(
       orbitControls.target
     );
-
-    // Only animate if desired maxDistance decreased and camera is beyond the new limit
-    if (
+    const needsDolly =
       desiredMaxCameraDistance < maxCameraDistance &&
-      currentDistance > desiredMaxCameraDistance
-    ) {
-      // Cancel any existing animation
-      if (zoomCancelRef.current) {
-        zoomCancelRef.current();
-      }
+      currentDistance > desiredMaxCameraDistance;
 
-      // Start new animation
-      zoomCancelRef.current = animateCameraZoom(
-        orbitControls,
-        currentDistance,
-        desiredMaxCameraDistance,
-        800,
-        () => {
-          // Animation complete - now update maxDistance
-          startTransition(() => {
-            setMaxCameraDistance(desiredMaxCameraDistance);
-          });
-          zoomCancelRef.current = null;
-        }
-      );
-    } else {
-      // No animation needed, update immediately
+    if (!needsDolly) {
+      if (active?.motion === "dolly") {
+        return;
+      }
       startTransition(() => {
         setMaxCameraDistance(desiredMaxCameraDistance);
       });
+      return;
     }
 
-    // Cleanup function to cancel animation if component unmounts or dependencies change
-    return () => {
-      if (zoomCancelRef.current) {
-        zoomCancelRef.current();
-        zoomCancelRef.current = null;
-      }
-    };
-  }, [desiredMaxCameraDistance, maxCameraDistance]);
+    if (
+      active?.motion === "dolly" &&
+      pendingMaxDistanceRef.current === desiredMaxCameraDistance
+    ) {
+      return;
+    }
 
-  const handleRecenter = useCallback(() => {
-    setRecenterTarget(null);
-    setRecenterLookAt(null);
-    setRecenterTranslateOnly(false); // Recenter button should rotate
-    setRecenterOrbitOnly(false);
-    setShouldRecenter(true);
-  }, []);
+    const lookAt = orbitControls.target.clone();
+    const offset = orbitControls.object.position.clone().sub(lookAt);
+    if (offset.length() < 1e-6) {
+      startTransition(() => {
+        setMaxCameraDistance(desiredMaxCameraDistance);
+      });
+      return;
+    }
+    offset.setLength(desiredMaxCameraDistance);
+    pendingMaxDistanceRef.current = desiredMaxCameraDistance;
+    startTransition(() => {
+      requestCameraMove({
+        position: lookAt.clone().add(offset),
+        lookAt,
+        motion: "dolly",
+      });
+    });
+  }, [
+    desiredMaxCameraDistance,
+    maxCameraDistance,
+    cameraMove,
+    requestCameraMove,
+  ]);
 
   const defaultCameraPositionRef = useRef(defaultCameraPosition);
   useEffect(() => {
     defaultCameraPositionRef.current = defaultCameraPosition;
   }, [defaultCameraPosition]);
+
+  const handleRecenter = useCallback(() => {
+    requestCameraMove({
+      position: defaultCameraPositionRef.current.clone(),
+      lookAt: new THREE.Vector3(0, 0, 0),
+      motion: "frame",
+    });
+  }, [requestCameraMove]);
 
   // 2D flattens tables onto y=0. Untilt when shallower than 45°, and zoom out
   // far enough that the flattened bounds fit in the FOV.
@@ -168,39 +172,28 @@ export function useCameraControls(tables: Table[]): UseCameraControlsReturn {
         return;
       }
 
-      setRecenterTarget(
-        getTopDownCameraPosition(from, lookAt, {
+      requestCameraMove({
+        position: getTopDownCameraPosition(from, lookAt, {
           fitDistance,
           untilt,
-        })
-      );
-      setRecenterLookAt(lookAt);
-      setRecenterTranslateOnly(false);
-      setRecenterOrbitOnly(true);
+        }),
+        lookAt,
+        motion: "orbit",
+      });
       setRestrictPolarAngle(false);
-      setIsCameraAnimating(true);
-      setShouldRecenter(true);
     },
-    []
+    [requestCameraMove]
   );
 
   return {
-    shouldRecenter,
-    recenterTarget,
-    recenterLookAt,
-    recenterTranslateOnly,
-    recenterOrbitOnly,
+    cameraMove,
     restrictPolarAngle,
     defaultCameraPosition,
-    isCameraAnimating,
+    isCameraAnimating: cameraMove !== null,
     maxCameraDistance,
-    setShouldRecenter,
-    setRecenterTarget,
-    setRecenterLookAt,
-    setRecenterTranslateOnly,
-    setRecenterOrbitOnly,
+    requestCameraMove,
+    completeCameraMove,
     setRestrictPolarAngle,
-    setIsCameraAnimating,
     handleRecenter,
     frameCameraForViewMode,
   };

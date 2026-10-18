@@ -8,7 +8,6 @@ import {
   useState,
   type MutableRefObject,
 } from "react";
-import * as THREE from "three";
 import { Table3D } from "./tables/table-3d";
 import { RelationshipLines } from "./relationships/relationship-lines";
 import { WebGLErrorBoundary } from "./webgl-error-boundary";
@@ -21,6 +20,7 @@ import { CameraController } from "@/visualizer/3d/controls/camera-controller";
 import {
   CAMERA_FOV_DEGREES,
   MAX_POLAR_ANGLE_2D,
+  type CameraMove,
 } from "@/visualizer/3d/utils/camera-utils";
 import type { DatabaseSchema, Table } from "@/shared/types/schema";
 import type { Relationship } from "@/visualizer/3d/types";
@@ -62,12 +62,7 @@ export interface SchemaSceneAnimation {
 export interface SchemaSceneCamera {
   maxCameraDistance: number;
   isCameraAnimating: boolean;
-  shouldRecenter: boolean;
-  defaultCameraPosition: THREE.Vector3;
-  recenterTarget: THREE.Vector3 | null;
-  recenterLookAt: THREE.Vector3 | null;
-  recenterTranslateOnly: boolean;
-  recenterOrbitOnly: boolean;
+  move: CameraMove | null;
   restrictPolarAngle: boolean;
 }
 
@@ -89,8 +84,7 @@ export interface SchemaSceneHandlers {
   ) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
-  onRecenterComplete: () => void;
-  onAnimatingChange: (isAnimating: boolean) => void;
+  onMoveComplete: () => void;
   onPointerMissed: () => void;
 }
 
@@ -134,17 +128,8 @@ export function SchemaScene({
     isAnimating,
     animatedPositionsRef,
   } = animation;
-  const {
-    maxCameraDistance,
-    isCameraAnimating,
-    shouldRecenter,
-    defaultCameraPosition,
-    recenterTarget,
-    recenterLookAt,
-    recenterTranslateOnly,
-    recenterOrbitOnly,
-    restrictPolarAngle,
-  } = camera;
+  const { maxCameraDistance, isCameraAnimating, move, restrictPolarAngle } =
+    camera;
   const {
     isDraggingTable,
     onTableSelect,
@@ -157,8 +142,7 @@ export function SchemaScene({
     onAnimatedPositionChange,
     onDragStart,
     onDragEnd,
-    onRecenterComplete,
-    onAnimatingChange,
+    onMoveComplete,
     onPointerMissed,
   } = handlers;
 
@@ -228,16 +212,7 @@ export function SchemaScene({
             speed={1}
           />
 
-          <CameraController
-            shouldRecenter={shouldRecenter}
-            defaultPosition={defaultCameraPosition}
-            recenterTarget={recenterTarget}
-            recenterLookAt={recenterLookAt}
-            translateOnly={recenterTranslateOnly}
-            orbitOnly={recenterOrbitOnly}
-            onRecenterComplete={onRecenterComplete}
-            onAnimatingChange={onAnimatingChange}
-          />
+          <CameraController move={move} onMoveComplete={onMoveComplete} />
 
           <Suspense fallback={null}>
             <RelationshipLines

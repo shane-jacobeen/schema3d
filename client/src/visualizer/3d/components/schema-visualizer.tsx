@@ -18,7 +18,7 @@ export function SchemaVisualizer() {
     interactionHandlers,
     connectedTables,
     isFiltering,
-    handleRecenterComplete,
+    handleMoveComplete,
     handleTableSelect,
   } = state;
 
@@ -56,12 +56,7 @@ export function SchemaVisualizer() {
           camera={{
             maxCameraDistance: cameraState.maxCameraDistance,
             isCameraAnimating: cameraState.isCameraAnimating,
-            shouldRecenter: cameraState.shouldRecenter,
-            defaultCameraPosition: cameraState.defaultCameraPosition,
-            recenterTarget: cameraState.recenterTarget,
-            recenterLookAt: cameraState.recenterLookAt,
-            recenterTranslateOnly: cameraState.recenterTranslateOnly,
-            recenterOrbitOnly: cameraState.recenterOrbitOnly,
+            move: cameraState.cameraMove,
             restrictPolarAngle: cameraState.restrictPolarAngle,
           }}
           handlers={{
@@ -82,8 +77,7 @@ export function SchemaVisualizer() {
             onAnimatedPositionChange: animationState.onAnimatedPositionChange,
             onDragStart: () => interactionHandlers.setIsDraggingTable(true),
             onDragEnd: () => interactionHandlers.setIsDraggingTable(false),
-            onRecenterComplete: handleRecenterComplete,
-            onAnimatingChange: cameraState.setIsCameraAnimating,
+            onMoveComplete: handleMoveComplete,
             onPointerMissed: interactionHandlers.handlePointerMissed,
           }}
         />
