@@ -14,7 +14,7 @@ import type {
   RelationshipLineProps,
 } from "../../types";
 import {
-  CLICK_MOVE_TOLERANCE_PX,
+  DRAG_MOVEMENT_THRESHOLD_PX,
   LONG_PRESS_DURATION,
   TABLE_RADIUS,
   RELATIONSHIP_LINE_Y_OFFSET,
@@ -169,7 +169,7 @@ function RelationshipLine({
       // Only select if it wasn't a long press, drag, or orbit
       if (
         !isLongPressRef.current &&
-        e.delta <= CLICK_MOVE_TOLERANCE_PX &&
+        e.delta <= DRAG_MOVEMENT_THRESHOLD_PX &&
         onSelect
       ) {
         onSelect(relationship);

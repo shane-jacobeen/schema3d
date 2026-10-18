@@ -10,7 +10,10 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { Table } from "@/shared/types/schema";
 import { useOrbitControlsRef } from "../../context/orbit-controls-context";
-import { CLICK_MOVE_TOLERANCE_PX, LONG_PRESS_DURATION } from "../../constants";
+import {
+  DRAG_MOVEMENT_THRESHOLD_PX,
+  LONG_PRESS_DURATION,
+} from "../../constants";
 
 interface UseTableDragOptions {
   table: Table;
@@ -63,6 +66,7 @@ export function useTableDrag({
   const isDraggingRef = useRef(false);
   const dragStartPositionRef = useRef<THREE.Vector3 | null>(null);
   const dragStartPointerRef = useRef<THREE.Vector2 | null>(null);
+  const dragStartClientRef = useRef<{ x: number; y: number } | null>(null);
   const orbitControlsContextRef = useOrbitControlsRef();
   const orbitControlsRef = useRef<ComponentRef<typeof OrbitControls> | null>(
     null
@@ -110,6 +114,7 @@ export function useTableDrag({
     isDraggingRef.current = false;
     dragStartPositionRef.current = null;
     dragStartPointerRef.current = null;
+    dragStartClientRef.current = null;
     enableOrbitControls();
     onDragEndRef.current?.();
     document.body.style.cursor = "default";
@@ -202,7 +207,7 @@ export function useTableDrag({
       e.stopPropagation();
       if (
         isLongPressRef.current ||
-        e.delta > CLICK_MOVE_TOLERANCE_PX ||
+        e.delta > DRAG_MOVEMENT_THRESHOLD_PX ||
         !onSelect
       ) {
         return;
@@ -223,6 +228,7 @@ export function useTableDrag({
           ((e.clientX - rect.left) / rect.width) * 2 - 1,
           -((e.clientY - rect.top) / rect.height) * 2 + 1
         );
+        dragStartClientRef.current = { x: e.clientX, y: e.clientY };
         dragStartPositionRef.current = new THREE.Vector3(...table.position);
       }
 
@@ -256,6 +262,7 @@ export function useTableDrag({
         !onPositionChange ||
         !dragStartPositionRef.current ||
         !dragStartPointerRef.current ||
+        !dragStartClientRef.current ||
         !isSelected ||
         isLongPressRef.current
       ) {
@@ -273,10 +280,11 @@ export function useTableDrag({
       const deltaX = currentPointer.x - dragStartPointerRef.current.x;
       const deltaY = currentPointer.y - dragStartPointerRef.current.y;
 
-      const movementThreshold = 0.01;
-      const hasMoved =
-        Math.abs(deltaX) > movementThreshold ||
-        Math.abs(deltaY) > movementThreshold;
+      const pointerTravel = Math.hypot(
+        e.clientX - dragStartClientRef.current.x,
+        e.clientY - dragStartClientRef.current.y
+      );
+      const hasMoved = pointerTravel > DRAG_MOVEMENT_THRESHOLD_PX;
 
       if (!isDraggingRef.current && hasMoved) {
         isDraggingRef.current = true;

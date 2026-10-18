@@ -10,9 +10,9 @@ export const EDGE_TUBE_RADIUS = 0.03;
 export const ANIMATION_DURATION = 1; // 1 second max
 
 // Drag constants
-export const DRAG_MOVEMENT_THRESHOLD = 0.01; // Minimum movement to start dragging
+// Pointer travel above this is a drag or orbit, not a click.
+export const DRAG_MOVEMENT_THRESHOLD_PX = 6;
 export const DRAG_SENSITIVITY = 0.5; // Scale factor for drag sensitivity
-export const CLICK_MOVE_TOLERANCE_PX = 6; // Pointer travel above this is a drag or orbit, not a click
 
 // Label positioning constants
 export const LABEL_BASE_OFFSET = 0.3;
