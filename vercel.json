@@ -48,7 +48,8 @@
     },
     {
       "source": "/((?!assets/).*)",
-      "destination": "/index.html"
+      "destination": "/index.html",
+      "_comment": "Catch-all for SPA routing. Vercel serves static files first (e.g., /about/index.html, /topics/sql/index.html) before applying rewrites, so prerendered route-specific HTML files are served correctly. Unknown routes fall back to root /index.html."
     }
   ]
 }

@@ -2,6 +2,16 @@ import { Helmet } from "react-helmet-async";
 import { METADATA } from "./metadata-data";
 
 /**
+ * Metadata components use react-helmet-async to manage tags at runtime.
+ *
+ * For SEO and social media previews:
+ * - Build script prerenderes static HTML files with meta tags for each route
+ * - When the React app hydrates, Helmet replaces prerendered tags with runtime-managed versions
+ * - This ensures non-JS crawlers see correct tags while maintaining single-source-of-truth
+ * - Helmet automatically prevents duplicate tags by replacing existing ones
+ */
+
+/**
  * Home page metadata for the main SchemaVisualizer route
  */
 export function SchemaMetadata() {
