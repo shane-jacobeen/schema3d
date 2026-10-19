@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "NODE_ENV=production vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "NODE_ENV=production vite build && tsx scripts/generate-static-html.ts && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "test": "vitest run",

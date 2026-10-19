@@ -1,56 +1,46 @@
 import { Helmet } from "react-helmet-async";
+import { METADATA } from "./metadata-data";
 
-const previewImageUrl = "https://schema3d.com/images/preview.png";
+/**
+ * Metadata components use react-helmet-async to manage tags at runtime.
+ *
+ * For SEO and social media previews:
+ * - Build script prerenderes static HTML files with meta tags for each route
+ * - When the React app hydrates, Helmet replaces prerendered tags with runtime-managed versions
+ * - This ensures non-JS crawlers see correct tags while maintaining single-source-of-truth
+ * - Helmet automatically prevents duplicate tags by replacing existing ones
+ */
 
 /**
  * Home page metadata for the main SchemaVisualizer route
  */
 export function SchemaMetadata() {
+  const meta = METADATA.home;
   return (
     <Helmet>
-      <title>Schema3D: Interactive Open-Source Schema Visualizer</title>
-      <meta
-        name="description"
-        content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
-      />
-      <link rel="canonical" href="https://schema3d.com/" />
-      <meta property="og:url" content="https://schema3d.com/" />
-      <meta
-        property="og:title"
-        content="Schema3D: Interactive Open-Source Schema Visualizer"
-      />
-      <meta
-        property="og:description"
-        content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
-      />
-      <meta property="og:image" content={previewImageUrl} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta
-        property="og:image:alt"
-        content="Schema3D 3D database schema visualizer preview"
-      />
-      <meta
-        name="twitter:title"
-        content="Schema3D: Interactive Open-Source Schema Visualizer"
-      />
-      <meta
-        name="twitter:description"
-        content="Explore database schemas in interactive 3D in your browser. Free and open source. Supports SQL, T-SQL, Mermaid ER, and DrawDB JSON. Share a link, no database connection."
-      />
-      <meta name="twitter:image" content={previewImageUrl} />
+      <title>{meta.title}</title>
+      <meta name="description" content={meta.description} />
+      <link rel="canonical" href={meta.canonicalUrl} />
+      <meta property="og:url" content={meta.ogUrl} />
+      <meta property="og:title" content={meta.ogTitle} />
+      <meta property="og:description" content={meta.ogDescription} />
+      <meta property="og:image" content={meta.ogImage} />
+      <meta property="og:image:width" content={meta.ogImageWidth} />
+      <meta property="og:image:height" content={meta.ogImageHeight} />
+      <meta property="og:image:alt" content={meta.ogImageAlt} />
+      <meta name="twitter:title" content={meta.twitterTitle} />
+      <meta name="twitter:description" content={meta.twitterDescription} />
+      <meta name="twitter:image" content={meta.twitterImage} />
       <script type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://schema3d.com",
-            },
-          ],
+          itemListElement: meta.breadcrumbs.map((crumb) => ({
+            "@type": "ListItem",
+            position: crumb.position,
+            name: crumb.name,
+            item: crumb.item,
+          })),
         })}
       </script>
     </Helmet>
@@ -61,39 +51,22 @@ export function SchemaMetadata() {
  * About page metadata
  */
 export function AboutPageMetadata() {
+  const meta = METADATA.about;
   return (
     <Helmet>
-      <title>About Schema3D: Interactive 3D Database Schema Visualizer</title>
-      <meta
-        name="description"
-        content="Schema3D is an interactive 3D database schema visualizer for SQL, Mermaid ER diagrams, and DrawDB JSON. Explore tables, relationships, and foreign keys in your browser without a database connection."
-      />
-      <link rel="canonical" href="https://schema3d.com/about" />
-      <meta
-        property="og:title"
-        content="About Schema3D: Interactive 3D Database Schema Visualizer"
-      />
-      <meta
-        property="og:description"
-        content="Schema3D is an interactive 3D database schema visualizer for SQL, Mermaid ER diagrams, and DrawDB JSON. Explore tables, relationships, and foreign keys in your browser without a database connection."
-      />
-      <meta property="og:url" content="https://schema3d.com/about" />
-      <meta property="og:image" content={previewImageUrl} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta
-        property="og:image:alt"
-        content="Schema3D 3D database schema visualizer preview"
-      />
-      <meta
-        name="twitter:title"
-        content="About Schema3D: Interactive 3D Database Schema Visualizer"
-      />
-      <meta
-        name="twitter:description"
-        content="Schema3D is an interactive 3D database schema visualizer for SQL, Mermaid ER diagrams, and DrawDB JSON. Explore tables, relationships, and foreign keys in your browser without a database connection."
-      />
-      <meta name="twitter:image" content={previewImageUrl} />
+      <title>{meta.title}</title>
+      <meta name="description" content={meta.description} />
+      <link rel="canonical" href={meta.canonicalUrl} />
+      <meta property="og:title" content={meta.ogTitle} />
+      <meta property="og:description" content={meta.ogDescription} />
+      <meta property="og:url" content={meta.ogUrl} />
+      <meta property="og:image" content={meta.ogImage} />
+      <meta property="og:image:width" content={meta.ogImageWidth} />
+      <meta property="og:image:height" content={meta.ogImageHeight} />
+      <meta property="og:image:alt" content={meta.ogImageAlt} />
+      <meta name="twitter:title" content={meta.twitterTitle} />
+      <meta name="twitter:description" content={meta.twitterDescription} />
+      <meta name="twitter:image" content={meta.twitterImage} />
       <script type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
@@ -114,20 +87,12 @@ export function AboutPageMetadata() {
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              name: "Home",
-              item: "https://schema3d.com",
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: "About",
-              item: "https://schema3d.com/about",
-            },
-          ],
+          itemListElement: meta.breadcrumbs.map((crumb) => ({
+            "@type": "ListItem",
+            position: crumb.position,
+            name: crumb.name,
+            item: crumb.item,
+          })),
         })}
       </script>
       <script type="application/ld+json">
@@ -178,41 +143,34 @@ export function AboutPageMetadata() {
  * SQL Topic Page metadata
  */
 export function SqlTopicMetadata() {
+  const meta = METADATA.sql;
   return (
     <Helmet>
-      <title>
-        SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D
-      </title>
-      <meta
-        name="description"
-        content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
-      />
-      <link rel="canonical" href="https://schema3d.com/topics/sql" />
-      <meta property="og:url" content="https://schema3d.com/topics/sql" />
-      <meta
-        property="og:title"
-        content="SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D"
-      />
-      <meta
-        property="og:description"
-        content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
-      />
-      <meta property="og:image" content={previewImageUrl} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta
-        property="og:image:alt"
-        content="Schema3D SQL schema visualizer preview"
-      />
-      <meta
-        name="twitter:title"
-        content="SQL Schema Visualizer — Explore Tables & FKs in 3D | Schema3D"
-      />
-      <meta
-        name="twitter:description"
-        content="Paste SQL or T-SQL (CREATE TABLE, foreign keys) and explore tables, columns, and relationships in an interactive browser schema visualizer. No database connection."
-      />
-      <meta name="twitter:image" content={previewImageUrl} />
+      <title>{meta.title}</title>
+      <meta name="description" content={meta.description} />
+      <link rel="canonical" href={meta.canonicalUrl} />
+      <meta property="og:url" content={meta.ogUrl} />
+      <meta property="og:title" content={meta.ogTitle} />
+      <meta property="og:description" content={meta.ogDescription} />
+      <meta property="og:image" content={meta.ogImage} />
+      <meta property="og:image:width" content={meta.ogImageWidth} />
+      <meta property="og:image:height" content={meta.ogImageHeight} />
+      <meta property="og:image:alt" content={meta.ogImageAlt} />
+      <meta name="twitter:title" content={meta.twitterTitle} />
+      <meta name="twitter:description" content={meta.twitterDescription} />
+      <meta name="twitter:image" content={meta.twitterImage} />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: meta.breadcrumbs.map((crumb) => ({
+            "@type": "ListItem",
+            position: crumb.position,
+            name: crumb.name,
+            item: crumb.item,
+          })),
+        })}
+      </script>
     </Helmet>
   );
 }
@@ -221,41 +179,34 @@ export function SqlTopicMetadata() {
  * Mermaid Topic Page metadata
  */
 export function MermaidTopicMetadata() {
+  const meta = METADATA.mermaid;
   return (
     <Helmet>
-      <title>
-        Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D
-      </title>
-      <meta
-        name="description"
-        content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
-      />
-      <link rel="canonical" href="https://schema3d.com/topics/mermaid" />
-      <meta property="og:url" content="https://schema3d.com/topics/mermaid" />
-      <meta
-        property="og:title"
-        content="Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D"
-      />
-      <meta
-        property="og:description"
-        content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
-      />
-      <meta property="og:image" content={previewImageUrl} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta
-        property="og:image:alt"
-        content="Schema3D Mermaid ER diagram visualizer preview"
-      />
-      <meta
-        name="twitter:title"
-        content="Mermaid ER Diagram Visualizer — Interactive 3D View | Schema3D"
-      />
-      <meta
-        name="twitter:description"
-        content="Import Mermaid ER diagram syntax and explore entities and relationships in an interactive 3D schema visualizer. Runs in the browser; share a link to the same view."
-      />
-      <meta name="twitter:image" content={previewImageUrl} />
+      <title>{meta.title}</title>
+      <meta name="description" content={meta.description} />
+      <link rel="canonical" href={meta.canonicalUrl} />
+      <meta property="og:url" content={meta.ogUrl} />
+      <meta property="og:title" content={meta.ogTitle} />
+      <meta property="og:description" content={meta.ogDescription} />
+      <meta property="og:image" content={meta.ogImage} />
+      <meta property="og:image:width" content={meta.ogImageWidth} />
+      <meta property="og:image:height" content={meta.ogImageHeight} />
+      <meta property="og:image:alt" content={meta.ogImageAlt} />
+      <meta name="twitter:title" content={meta.twitterTitle} />
+      <meta name="twitter:description" content={meta.twitterDescription} />
+      <meta name="twitter:image" content={meta.twitterImage} />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: meta.breadcrumbs.map((crumb) => ({
+            "@type": "ListItem",
+            position: crumb.position,
+            name: crumb.name,
+            item: crumb.item,
+          })),
+        })}
+      </script>
     </Helmet>
   );
 }
@@ -264,39 +215,34 @@ export function MermaidTopicMetadata() {
  * DrawDB Topic Page metadata
  */
 export function DrawDbTopicMetadata() {
+  const meta = METADATA.drawdb;
   return (
     <Helmet>
-      <title>Visualize DrawDB Schemas in 3D | Schema3D</title>
-      <meta
-        name="description"
-        content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
-      />
-      <link rel="canonical" href="https://schema3d.com/topics/drawdb" />
-      <meta property="og:url" content="https://schema3d.com/topics/drawdb" />
-      <meta
-        property="og:title"
-        content="Visualize DrawDB Schemas in 3D | Schema3D"
-      />
-      <meta
-        property="og:description"
-        content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
-      />
-      <meta property="og:image" content={previewImageUrl} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta
-        property="og:image:alt"
-        content="Schema3D DrawDB schema visualizer preview"
-      />
-      <meta
-        name="twitter:title"
-        content="Visualize DrawDB Schemas in 3D | Schema3D"
-      />
-      <meta
-        name="twitter:description"
-        content="Import DrawDB JSON or a share/gist link into Schema3D to explore tables and relationships in interactive 3D. Edit in DrawDB when you need 2D diagram editing."
-      />
-      <meta name="twitter:image" content={previewImageUrl} />
+      <title>{meta.title}</title>
+      <meta name="description" content={meta.description} />
+      <link rel="canonical" href={meta.canonicalUrl} />
+      <meta property="og:url" content={meta.ogUrl} />
+      <meta property="og:title" content={meta.ogTitle} />
+      <meta property="og:description" content={meta.ogDescription} />
+      <meta property="og:image" content={meta.ogImage} />
+      <meta property="og:image:width" content={meta.ogImageWidth} />
+      <meta property="og:image:height" content={meta.ogImageHeight} />
+      <meta property="og:image:alt" content={meta.ogImageAlt} />
+      <meta name="twitter:title" content={meta.twitterTitle} />
+      <meta name="twitter:description" content={meta.twitterDescription} />
+      <meta name="twitter:image" content={meta.twitterImage} />
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: meta.breadcrumbs.map((crumb) => ({
+            "@type": "ListItem",
+            position: crumb.position,
+            name: crumb.name,
+            item: crumb.item,
+          })),
+        })}
+      </script>
     </Helmet>
   );
 }
