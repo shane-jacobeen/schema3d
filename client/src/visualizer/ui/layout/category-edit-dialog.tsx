@@ -274,7 +274,7 @@ export function CategoryEditDialog({
           </div>
 
           {/* Transfer List */}
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2">
             {/* Tables Not In Category */}
             <div className="space-y-2">
               <Label className="text-slate-300">
@@ -299,7 +299,10 @@ export function CategoryEditDialog({
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-slate-200">{table.name}</span>
-                          <span className="text-xs text-slate-400">
+                          <span
+                            className="ml-2 min-w-0 truncate text-xs text-slate-400"
+                            title={table.category}
+                          >
                             {table.category}
                           </span>
                         </div>
@@ -327,7 +330,7 @@ export function CategoryEditDialog({
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="bg-slate-800 text-white border-slate-700"
+                    className="max-w-xs break-words bg-slate-800 text-white border-slate-700"
                   >
                     Add to {categoryName || "Category"}
                   </TooltipContent>
@@ -348,7 +351,7 @@ export function CategoryEditDialog({
                   </TooltipTrigger>
                   <TooltipContent
                     side="top"
-                    className="bg-slate-800 text-white border-slate-700"
+                    className="max-w-xs break-words bg-slate-800 text-white border-slate-700"
                   >
                     Remove from {categoryName || "Category"}
                   </TooltipContent>
@@ -358,9 +361,15 @@ export function CategoryEditDialog({
 
             {/* Tables In Category */}
             <div className="space-y-2">
-              <Label className="text-slate-300">
-                Tables in <strong>{categoryName || "Category"}</strong> (
-                {tablesInCategory.length})
+              <Label
+                className="flex min-w-0 gap-1 whitespace-nowrap text-slate-300"
+                title={categoryName || undefined}
+              >
+                Tables in{" "}
+                <strong className="-my-0.5 truncate py-0.5">
+                  {categoryName || "Category"}
+                </strong>{" "}
+                ({tablesInCategory.length})
               </Label>
               <div className="border border-slate-700 rounded-md bg-slate-800/50 h-64 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-500/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-blue-500/70 [scrollbar-width:thin] [scrollbar-color:rgb(59,130,246,0.5)_transparent]">
                 {tablesInCategory.length === 0 ? (

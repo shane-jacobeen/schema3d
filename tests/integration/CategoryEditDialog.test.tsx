@@ -129,6 +129,29 @@ describe("CategoryEditDialog", () => {
       ).toBeInTheDocument();
     });
 
+    it("should truncate a long category name in the table list header", async () => {
+      const user = userEvent.setup();
+      const longName = "INSERT_INTO_Employees_".repeat(10);
+
+      render(
+        <CategoryEditDialog
+          open={true}
+          onOpenChange={mockOnOpenChange}
+          category="Auth"
+          schema={mockSchema}
+          onSave={mockOnSave}
+        />
+      );
+
+      const input = screen.getByLabelText("Category Name");
+      await user.clear(input);
+      await user.type(input, longName);
+
+      const name = screen.getByText(longName, { selector: "strong" });
+      expect(name).toHaveClass("truncate");
+      expect(name.parentElement).toHaveAttribute("title", longName);
+    });
+
     it("should show tables not in the selected category", () => {
       render(
         <CategoryEditDialog
